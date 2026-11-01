@@ -48,3 +48,16 @@ before handoff. Technical guides and validation reports retain detailed evidence
 the progress documents link to those references to keep status and history clear.
 
 Reference: [maintenance rules](README.md#maintaining-the-record).
+
+## D005 — Commit validated work as development checkpoints
+
+Date: 2026-11-01. Status: accepted by the version-control workflow task.
+
+Agents create focused local Conventional Commits for completed, validated work,
+including documentation and its development records. This makes task history
+traceable and allows individual changes to be reviewed or reverted. Stage only
+related changes and preserve upstream and published history. Local commits do
+not authorize publication; pushes and merges still need user authorization,
+with review and applicable CI checks before integration.
+
+Reference: [Git and GitHub workflow](../../AGENTS.md#git-and-github-workflow).

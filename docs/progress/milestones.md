@@ -36,6 +36,17 @@ Scope: documentation and agent instructions.
 - [x] Require agents to read and maintain the records through `AGENTS.md`.
 - [x] Check document links and whitespace, then record the result in the journal.
 
+## M3 — Conventional Commits and GitHub workflow
+
+Status: complete, 2026-11-01.
+
+Scope: agent instructions and development records.
+
+- [x] Record the completed progress-document task in a focused local commit.
+- [x] Require local Conventional Commits for completed, validated work.
+- [x] Document focused staging, task branches, history preservation, and PR checks.
+- [x] Check documentation links and whitespace and commit the policy update.
+
 ## Future milestones
 
 Status: proposed; implementation is not authorized by this record.

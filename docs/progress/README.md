@@ -16,7 +16,10 @@ Build checks for macOS 15 and 26 are configured but have not run on GitHub.
 Window focusing, switching existing Spaces, and macOS 26 runtime behavior remain
 unverified. See the [validation report](../validation.md) for evidence and limits.
 
-The progress folder and agent maintenance rules are established in M2.
+The progress folder and agent maintenance rules are established in M2 and
+committed as `724ba46`. M3 adds a
+[version-control workflow](../../AGENTS.md#git-and-github-workflow) that requires
+local Conventional Commits for validated work and review before GitHub integration.
 Virtual workspace management, the native GUI, and the hotkey engine are future
 work and require a separately authorized milestone.
 

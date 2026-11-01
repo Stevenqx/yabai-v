@@ -44,3 +44,25 @@ so no build or daemon test was needed for this task.
 Open issues: the M1 validation follow-ups remain open.
 Next: use these records for the next development task and maintain the outstanding
 validation follow-ups in M1.
+
+## 2026-11-01 — Conventional Commits and GitHub workflow
+
+Scope: documentation and local version control, M3.
+
+Recorded the completed progress-document task as `724ba46`
+(`docs: add development progress records`). Updated
+[AGENTS.md](../../AGENTS.md#git-and-github-workflow) to require local Conventional
+Commits for completed, validated work. Added conventions for focused staging,
+task branches, reviewable checkpoints, history preservation, and GitHub pull
+requests with review and CI checks. Pushes and merges retain explicit authorization.
+Recorded the rationale as [D005](decisions.md#d005--commit-validated-work-as-development-checkpoints).
+
+Validation: the first documentation commit passed 21 local-link checks and staged
+whitespace checks. The policy update passed all 25 local Markdown links and
+whitespace checks across six documents, including `git diff --check`. The old
+opt-in commit rule was replaced, and publishing still requires authorization.
+Executable behavior is unchanged; no build or daemon test was needed.
+
+Open issues: the M1 validation follow-ups remain open.
+Next: use the committed workflow for subsequent work and complete M1 validation
+follow-ups when authorized.

@@ -37,8 +37,50 @@ small changes that can be rebased. Use Conventional Commits with focused commits
   resulting signature. CI ad-hoc signatures do not establish a stable TCC identity.
 - Report headless tests separately from a real daemon/GUI session. A build or
   parser test does not establish runtime compatibility on another macOS version.
+
+## Git and GitHub workflow
+
+- Automatically create local Git commits for each completed, validated unit of
+  work, including documentation changes, unless the user requests otherwise.
+  Do not leave completed work uncommitted merely because committing was not
+  separately requested. If Git writes are blocked, report the blocker and what
+  remains to be committed.
+- Inspect the branch, working tree, and existing diff before starting. Use a
+  descriptive task branch such as `feat/vspace-ping` or `docs/development-records`;
+  reuse the current task branch when the work is related. Do not commit directly
+  to `main` or `master`, and preserve upstream history.
+- Make each commit one coherent change that can be reviewed and reverted on its
+  own. Include related implementation, tests, and development-record updates
+  together; separate unrelated work and avoid incomplete or broken checkpoints.
+- Stage only the task's files or hunks. Review `git diff --cached` and run
+  `git diff --cached --check` before committing. Preserve unrelated user changes;
+  do not stage the entire working tree blindly, generated binaries, or secrets.
+- Use Conventional Commits: `<type>(<scope>): <imperative summary>`; scope is
+  optional. Choose an appropriate type such as `feat`, `fix`, `docs`, `refactor`,
+  `test`, `build`, `ci`, or `chore`. Keep subjects concise, aiming for 50 characters.
+  Example: `docs(workflow): require progress commits`.
+- Use a body when needed to explain rationale, tradeoffs, or validation. Reference
+  relevant issues when available. Mark breaking changes with `!` or a
+  `BREAKING CHANGE:` footer according to the specification.
+- Run the checks appropriate to the change before committing. Do not bypass
+  commit hooks or configured commit signing to force a commit through.
+- Keep the progress records consistent with the committed work. Report new
+  commit IDs and validation results at handoff; record references to earlier
+  commits in the journal when useful, without requiring a commit to contain its own ID.
 - Rebase only unpublished work. Fetch upstream and record the new base when
-  updating it. Never force-push without explicit authorization.
+  updating it. Do not amend another contributor's commits or rewrite published
+  history or force-push without explicit authorization. Prefer follow-up commits
+  for changes to published work.
+- Review the diff before publishing. Push to the fork's `origin` only when
+  authorized; local commit creation does not authorize a push or a merge.
+- Use a focused pull request for integration when requested. Explain
+  the problem, changes, validation, and remaining limitations; link relevant
+  milestones or issues. Obtain review and pass applicable CI checks before merge,
+  including the macOS 15/26 build matrix. Do not bypass required reviews or checks.
+
+References: [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+defines the message format; [GitHub flow](https://docs.github.com/en/get-started/using-github/github-flow)
+describes the branch and pull request workflow.
 
 ## Development records
 
@@ -70,4 +112,5 @@ small changes that can be rebased. Use Conventional Commits with focused commits
 - Do not run `--load-sa`, request sudo, or change SIP.
 - Keep development binaries in the checkout. Preserve the original installation
   and its service definition so it remains recoverable.
-- Commit locally when requested; do not push unreviewed changes without approval.
+- Create local commits according to the workflow above; pushes and merges require
+  explicit user authorization.
