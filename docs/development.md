@@ -1,8 +1,10 @@
 # Development workflow
 
-The preferred checkout is `~/Developer/yabai-fork`. Build and run binaries from
-the checkout; do not replace a Homebrew binary or install a development service.
-See `architecture.md` for scope and `validation.md` for observed results.
+The GitHub fork is `Stevenqx/yabai-v`. The working checkout for this setup is
+`/Users/steven/Workspace/Github/yabai-v`; the originally preferred location is
+`~/Developer/yabai-fork`. Build and run binaries from the checkout; do not replace
+a Homebrew binary or install a development service. See `architecture.md` for
+scope and `validation.md` for observed results.
 
 ## Repository setup
 
@@ -10,9 +12,9 @@ With Git and the GitHub CLI authenticated, create the fork and clone its complet
 history (no `--depth` or source archives):
 
 ```sh
-gh repo fork asmvik/yabai --fork-name yabai-fork --clone=false
+gh repo fork asmvik/yabai --fork-name yabai-v --clone=false
 mkdir -p ~/Developer
-git clone https://github.com/YOUR_ACCOUNT/yabai-fork.git ~/Developer/yabai-fork
+git clone https://github.com/YOUR_ACCOUNT/yabai-v.git ~/Developer/yabai-fork
 cd ~/Developer/yabai-fork
 git remote add upstream https://github.com/asmvik/yabai.git
 git fetch upstream --tags
@@ -26,6 +28,21 @@ If the fork already exists, inspect it instead of repeating creation. If the
 checkout was initially cloned from upstream, rename that remote to `upstream`
 and add the fork URL as `origin`. This does not publish local commits. Push only
 after reviewing the diff and receiving explicit confirmation.
+
+To relocate this existing checkout after finishing the current workspace session,
+first import its prepared commits and stop any foreground development daemon.
+Run the following manually only if the destination does not already exist:
+
+```sh
+if test ! -e ~/Developer/yabai-fork; then
+    mkdir -p ~/Developer &&
+        mv /Users/steven/Workspace/Github/yabai-v ~/Developer/yabai-fork
+fi
+```
+
+Move the complete directory, including `.git`, to retain history and commits.
+Use the new path for later builds and re-enable Accessibility for that binary if
+macOS requests it. This move does not relocate the Homebrew installation.
 
 For later updates, start with a clean working tree, fetch `upstream`, and rebase
 unpublished feature commits onto `upstream/master`. Coordinate published history
@@ -131,10 +148,15 @@ USER=yabai-fork-dev ./bin/yabai -m query --windows
 Check that the queries return JSON arrays. Check that `vspace`,
 `vspace --unknown`, and `vspace --ping extra` exit unsuccessfully. If a disposable
 window and a safe GUI session are available, query its ID and use
-`USER=yabai-fork-dev ./bin/yabai -m window --focus ID`; verify focus visually.
+`USER=yabai-fork-dev ./bin/yabai -m window --focus ID`. Replace `ID` with the
+integer `id` from the query output before running the command; verify focus
+visually and restore the original focus afterward.
 Switch between existing Spaces with Mission Control or the system shortcuts and
-query `--spaces` again. Do not create/delete native Spaces or attempt upstream
-`space --focus` through the scripting addition with SIP enabled.
+query `--spaces` again. Optionally test `space --focus INDEX` on an existing
+Space: this upstream base has a gesture fallback that does not require the
+scripting addition. Verify the visible result and query it again, then restore
+the original Space. Do not create/delete native Spaces or load the scripting
+addition; do not substitute `space --switch`, whose implementation differs.
 
 Stop only the foreground development process with Ctrl-C. An existing Homebrew
 binary, service plist, and user configuration must remain intact. If the original

@@ -32,9 +32,11 @@ This milestone adds neither subsystem nor a Swift project.
 - SIP stays fully enabled. Fork functionality must work without a scripting
   addition. Upstream's CLI commands remain present, including commands whose
   privileged behavior cannot work under this restriction.
-- Native Space creation/deletion and programmatic Space focus through upstream's
-  scripting addition are outside the supported fork workflow. Use Mission
-  Control or existing system shortcuts for manual Space-switching validation.
+- Native Space creation/deletion and other scripting-addition-only operations
+  are outside the supported fork workflow. This base already has a gesture
+  fallback for `space --focus` when the scripting addition is unavailable;
+  preserve it. Verify actual switching visually and through queries because
+  a successful CLI exit does not establish that a synthesized gesture worked.
 - Window focusing and tiling require Accessibility permission and a GUI session.
   Screen Recording is only relevant to optional upstream animation features.
 - Virtual workspaces, workspace persistence, GUI overlays, hotkey handling, and
