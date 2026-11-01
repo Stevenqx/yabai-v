@@ -40,6 +40,25 @@ small changes that can be rebased. Use Conventional Commits with focused commits
 - Rebase only unpublished work. Fetch upstream and record the new base when
   updating it. Never force-push without explicit authorization.
 
+## Development records
+
+- Before each development task, read `docs/progress/README.md` and
+  `docs/progress/milestones.md`, then the decision and journal entries relevant
+  to the task. Read the linked technical documentation when its subject is affected.
+- Record the active task and its scope in the milestone document before changing
+  implementation. Future milestones are proposals until explicitly authorized.
+- Keep the main progress document current as work advances. Update the relevant
+  milestone checklists, follow-ups, and limitations when their status changes.
+- Append an entry to `docs/progress/journal.md` for each task, including the date,
+  changes, checks actually performed and their results, blockers, and next step.
+- Record significant design or workflow decisions in `docs/progress/decisions.md`
+  with their rationale and status. Distinguish proposals from accepted decisions.
+- Before handing off work, update these records and any affected technical docs.
+  Link to detailed validation reports; preserve earlier journal entries and
+  distinguish passed, failed, skipped, and unrun checks.
+- For documentation-only changes, check Markdown links and `git diff --check`;
+  rebuilding or running the daemon is unnecessary unless executable behavior changes.
+
 ## Host safety
 
 - Do not stop, restart, replace, install, or uninstall an existing yabai service

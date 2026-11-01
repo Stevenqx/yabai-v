@@ -6,6 +6,9 @@ The GitHub fork is `Stevenqx/yabai-v`. The working checkout for this setup is
 a Homebrew binary or install a development service. See `architecture.md` for
 scope and `validation.md` for observed results.
 
+Read the [development progress index](progress/README.md) for current milestones,
+decisions, and the task journal. Maintain those records as described in `AGENTS.md`.
+
 ## Repository setup
 
 With Git and the GitHub CLI authenticated, create the fork and clone its complete

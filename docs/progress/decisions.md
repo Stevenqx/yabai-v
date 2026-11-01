@@ -1,0 +1,50 @@
+# Decisions
+
+Record significant decisions with a stable ID, date, status, rationale, and links.
+Use proposed, accepted, or superseded status. Add a dated superseding decision
+when a direction changes, and retain the history.
+
+## D001 — Extend the CLI through vspace
+
+Date: 2026-11-01. Status: accepted for the smoke-test milestone.
+
+Keep fork commands under `yabai -m vspace` and isolate their handling from existing
+domains. The current extension implements only `--ping`. This preserves existing
+CLI and layout behavior while keeping the patch small for upstream rebases.
+
+Reference: [architecture boundaries](../architecture.md).
+
+## D002 — Keep SIP enabled and preserve the installed service
+
+Date: 2026-11-01. Status: accepted project constraint.
+
+Fork functionality must work without the scripting addition or root privileges.
+Retain upstream compatibility code while documenting privileged-operation limits.
+Native Space creation/deletion is outside fork scope. Development uses a signed
+checkout binary and explicit config; changes to the installed service require
+explicit authorization, and test sessions must restore its prior state.
+
+References: [agent conventions](../../AGENTS.md),
+[development workflow](../development.md), [recovery results](../validation.md).
+
+## D003 — Preserve upstream architecture and defer new subsystems
+
+Date: 2026-11-01. Status: accepted boundary; future design is pending.
+
+Keep the existing build system, C/Objective-C style, textual inclusion model, and
+BSP/stack/float layouts. Future workspace state belongs in the daemon, with GUI
+and hotkey clients using explicit interfaces. Their detailed design and
+implementation remain future work; no Swift GUI project has been added.
+
+Reference: [architecture boundaries](../architecture.md).
+
+## D004 — Maintain development records alongside changes
+
+Date: 2026-11-01. Status: accepted by the documentation task.
+
+Use a main progress index, milestone checklist, decision log, and dated journal.
+Agents read the index and relevant records before development and update them
+before handoff. Technical guides and validation reports retain detailed evidence;
+the progress documents link to those references to keep status and history clear.
+
+Reference: [maintenance rules](README.md#maintaining-the-record).
