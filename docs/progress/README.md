@@ -12,16 +12,25 @@ restored, and SIP remained enabled.
 
 The upstream base is `dd845723416f5fe92af49fad5ebab00369e07edd`.
 The setup work is recorded in four Conventional Commits ending at `3ec8c49`.
-Build checks for macOS 15 and 26 are configured but have not run on GitHub.
+All six commits through `de6a849` have now been reviewed with no blocking
+findings, and all six headless tests passed again. GitHub read access is working;
+the task branch remains unpublished and build checks for macOS 15 and 26 have
+not run. The persistent-certificate rebuild and signature verification passed
+after manual Keychain authorization.
 Window focusing, switching existing Spaces, and macOS 26 runtime behavior remain
 unverified. See the [validation report](../validation.md) for evidence and limits.
 
 The progress folder and agent maintenance rules are established in M2 and
-committed as `724ba46`. M3 adds a
+committed as `724ba46`. M3, committed as `de6a849`, adds a
 [version-control workflow](../../AGENTS.md#git-and-github-workflow) that requires
 local Conventional Commits for validated work and review before GitHub integration.
 Virtual workspace management, the native GUI, and the hotkey engine are future
 work and require a separately authorized milestone.
+
+The active M1 follow-up is recorded in the
+[validation report](../validation.md#validation-follow-up--2026-11-01), including
+the remaining publication, GUI-session, and macOS 26 requirements. No existing
+service was changed during the follow-up.
 
 ## Supporting documents
 

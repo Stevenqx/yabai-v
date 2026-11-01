@@ -33,7 +33,8 @@ and add the fork URL as `origin`. This does not publish local commits. Push only
 after reviewing the diff and receiving explicit confirmation.
 
 To relocate this existing checkout after finishing the current workspace session,
-first import its prepared commits and stop any foreground development daemon.
+first ensure its local work is committed and stop any foreground development
+daemon. The initial prepared commits are already imported into this checkout.
 Run the following manually only if the destination does not already exist:
 
 ```sh

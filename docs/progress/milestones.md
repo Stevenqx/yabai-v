@@ -20,10 +20,26 @@ Commits: `271fb07`, `e1f1968`, `c8c4a93`, `3ec8c49`.
 
 Validation follow-ups:
 
-- [ ] Review the commits and obtain authorization before pushing.
+- [x] Review the six local commits through `de6a849`; no blocking findings.
+- [ ] Obtain explicit authorization before pushing the task branch.
 - [ ] Run the GitHub Actions matrix on macOS 15 and 26 after publication.
 - [ ] Verify window focusing and existing-Space switching in a suitable session.
 - [ ] Validate runtime behavior on macOS 26.
+
+Active task, 2026-11-01: continue the M1 validation follow-ups before detailed
+design or implementation. Review the local commits, reproduce available local
+checks, inspect publication and GUI-test prerequisites, and record evidence and
+remaining blockers. Publication and changes to the running service still require
+explicit approval; no future subsystem is in scope.
+
+Available checks: six headless tests, shell syntax, workflow YAML/matrix,
+history/whitespace, installed-service queries and unchanged original file hashes
+passed. The persistent-certificate rebuild and signature verification passed
+after manual Keychain authorization. GitHub read access works outside the
+sandbox, but the task branch is unpublished and
+Actions has no runs. Display 1 has two ordinary existing Spaces for an approved
+GUI test; suitable disposable windows still need preparation. See the
+[follow-up evidence and execution plan](../validation.md#validation-follow-up--2026-11-01).
 
 ## M2 — Development process records
 

@@ -66,3 +66,40 @@ Executable behavior is unchanged; no build or daemon test was needed.
 Open issues: the M1 validation follow-ups remain open.
 Next: use the committed workflow for subsequent work and complete M1 validation
 follow-ups when authorized.
+
+## 2026-11-01 — M1 validation follow-up and review
+
+Scope: continue unfinished validation before detailed design or implementation.
+Starting HEAD: `de6a849`, clean `feat/vspace-smoke` working tree and index.
+
+Reviewed all six local commits against upstream
+`dd845723416f5fe92af49fad5ebab00369e07edd`; no blocking findings. Confirmed the
+minimal production-code scope, textual inclusion, existing failure protocol,
+and unchanged upstream handlers/layouts/build system. Corrected the setup-time
+import instructions and GitHub-access limitation; imported commits are already
+present, and read-only GitHub inspection now succeeds outside the sandbox.
+Updated the progress checklist and appended current evidence and a concrete
+remaining-test plan to the [validation report](../validation.md#validation-follow-up--2026-11-01).
+
+Validation: all six headless tests passed, with the same five upstream CoreVideo
+deprecation warnings. The universal `make` build through `./scripts/build-dev.sh`
+passed without warnings; the user handled the Keychain prompt manually.
+Certificate signature verification passed outside the sandbox for all
+architectures, with the same identifier and certificate leaf SHA-1. Shell syntax,
+workflow YAML/macOS 15/26 matrix, upstream history, and baseline-to-HEAD whitespace
+checks passed. The one original Homebrew daemon remains running; its read-only
+queries passed, its three original file hashes still match, and SIP is enabled.
+The rebuilt binary contains x86_64/arm64 and reports `yabai-v7.1.25`. All 29
+local Markdown links, including anchors across eight documents, and
+`git diff --check` passed.
+
+Open issues: publication and CI remain pending explicit approval; the remote task
+branch is absent and Actions has no runs. No service changes or new daemon/GUI
+tests were performed. Display 1 now has two ordinary existing Spaces, but the
+focused Space has no eligible window pair. An approved GUI session needs
+disposable test windows and visible confirmation. macOS 26 runtime still needs
+a separate supplied host/session. These remain validation limits, not passed
+checks; future workspace design and implementation remain deferred.
+
+Next: obtain publication and temporary service-pause approval, run CI for the
+published HEAD and safe GUI tests, then record macOS 26 runtime evidence.
