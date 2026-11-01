@@ -2976,6 +2976,8 @@ static void handle_domain_signal(FILE *rsp, struct token domain, char *message)
     }
 }
 
+#include "vspace.c"
+
 void handle_message(FILE *rsp, char *message)
 {
     struct token domain = get_token(&message);
@@ -2993,6 +2995,8 @@ void handle_message(FILE *rsp, char *message)
         handle_domain_rule(rsp, domain, message);
     } else if (token_equals(domain, DOMAIN_SIGNAL)) {
         handle_domain_signal(rsp, domain, message);
+    } else if (token_equals(domain, DOMAIN_VSPACE)) {
+        handle_domain_vspace(rsp, domain, message);
     } else {
         daemon_fail(rsp, "unknown domain '%.*s'\n", domain.length, domain.text);
     }
