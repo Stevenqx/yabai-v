@@ -103,3 +103,48 @@ checks; future workspace design and implementation remain deferred.
 
 Next: obtain publication and temporary service-pause approval, run CI for the
 published HEAD and safe GUI tests, then record macOS 26 runtime evidence.
+
+## 2026-11-02 — Publish CI and complete macOS 15 GUI checks
+
+Scope: the user approved pushing the reviewed `feat/vspace-smoke` branch at
+`6359db7` and running CI, plus temporary service pauses for focus and existing-Space
+tests with original service, Space, and focus recovery. No merge was authorized
+or performed; no product implementation changed.
+
+Published `6359db75df35aa875b780a4e83fc89ab533b4015` to the fork's `origin`.
+[Actions run 41403274379](https://github.com/Stevenqx/yabai-v/actions/runs/41403274379)
+passed both jobs: macOS 15.8.2 and macOS 26.6.2 arm64 hosts each built and verified
+the universal x86_64/arm64 binary, passed all six headless tests, and passed
+whitespace/shell-syntax checks. Both test builds emitted the same five upstream
+CoreVideo deprecation warnings. CI is build/headless evidence, not a macOS 26
+interactive session.
+
+The signed local binary passed verification, live ping, invalid-command, query,
+and float-config checks. Computer Use blocked Terminal access for safety and a
+Finder inspection timed out; the user manually prepared the disposable windows.
+After an initial query-confirmed sequence, the user requested a repeat and
+confirmed both focus changes (7966 → 7980 → 7966) and the existing-Space round trip
+(Space ID 3 → 7 → 3 on display 1) worked visibly. Each repeated state was held for
+five seconds; queries confirmed focus and visibility as well. No native Space
+was created/deleted and no scripting addition was installed or loaded.
+
+All sessions restored the original service. An initial final-state check caught
+focus changing at original-service startup; restoration through that daemon
+corrected it. Updated the [development workflow](../development.md#manual-daemon-smoke-test)
+to require verifying focus after startup too. Automatic review held the last
+session's completion until visual confirmation, then recovery succeeded. Final
+verification found exactly one Homebrew daemon (PID 9357), original visible
+Spaces and focus restored, all query domains working, original file hashes
+unchanged, and SIP enabled. The two repeat-test windows remain open as promised.
+
+Updated the validation report, main progress index, and M1 checklists. Detailed
+evidence and local log paths are in the
+[latest validation update](../validation.md#publication-and-gui-validation--2026-11-02).
+All 33 local Markdown links, including anchors across eight documents, and
+`git diff --check` passed. No new executable changes were made, so additional
+local builds or test runs are unnecessary.
+
+Remaining limitation: the user confirmed no macOS 26 GUI host/session is
+available. Its interactive runtime check remains unrun; detailed design and
+implementation remain deferred. Next: obtain that host/session and record its
+runtime evidence before closing M1 or explicitly revise the validation gate.

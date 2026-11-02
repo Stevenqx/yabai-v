@@ -1,5 +1,10 @@
 # Validation report — 2026-11-01
 
+Latest update: the [2026-11-02 publication and GUI validation](#publication-and-gui-validation--2026-11-02)
+records passing macOS 15/26 CI and visually confirmed macOS 15 GUI checks.
+macOS 26 interactive runtime remains unverified; the user has no available host.
+The initial results below are retained as historical evidence.
+
 ## Environment and upstream
 
 - macOS 15.6 (24G84), Apple Silicon (`arm64`); SIP enabled throughout.
@@ -178,3 +183,93 @@ IDs and indices immediately before use because the desktop can change again.
 No publication, service change, new daemon, window focusing, or Space switching
 has been performed in this follow-up. Detailed workspace design and implementation
 remain deferred until the validation follow-ups are resolved.
+
+## Publication and GUI validation — 2026-11-02
+
+The user explicitly approved pushing the reviewed branch at `6359db7` and
+running its CI, plus a brief GUI test session with recovery of the original
+service, Space, and focus. Published only `feat/vspace-smoke` to the fork's
+`origin`; no pull request or merge was performed. Tested source commit:
+`6359db75df35aa875b780a4e83fc89ab533b4015`.
+
+### GitHub Actions
+
+[Run 41403274379](https://github.com/Stevenqx/yabai-v/actions/runs/41403274379)
+completed successfully for that exact commit. Both jobs built the universal
+x86_64/arm64 binary with the existing makefile, verified its ad-hoc signature,
+checked the architectures and version, passed all six headless tests, and passed
+whitespace and shell-syntax checks.
+
+| Job | Actual hosted OS/image | Result |
+| --- | --- | --- |
+| [macOS 15](https://github.com/Stevenqx/yabai-v/actions/runs/41403274379/job/125139569754) | 15.8.2 (24H232), `macos-15-arm64` image `20261028.0489.1` | Passed, 6/6 tests |
+| [macOS 26](https://github.com/Stevenqx/yabai-v/actions/runs/41403274379/job/125139569916) | 26.6.2 (25G83), `macos-26-arm64` image `20261026.0455.2` | Passed, 6/6 tests |
+
+Both headless test builds emit the same five upstream CoreVideo deprecation
+warnings. The Actions logs are also saved locally at
+`/private/tmp/yabai-v-ci-41403274379.log`. Hosted build/test success does not
+establish interactive macOS 26 runtime compatibility.
+
+### Approved macOS 15.6 GUI session
+
+The existing certificate-signed binary passed strict verification for all
+architectures before startup. Confirmed exactly one original Homebrew daemon
+before stopping it and no competing daemon before starting the checkout binary
+with dedicated IPC names and `examples/yabairc.dev`. The float configuration,
+exact live ping JSON, invalid-command failures, and display/Space/window queries
+passed again.
+
+Computer Use refused access to Terminal for safety; a separate Finder inspection
+timed out and reset its runtime. The user manually prepared the disposable idle
+terminal windows. The first window-identification check missed Terminal's
+localized app name (`终端`); correcting that check identified the intended pair
+on display 1, Space 1. No terminal commands were entered into those windows.
+
+The first completed focus sequence (windows 7864 → 7875 → 7864) and existing-Space
+round trip passed queries. Those disposable windows were closed during cleanup.
+The user requested a repeat to observe the changes, prepared a new pair, and
+confirmed **both worked visibly** after the following slower sequence:
+
+| Operation | Query evidence | Visual evidence |
+| --- | --- | --- |
+| Focus windows 7966 → 7980 → 7966 | Each selected window became focused and visible | User confirmed; each step held for 5 seconds |
+| Switch display 1 from Space ID 3 (index 1) to ID 7 (index 2), then back to ID 3 | Correct ID, `has-focus`, and `is-visible` after each command | User confirmed; each destination held for 5 seconds |
+
+No native Space was created or deleted, and no scripting addition was installed
+or loaded. These are real macOS 15.6 GUI results with SIP enabled; they do not
+establish GUI runtime behavior on macOS 26.
+
+### Recovery and remaining limitation
+
+All test sessions stopped the development process and restored the original
+service. The first restoration check found that original-service startup had
+changed focus after the pre-shutdown restoration. Restoring focus again through
+the original daemon corrected it. Subsequent sessions verified restoration both
+before stopping the development daemon and after the original service started.
+
+Automatic approval review held completion of the final test session until the
+user's visual confirmation arrived. The session then ended successfully without
+closing the repeat-test windows. Final verification found exactly one original
+Homebrew daemon, PID 9357, running `/opt/homebrew/bin/yabai`. All three query
+domains passed; original Space ID 395 on display 2 and Orca window 6369 were
+focused, and the original set of visible Spaces was restored. The original
+binary, user configuration, and LaunchAgent hashes still match the values above.
+SIP remained enabled. Windows 7966 and 7980 remain open as promised.
+
+Logs and event snapshots:
+
+- Initial Space-query round trip: `/private/tmp/yabai-fork-runtime.08BMuJ`.
+- First focus/Space sequence and recovery: `/private/tmp/yabai-fork-runtime.gLZGpg`.
+- Visually confirmed repeat: `/private/tmp/yabai-fork-runtime.zKEAQX`, including
+  `gui-events-repeat.json`, signature, daemon, recovery, and hash records.
+- Original and final desktop snapshots:
+  `/private/tmp/yabai-v-approved-gui-yuh58lw1`.
+
+The user confirmed that no macOS 26 GUI host/session is available. That runtime
+check remains **unrun**, independently of the passing macOS 26 CI job. It is the
+remaining M1 validation follow-up; detailed design and implementation remain
+deferred pending its evidence or an explicitly revised validation gate.
+
+The resulting documentation changes passed all 33 local Markdown link checks
+(including anchors across eight documents) and `git diff --check`. No executable
+behavior changed after the CI-tested commit.

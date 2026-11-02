@@ -166,6 +166,11 @@ Stop only the foreground development process with Ctrl-C. An existing Homebrew
 binary, service plist, and user configuration must remain intact. If the original
 service was stopped during an approved test, restore its prior state explicitly
 and verify its queries; do not leave recovery to an automated cleanup guess.
+Verify the original visible Spaces and focused window again after the original
+service starts: startup can change focus even if it was restored before stopping
+the development daemon. Keep visual confirmation distinct from command exits
+and queried state, and leave disposable test windows open when a repeat check
+has been requested until its result is confirmed.
 
 ## Debugging
 
