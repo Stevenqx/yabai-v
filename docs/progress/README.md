@@ -32,8 +32,26 @@ work and require a separately authorized milestone.
 The completed publication and macOS 15 GUI checks are recorded in the
 [latest validation update](../validation.md#publication-and-gui-validation--2026-11-02).
 The remaining M1 follow-up is macOS 26 interactive runtime validation; detailed
-design and implementation remain deferred. Two disposable terminal windows from
-the confirmed repeat remain open as promised.
+design and implementation remain deferred. At the 2026-11-02 handoff, the two
+disposable terminal windows from the confirmed repeat were left open as promised.
+
+## Resuming work
+
+Handoff checked on 2026-11-03. Use this checkout on `feat/vspace-smoke`, which
+includes the validation-record commit `dbdc0c0`. The published, CI-tested commit
+is `6359db7`; the later validation records are local, so a fresh GitHub clone
+needs those documentation commits before it has the same handoff context.
+
+1. Inspect the branch and working tree, then read the milestones, decisions,
+   latest journal entry, and linked technical guides. Treat recorded PIDs,
+   window IDs, and desktop state as historical; recheck them before use.
+2. Resume M1 with macOS 26 interactive runtime validation when a GUI host/session
+   becomes available. Follow the signed-build, GUI, and recovery procedure in
+   the development guide; keep the remaining check unrun until evidence exists.
+3. After that evidence or an explicit user revision of the validation gate,
+   define a separately authorized design milestone for daemon-owned workspace
+   state and SIP-compatible window visibility/assignment. Detailed design,
+   workspace implementation, GUI, and hotkey work are not currently authorized.
 
 ## Supporting documents
 

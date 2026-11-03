@@ -148,3 +148,24 @@ Remaining limitation: the user confirmed no macOS 26 GUI host/session is
 available. Its interactive runtime check remains unrun; detailed design and
 implementation remain deferred. Next: obtain that host/session and record its
 runtime evidence before closing M1 or explicitly revise the validation gate.
+
+## 2026-11-03 — Verify the repository handoff
+
+Scope: confirm that another agent can reconstruct current progress and continue
+from the repository. Starting HEAD: `dbdc0c0` on `feat/vspace-smoke`, with a clean
+working tree and one local commit beyond the published tracking branch.
+
+Checked the agent instructions, progress index, milestones, decisions, journal,
+validation report, architecture boundaries, and development guide. They record
+the implemented ping command, passing macOS 15/26 CI at `6359db7`, visually
+confirmed macOS 15 GUI checks, recovery evidence, and the unavailable macOS 26
+runtime host. Added explicit resume instructions and the distinction between
+local validation records and the published, CI-tested commit to the progress
+index. Historical desktop identifiers must be rechecked before reuse.
+
+Validation: all 33 local Markdown links, including anchors across eight
+documents, and `git diff --check` passed.
+No executable or host state changed, so builds and runtime tests are unnecessary.
+Next: resume the remaining macOS 26 runtime check when a host is supplied, or
+obtain an explicit revision of the validation gate before a separately
+authorized design milestone. No push or merge was performed for this audit.
