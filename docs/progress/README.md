@@ -27,8 +27,10 @@ hotkeys, and Milestone 2 remain deferred.
 ## Resuming work
 
 Handoff/task start checked on 2026-11-03. Active branch: `feat/vspace-mapping`,
-starting from `93a59ed`. The mapping branch and its new documentation are local;
-no new implementation has been published or CI-tested.
+starting from `93a59ed`, with scope checkpoint `21a6e6f`. The manager foundation
+is implemented and passes a universal build and 13 headless tests. CLI/startup
+wiring remains next. This branch and its documentation are local; no Milestone 1
+implementation has been published or CI-tested.
 
 1. Inspect branch/tree and read milestones, decisions, journal, architecture,
    development guide, and latest validation. Recheck all historical host state.

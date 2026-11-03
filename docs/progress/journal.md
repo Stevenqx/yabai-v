@@ -209,3 +209,22 @@ changes; build/runtime checks are unnecessary for this checkpoint.
 
 Next: implement and test the independent manager and vspace commands. New CI
 publication and interactive service changes require separate approval.
+
+## 2026-11-03 — Implement the independent mapping manager
+
+Scope: Milestone 1 manager foundation, following scope checkpoint `21a6e6f`.
+Added native adapters and headless-testable mapping/focus policy, atomic startup
+snapshot construction, conservative ordinary-window occupancy, global indices,
+separate internal IDs, duplicate prevention, and session stability. Focus reuses
+upstream and checks native activation. No upstream domain or layout code changed;
+CLI/startup integration remains the next coherent unit.
+
+Validation: `make` passed without warnings; 13/13 headless tests passed with the
+five existing upstream CoreVideo warnings. Local Markdown links and whitespace
+checks passed. Read-only inspection confirms SIP enabled, one original Homebrew
+daemon (PID 9357), and only the earlier Milestone 0 CI run. Updated architecture,
+validation, decision D008, milestones, and resume notes. No new daemon or service
+change, publication, or GUI test occurred.
+
+Next: wire startup and the strict vspace commands, extend dispatcher regression
+tests, sign/verify the final binary, then prepare concrete CI/interactive approval.

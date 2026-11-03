@@ -12,12 +12,20 @@ typedef TEST_SIG(function);
 #define TEST_CHECK(r, e) if ((r) != (e)) { printf("                   \e[1;33m%s\e[m\e[1;31m#%d %s == %s\e[m \e[1;31m(%d == %d)\e[m\n", test_name, __LINE__, #r, #e, r, e); result = false; }
 
 #include "area.c"
+#include "virtual_workspace_manager.c"
 #include "vspace.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
 #define TEST_LIST                                              \
     TEST_ENTRY(display_area_is_in_direction)                   \
     TEST_ENTRY(closest_display_in_direction)                    \
+    TEST_ENTRY(virtual_workspace_mapping_and_order)             \
+    TEST_ENTRY(virtual_workspace_lookup_and_session_stability)  \
+    TEST_ENTRY(virtual_workspace_duplicate_prevention)          \
+    TEST_ENTRY(virtual_workspace_incomplete_enumeration)        \
+    TEST_ENTRY(virtual_workspace_window_occupancy)              \
+    TEST_ENTRY(virtual_workspace_focus_native_id)               \
+    TEST_ENTRY(virtual_workspace_focus_failures)                \
     TEST_ENTRY(vspace_ping)                                    \
     TEST_ENTRY(vspace_missing_command)                         \
     TEST_ENTRY(vspace_unknown_command)                         \

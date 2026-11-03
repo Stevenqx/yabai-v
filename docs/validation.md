@@ -273,3 +273,20 @@ deferred pending its evidence or an explicitly revised validation gate.
 The resulting documentation changes passed all 33 local Markdown link checks
 (including anchors across eight documents) and `git diff --check`. No executable
 behavior changed after the CI-tested commit.
+
+## Milestone 1 manager foundation — 2026-11-03
+
+Starting checkpoint: `21a6e6f` on `feat/vspace-mapping`. Local macOS 15.6 arm64,
+SIP enabled. `make` passed without warnings and produced the universal binary.
+`make -C tests` passed 13/13 tests; only the same five upstream CoreVideo
+deprecation warnings appeared. Added tests cover native order across displays,
+empty active versus spare Spaces, unknown occupancy, duplicate prevention,
+atomic enumeration failures, stable session mappings, lookup, ordinary floating
+and minimized windows under BSP/float layouts, native focus IDs, stale targets,
+native errors, and silent activation failure. `git diff --check` passed.
+
+This checkpoint compiles/tests the independent manager without starting it in
+the daemon; CLI/startup wiring follows. The original Homebrew daemon remains
+PID 9357 at this read-only check. No service, desktop, or signing trust changed.
+The only GitHub CI run remains Milestone 0's `41403274379`; Milestone 1 has not
+been published. No interactive Milestone 1 runtime result is claimed.

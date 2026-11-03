@@ -100,8 +100,8 @@ upstream domain semantics, layouts, build system, and installed service.
 
 - [x] Inspect the branch, clean tree, previous changes, records, and native APIs.
 - [x] Align earlier development tasks under Milestone 0 and record active scope.
-- [ ] Initialize in native display/Space order using native IDs and occupancy.
-- [ ] Include ordinary floating windows and conservatively retain unknown Spaces.
+- [x] Initialize in native display/Space order using native IDs and occupancy.
+- [x] Include ordinary floating windows and conservatively retain unknown Spaces.
 - [ ] Implement documented JSON queries and native focus with CLI failures.
 - [ ] Test mapping, ordering, lookup, duplicate prevention, layouts, and bad input.
 - [ ] Build locally, verify persistent signing, and run headless/regression checks.

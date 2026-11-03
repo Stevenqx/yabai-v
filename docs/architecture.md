@@ -47,3 +47,32 @@ This milestone adds neither subsystem nor a Swift project.
 
 Keep upstream changes small: add a command domain and isolated implementation,
 extend the existing tests, and leave existing domain handlers and layouts intact.
+
+## Milestone 1 manager foundation
+
+`src/virtual_workspace_manager.h` and `.c` define an independent daemon-owned
+mapping module, textually included by the manifest. The native adapter uses the
+existing active-display and display-Space lists and WindowServer queries. A
+query-source interface allows the same mapping/focus policy to run headlessly.
+The CLI/startup connection follows in the next implementation checkpoint.
+
+Initialization traverses native display order, then each display's native Space
+order. It assigns separate sequential internal IDs and global one-based visible
+indices to occupied, uncertain, and globally active Spaces. Confirmed-empty
+inactive Spaces are spare. Duplicate native IDs cannot produce two mappings;
+conflicting display ownership or incomplete enumeration fails atomically.
+Repeated initialization preserves the original session snapshot.
+
+Occupancy uses the native window list with hidden/minimized windows included,
+then tracked AX roles. Ordinary standard, floating, and dialog windows count
+regardless of tiling or float flags. Missing AX information and untracked native
+candidates at upstream's ordinary window levels are unknown, hence allocated.
+Failed queries and incomplete native iteration are also unknown. Known desktop
+and nonordinary windows do not alone allocate a Space. No BSP tree is consulted.
+
+Focus resolves only a virtual index, checks the native display association, and
+calls `space_manager_focus_space` unchanged. It translates native failures and
+checks native active state for approximately one second, because upstream's
+gesture fallback can report success without switching. No new scripting-addition
+requirement is introduced. External Space/display changes do not reassign IDs;
+stale targets fail and startup rebuilding remains the recovery mechanism.

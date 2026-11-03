@@ -86,3 +86,22 @@ Only this milestone is authorized; lifecycle, movement, persistence, GUI, and
 hotkeys remain deferred. Publication and service changes still require approval.
 
 Reference: [Milestone 1 scope](milestones.md#milestone-1--virtual-workspace-mapping-and-focusing).
+
+## D008 — Freeze a conservative native mapping for each session
+
+Date: 2026-11-03. Status: accepted for Milestone 1.
+
+Keep VirtualWorkspaceManager independent of native layout state. Use native
+Space IDs and display IDs, separate internal virtual IDs and global visible
+indices, and native enumeration order. Allocate occupied/uncertain Spaces and
+the globally active Space; confirmed-empty inactive Spaces remain spare.
+Incomplete window metadata must not establish emptiness. Include floating,
+hidden, and minimized ordinary windows without consulting the BSP tree.
+
+Build the snapshot atomically after native managers are ready. Freeze it until
+restart; dynamic allocation, reassociation, and persistence are future work.
+Reject stale native/display associations at focus time. Reuse upstream native
+focus unchanged and verify observed activation to catch silent gesture failure.
+A small query-source interface supports deterministic headless policy tests.
+
+Reference: [manager architecture](../architecture.md#milestone-1-manager-foundation).
