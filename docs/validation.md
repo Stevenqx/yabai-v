@@ -1,9 +1,9 @@
 # Validation report — 2026-11-01
 
-Latest update: the [2026-11-02 publication and GUI validation](#publication-and-gui-validation--2026-11-02)
-records passing macOS 15/26 CI and visually confirmed macOS 15 GUI checks.
-macOS 26 interactive runtime remains unverified; the user has no available host.
-The initial results below are retained as historical evidence.
+Latest update: [Milestone 1 commands and local validation](#milestone-1-commands-and-local-validation--2026-11-03).
+The [Milestone 0 publication and GUI validation](#publication-and-gui-validation--2026-11-02)
+remains historical evidence. New CI and interactive checks are pending approval;
+macOS 26 interactive runtime remains unavailable. Earlier results are retained.
 
 ## Environment and upstream
 
@@ -290,3 +290,108 @@ the daemon; CLI/startup wiring follows. The original Homebrew daemon remains
 PID 9357 at this read-only check. No service, desktop, or signing trust changed.
 The only GitHub CI run remains Milestone 0's `41403274379`; Milestone 1 has not
 been published. No interactive Milestone 1 runtime result is claimed.
+
+## Milestone 1 commands and local validation — 2026-11-03
+
+Branch: `feat/vspace-mapping`. Scope checkpoint `21a6e6f`, manager checkpoint
+`36e9ac8`; the next implementation commit integrates startup and CLI commands.
+The user authorizes this milestone despite the prior unavailable macOS 26 GUI
+host. All earlier tasks belong to Milestone 0; old milestone labels in historical
+entries do not change the current roadmap.
+
+### Executed checks
+
+| Check | Result |
+| --- | --- |
+| `./scripts/build-dev.sh` (runs `make`) | Passed; no production compiler warnings |
+| Persistent certificate signature, strict/all architectures | Passed; `yabai-fork Development`, identifier `com.yabai-fork.development`, unchanged certificate leaf SHA-1 `85c2410619477a69b324ed91bb1ff677f4e2e775` |
+| Universal architecture check and version | Passed; x86_64/arm64, `yabai-v7.1.25` |
+| `make -C tests` | Passed, 22/22; same five upstream CoreVideo deprecation warnings |
+| Clang static analyzer, arm64 manifest | Passed, no findings |
+| `sh -n scripts/build-dev.sh examples/yabairc.dev` | Passed |
+| Local Markdown links/anchors and `git diff --check` | Passed |
+| Compare native handlers, layout code, and build/test/CI files to `93a59ed` | Unchanged; includes `src/message.c`, native Space/display/window managers, and `src/view.c` |
+| Checkout CLI read-only queries against installed daemon | Passed; 2 displays, 4 native Spaces, 5 windows |
+| Read-only native adapter probe (no daemon/focus) | Passed; native Spaces 3/589 allocated as unknown ordinary candidates, 7/592 confirmed empty/spare; JSON/current and global indices matched |
+| Original binary/config/LaunchAgent SHA-256 | Matches all three Milestone 0 values above |
+| New macOS 15/26 GitHub Actions matrix | **Unrun**, local branch needs publication approval |
+| New daemon and interactive vspace focus | **Unrun**, requires explicit service-pause approval |
+| macOS 26 interactive runtime | **Unrun**, no GUI host/session supplied |
+
+The 22 tests include the two upstream geometry tests and original ping/error
+tests. New tests exercise an all-empty multi-display snapshot (only the globally
+active Space is allocated), occupied/spare/unknown mappings, display/Space order,
+global indices, session stability, duplicate/conflicting ownership, atomic query
+failure, lookup, BSP/float occupancy including minimized and floating windows,
+64-bit serialization, strict/overflowing indices, pre-action argument checks,
+current/unmapped responses, exact JSON, native focus ID dispatch and failures,
+stale targets, and a dispatched gesture that never activates the target.
+Known nonordinary/desktop windows, native system-UI tags, ordinary tags at
+unusual levels, and missing/unknown AX metadata are covered.
+
+Review strengthened conservative occupancy: explicit AXUnknown data and untracked native
+ordinary-window candidates remain unknown, regardless of floating level. The
+existing native ordinary-window tag predicate excludes nonordinary system UI. False-positive allocation
+of visually empty Spaces with unidentified system UI is intentional and
+[documented](vspace.md#startup-policy-and-session-stability). Startup snapshot
+freezing and focus timeout behavior are limitations, not lifecycle support.
+
+The signed read-only native probe compiled the production manifest with the
+normal daemon entry point disabled and initialized empty lookup tables. It did
+not register event handlers, load configuration, start a daemon, or call focus.
+It verified the real display/Space lists and native occupancy adapter: occupied
+Spaces 3/589 remained conservatively allocated without AX tracking, while empty
+Spaces 7/592 remained spare after excluding native nonordinary system UI. Its
+list/current JSON matched the active native Space and had unique global indices.
+This is native-query evidence, not an interactive daemon session. The initial
+probe crashed because its temporary harness omitted the lookup-table setup;
+the crash report confirmed that cause. Correcting only the probe setup fixed it.
+The first successful run then exposed overly broad unknown classification of
+system UI, which was corrected in production using upstream's native tag test
+and covered by focused unit cases and a successful probe rerun.
+
+No regression was detected in these checks. Read-only installed-daemon queries
+exercise the unchanged CLI client and the installed native handlers; they do not
+validate the new manager in a real daemon. No new binary was installed, no daemon
+was started/stopped, and no desktop focus/layout was changed. SIP remains enabled.
+
+Logs: `/private/tmp/yabai-v-m1-build.log`, `yabai-v-m1-signature.log`,
+`yabai-v-m1-tests.log`, and `yabai-v-m1-analyzer.log` in the same directory.
+Read-only installation/query baseline: `/private/tmp/yabai-v-m1-baseline.j8r6f3ko`.
+Probe source: `/private/tmp/yabai-v-m1-native-probe.m`; results:
+`/private/tmp/yabai-v-m1-native-probe.jsonl` and the corresponding `.log`.
+An initial baseline helper used the wrong LaunchAgent filename and failed after
+successful queries; inspecting the directory and rerunning with
+`com.asmvik.yabai.plist` completed the baseline. No files were changed by it.
+
+### Prepared approval-dependent checks
+
+1. After diff review and publication approval, push only `feat/vspace-mapping`
+   to `origin` (including its unpublished foundation documentation ancestry).
+   Wait for the existing macOS 15/26 matrix and record the exact tested SHA,
+   results, and logs. Do not merge or rewrite the published smoke-test branch.
+2. After explicit approval to pause the original service, recheck all host state,
+   signature, original file hashes, visible Spaces, focus, and a safe mapped
+   destination. The read-only baseline currently shows original PID 9357,
+   active native Space 589 on display 2, Orca window 6369, and occupied native
+   Space 3 visible on display 1. These identifiers are historical at handoff.
+3. Pause only the inspected original LaunchAgent, verify no daemon remains,
+   start the signed checkout binary with the existing float development config,
+   and query ping/list/current plus native displays/Spaces/windows. Validate
+   actual occupancy and index/native-ID associations before focusing anything.
+4. Focus a safe mapped existing destination and return to the original virtual
+   index, holding each state for five seconds for visual confirmation. Verify
+   current/list/native state and unchanged window frames, associations, and
+   layout settings across the focus calls. Never move windows or create Spaces
+   to prepare a target. If no safe mapped target exists, record a skipped focus
+   check instead of manufacturing one. Distinguish cross-display focusing of
+   visible Spaces from switching to an inactive Space.
+5. Stop only the development process and restore the original service. Verify
+   original visible Spaces and focused window after service startup too, compare
+   installation hashes, and record any upstream startup effects separately.
+   Keep query evidence separate from visual confirmation.
+
+Both operations need user approval under `AGENTS.md`; earlier approval covered
+only the old smoke-test branch/session. The prepared result is fully local and
+reviewable. Milestone 1 implementation is complete, but these checks remain open;
+Milestone 2 has not begun.

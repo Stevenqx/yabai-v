@@ -7,23 +7,16 @@ translation unit; the makefile also links upstream's embedded scripting-addition
 payloads. Building those bytes does not install or load the scripting addition.
 
 The new `vspace` domain is dispatched through the same daemon message interface.
-Its implementation belongs in `src/vspace.c`, included after the shared token
-helpers are available. For this milestone it has no state and no macOS API calls.
+Command handling belongs in `src/vspace.c`, included after the shared token
+helpers are available. Milestone 0's exact `--ping` response is preserved.
+Milestone 1 adds `--list`, `--current`, and `--focus N`; see the
+[command and JSON contract](vspace.md). Existing native selectors and domain
+handlers are unchanged.
 
-```
-./bin/yabai -m vspace --ping
-{"status":"ok","component":"vspace"}
-```
-
-The response proves that the request reached a daemon containing the extension.
-It does not report Accessibility permission, scripting-addition availability,
-layout health, or virtual workspace support. Missing/unknown commands and extra
-arguments fail using the existing CLI error protocol.
-
-Future virtual workspace state should remain separate from native macOS Spaces
-and layout algorithms. The daemon will own that state; any future native overlay
-or integrated hotkey engine will use explicit interfaces to request changes.
-This milestone adds neither subsystem nor a Swift project.
+The daemon owns a separate `virtual_workspace_manager`, initialized after the
+native Space and window managers and before the message loop/configuration.
+It owns only mapping state, never window positions or layout state. Future GUI
+and hotkey clients must use the message interface; they do not exist yet.
 
 ## Compatibility and limitations
 
@@ -39,8 +32,8 @@ This milestone adds neither subsystem nor a Swift project.
   a successful CLI exit does not establish that a synthesized gesture worked.
 - Window focusing and tiling require Accessibility permission and a GUI session.
   Screen Recording is only relevant to optional upstream animation features.
-- Virtual workspaces, workspace persistence, GUI overlays, hotkey handling, and
-  display/window reassignment policies are not implemented.
+- Virtual workspace mapping/focusing is implemented. Dynamic allocation,
+  persistence, GUI, hotkeys, and display/window reassignment remain deferred.
 - A separate `USER` value changes upstream socket/lock names but does not isolate
   two daemons from the same WindowServer session. Never use it as justification
   to run competing window managers.
@@ -54,7 +47,9 @@ extend the existing tests, and leave existing domain handlers and layouts intact
 mapping module, textually included by the manifest. The native adapter uses the
 existing active-display and display-Space lists and WindowServer queries. A
 query-source interface allows the same mapping/focus policy to run headlessly.
-The CLI/startup connection follows in the next implementation checkpoint.
+Startup initializes the mapping before requests arrive. Enumeration failure
+logs a warning and leaves the new mapping commands unavailable; the original
+daemon commands and ping continue to work.
 
 Initialization traverses native display order, then each display's native Space
 order. It assigns separate sequential internal IDs and global one-based visible
@@ -65,8 +60,9 @@ Repeated initialization preserves the original session snapshot.
 
 Occupancy uses the native window list with hidden/minimized windows included,
 then tracked AX roles. Ordinary standard, floating, and dialog windows count
-regardless of tiling or float flags. Missing AX information and untracked native
-candidates at upstream's ordinary window levels are unknown, hence allocated.
+regardless of tiling or float flags. Missing or unknown AX roles and untracked native
+ordinary-window candidates are unknown, hence allocated. Native desktop levels
+and the existing ordinary-window tag predicate exclude system UI without AX.
 Failed queries and incomplete native iteration are also unknown. Known desktop
 and nonordinary windows do not alone allocate a Space. No BSP tree is consulted.
 

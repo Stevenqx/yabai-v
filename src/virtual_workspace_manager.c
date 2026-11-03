@@ -1,16 +1,17 @@
 extern struct window_manager g_window_manager;
 extern int g_connection;
 
-static enum virtual_workspace_occupancy virtual_workspace_classify_window(struct window *window, uint32_t parent_wid, int level)
+static enum virtual_workspace_occupancy virtual_workspace_classify_window(struct window *window, int level, uint64_t tags)
 {
     if (window) {
-        if (!window_role(window) || !window_subrole(window)) return VIRTUAL_WORKSPACE_UNKNOWN;
+        if (!window_role(window) || !window_subrole(window) || window_is_unknown(window)) return VIRTUAL_WORKSPACE_UNKNOWN;
         return window_is_real(window) ? VIRTUAL_WORKSPACE_OCCUPIED : VIRTUAL_WORKSPACE_EMPTY;
     }
 
-    /* Same ordinary window levels as space_window_list; AX may not be ready. */
-    if (parent_wid == 0 && (level == 0 || level == 3 || level == 8)) return VIRTUAL_WORKSPACE_UNKNOWN;
-    return VIRTUAL_WORKSPACE_EMPTY;
+    /* Exclude desktop and native nonordinary windows, as space_window_list does. */
+    if (level <= CGWindowLevelForKey(kCGDesktopIconWindowLevelKey)) return VIRTUAL_WORKSPACE_EMPTY;
+    if (!((tags & 0x1) || ((tags & 0x2) && (tags & 0x80000000)))) return VIRTUAL_WORKSPACE_EMPTY;
+    return VIRTUAL_WORKSPACE_UNKNOWN;
 }
 
 static enum virtual_workspace_occupancy virtual_workspace_native_occupancy(uint64_t sid)
@@ -44,7 +45,7 @@ static enum virtual_workspace_occupancy virtual_workspace_native_occupancy(uint6
         ++seen;
         uint32_t wid = SLSWindowIteratorGetWindowID(iterator);
         struct window *window = window_manager_find_window(&g_window_manager, wid);
-        enum virtual_workspace_occupancy occupancy = virtual_workspace_classify_window(window, SLSWindowIteratorGetParentID(iterator), SLSWindowIteratorGetLevel(iterator));
+        enum virtual_workspace_occupancy occupancy = virtual_workspace_classify_window(window, SLSWindowIteratorGetLevel(iterator), SLSWindowIteratorGetTags(iterator));
         if (occupancy == VIRTUAL_WORKSPACE_OCCUPIED) {
             result = occupancy;
             goto out;

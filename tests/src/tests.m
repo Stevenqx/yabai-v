@@ -19,6 +19,7 @@ typedef TEST_SIG(function);
 #define TEST_LIST                                              \
     TEST_ENTRY(display_area_is_in_direction)                   \
     TEST_ENTRY(closest_display_in_direction)                    \
+    TEST_ENTRY(virtual_workspace_only_empty_active)             \
     TEST_ENTRY(virtual_workspace_mapping_and_order)             \
     TEST_ENTRY(virtual_workspace_lookup_and_session_stability)  \
     TEST_ENTRY(virtual_workspace_duplicate_prevention)          \
@@ -29,7 +30,15 @@ typedef TEST_SIG(function);
     TEST_ENTRY(vspace_ping)                                    \
     TEST_ENTRY(vspace_missing_command)                         \
     TEST_ENTRY(vspace_unknown_command)                         \
-    TEST_ENTRY(vspace_extra_argument)
+    TEST_ENTRY(vspace_extra_argument)                          \
+    TEST_ENTRY(vspace_list_and_current)                        \
+    TEST_ENTRY(vspace_uninitialized)                           \
+    TEST_ENTRY(vspace_invalid_indices)                         \
+    TEST_ENTRY(vspace_reject_extra_arguments)                   \
+    TEST_ENTRY(vspace_focus_and_current)                        \
+    TEST_ENTRY(vspace_focus_errors)                             \
+    TEST_ENTRY(vspace_64_bit_ids)                               \
+    TEST_ENTRY(vspace_preserve_existing_dispatch)
 
 static struct {
     char *name;

@@ -228,3 +228,43 @@ change, publication, or GUI test occurred.
 
 Next: wire startup and the strict vspace commands, extend dispatcher regression
 tests, sign/verify the final binary, then prepare concrete CI/interactive approval.
+
+## 2026-11-03 — Integrate virtual workspace commands and validate locally
+
+Scope: finish Milestone 1 implementation after manager checkpoint `36e9ac8`.
+Initialized the independent manager after native managers and before message/config
+processing, with a nonfatal warning on failed enumeration. Added strict list,
+current, and focus commands with documented JSON and established daemon failures;
+retained exact ping and original domains. Review tightened unknown AX/untracked
+window classification, including unusual levels, and added the all-empty case. A
+read-only native probe then identified system UI on empty Spaces; applying
+upstream’s ordinary-window tag predicate excludes it without dropping unknown
+ordinary candidates.
+Updated the command guide, architecture, development procedure, milestone status,
+validation report, and resume instructions. No Milestone 2 work was started.
+
+Validation: signed universal `make` build and strict/all-architecture verification
+passed with the persistent certificate and unchanged identity. All 22 tests pass,
+with the same five upstream CoreVideo warnings; arm64 Clang analysis has no
+findings. Shell syntax, local Markdown links/anchors, and whitespace checks pass.
+Native handlers/layouts and build/test/CI infrastructure are byte-for-byte
+unchanged from `93a59ed`. The built CLI's read-only original-daemon queries pass
+(2 displays, 4 Spaces, 5 windows); all three original installation hashes match.
+The signed read-only native probe confirmed real native ordering, conservative
+occupied mapping, empty spare Spaces, and list/current JSON without any daemon
+or focus calls. Its first temporary harness omitted lookup-table initialization
+and crashed; initializing those tables fixed the harness. Its next run exposed
+system-UI false allocation, corrected with the native tag predicate and confirmed
+by another probe run and unit cases.
+The first baseline helper used an incorrect plist filename; directory inspection
+and rerun completed the read-only baseline without changing host files.
+
+No regression was detected within executed checks. No service or desktop changes,
+new daemon, push, or merge occurred. New macOS 15/26 CI and interactive smoke
+checks remain **unrun** pending explicit publication/service-pause approval.
+macOS 26 GUI runtime still lacks a host. Mapping remains a startup snapshot;
+unknown occupancy may conservatively allocate a visually empty Space.
+
+Evidence and concrete next checks: [Milestone 1 validation](../validation.md#milestone-1-commands-and-local-validation--2026-11-03).
+Next: request approval for the completed branch's publication/CI and a brief
+interactive virtual-focus round trip with full original-service/focus recovery.

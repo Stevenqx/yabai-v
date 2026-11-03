@@ -29,6 +29,7 @@ struct process_manager g_process_manager;
 struct display_manager g_display_manager;
 struct window_manager g_window_manager;
 struct space_manager g_space_manager;
+struct virtual_workspace_manager g_virtual_workspace_manager;
 struct memory_pool g_signal_storage;
 struct mouse_state g_mouse_state;
 struct event_loop g_event_loop;
@@ -336,6 +337,10 @@ int main(int argc, char **argv)
     window_manager_init(&g_window_manager);
     space_manager_begin(&g_space_manager);
     window_manager_begin(&g_space_manager, &g_window_manager);
+
+    if (!virtual_workspace_manager_begin(&g_virtual_workspace_manager, NULL)) {
+        warn("yabai: could not initialize virtual workspace mapping.\n");
+    }
 
     if (workspace_is_macos_sequoia() || workspace_is_macos_tahoe()) {
         update_window_notifications();

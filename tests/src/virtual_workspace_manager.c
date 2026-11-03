@@ -84,6 +84,26 @@ static const struct virtual_workspace_source virtual_workspace_test_source = {
 
 static const uint64_t virtual_workspace_test_order[] = { 700, 300, 500, 400 };
 
+static enum virtual_workspace_occupancy virtual_workspace_test_empty(uint64_t sid)
+{
+    (void) sid;
+    return VIRTUAL_WORKSPACE_EMPTY;
+}
+
+TEST_FUNC(virtual_workspace_only_empty_active,
+{
+    virtual_workspace_test_reset();
+    struct virtual_workspace_source source = virtual_workspace_test_source;
+    source.occupancy = virtual_workspace_test_empty;
+    struct virtual_workspace_manager vm = {0};
+    TEST_CHECK(virtual_workspace_manager_begin(&vm, &source), true);
+    TEST_CHECK(buf_len(vm.workspaces), 1);
+    TEST_CHECK(vm.workspaces[0].sid == 300, true);
+    TEST_CHECK(vm.workspaces[0].did, 90);
+    TEST_CHECK(vm.workspaces[0].index, 1);
+    buf_free(vm.workspaces);
+});
+
 TEST_FUNC(virtual_workspace_mapping_and_order,
 {
     virtual_workspace_test_reset();
@@ -173,18 +193,26 @@ TEST_FUNC(virtual_workspace_window_occupancy,
     window_set_flag(&window, WINDOW_MINIMIZE);
     TEST_CHECK(virtual_workspace_classify_window(&window, 0, 0), VIRTUAL_WORKSPACE_OCCUPIED);
     window.subrole = kAXFloatingWindowSubrole;
-    TEST_CHECK(virtual_workspace_classify_window(&window, 0, 3), VIRTUAL_WORKSPACE_OCCUPIED);
+    TEST_CHECK(virtual_workspace_classify_window(&window, 3, 0), VIRTUAL_WORKSPACE_OCCUPIED);
     window.subrole = kAXDialogSubrole;
-    TEST_CHECK(virtual_workspace_classify_window(&window, 0, 8), VIRTUAL_WORKSPACE_OCCUPIED);
+    TEST_CHECK(virtual_workspace_classify_window(&window, 8, 0), VIRTUAL_WORKSPACE_OCCUPIED);
     window.subrole = NULL;
     TEST_CHECK(virtual_workspace_classify_window(&window, 0, 0), VIRTUAL_WORKSPACE_UNKNOWN);
     window.subrole = kAXUnknownSubrole;
+    TEST_CHECK(virtual_workspace_classify_window(&window, 0, 0), VIRTUAL_WORKSPACE_UNKNOWN);
+    window.role = kAXMenuRole;
+    window.subrole = kAXStandardWindowSubrole;
     TEST_CHECK(virtual_workspace_classify_window(&window, 0, 0), VIRTUAL_WORKSPACE_EMPTY);
-    TEST_CHECK(virtual_workspace_classify_window(NULL, 0, 0), VIRTUAL_WORKSPACE_UNKNOWN);
-    TEST_CHECK(virtual_workspace_classify_window(NULL, 0, 3), VIRTUAL_WORKSPACE_UNKNOWN);
-    TEST_CHECK(virtual_workspace_classify_window(NULL, 0, 8), VIRTUAL_WORKSPACE_UNKNOWN);
-    TEST_CHECK(virtual_workspace_classify_window(NULL, 0, -2147483623), VIRTUAL_WORKSPACE_EMPTY);
-    TEST_CHECK(virtual_workspace_classify_window(NULL, 123, 0), VIRTUAL_WORKSPACE_EMPTY);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, 0, 0x1), VIRTUAL_WORKSPACE_UNKNOWN);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, 3, 0x1), VIRTUAL_WORKSPACE_UNKNOWN);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, 8, 0x1), VIRTUAL_WORKSPACE_UNKNOWN);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, -2147483623, 0x1), VIRTUAL_WORKSPACE_EMPTY);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, -1, 0x1), VIRTUAL_WORKSPACE_UNKNOWN);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, 20, 0x1), VIRTUAL_WORKSPACE_UNKNOWN);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, 25, 0x816000000d0440), VIRTUAL_WORKSPACE_EMPTY);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, 24, 0x8140000d000408), VIRTUAL_WORKSPACE_EMPTY);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, 0, 0x80000002), VIRTUAL_WORKSPACE_UNKNOWN);
+    TEST_CHECK(virtual_workspace_classify_window(NULL, 0, 0x2), VIRTUAL_WORKSPACE_EMPTY);
     g_space_manager.layout = original_layout;
 });
 

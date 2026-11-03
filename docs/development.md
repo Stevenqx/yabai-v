@@ -111,8 +111,10 @@ make -C tests
 git diff --check
 ```
 
-The vspace tests exercise the production message dispatcher without initializing
-WindowServer managers: exact ping JSON and error handling for unsupported input.
+The vspace tests exercise the production manager and message dispatcher with a
+deterministic native-query source, without initializing WindowServer managers.
+They cover mapping/order, occupancy, BSP/float independence, duplicates, session
+stability, lookup, JSON, focus outcomes, strict input, and the exact ping response.
 The existing upstream tests run alongside them. These checks require neither
 Accessibility permissions nor a running daemon. GitHub Actions repeats the build,
 ad-hoc signature verification, and tests on `macos-15` and `macos-26`; hosted
@@ -144,12 +146,16 @@ It does not install a service. In another terminal in the same checkout:
 ```sh
 USER=yabai-fork-dev ./bin/yabai -m vspace --ping
 # {"status":"ok","component":"vspace"}
+USER=yabai-fork-dev ./bin/yabai -m vspace --list
+USER=yabai-fork-dev ./bin/yabai -m vspace --current
 USER=yabai-fork-dev ./bin/yabai -m query --displays
 USER=yabai-fork-dev ./bin/yabai -m query --spaces
 USER=yabai-fork-dev ./bin/yabai -m query --windows
 ```
 
-Check that the queries return JSON arrays. Check that `vspace`,
+Check that the native queries and vspace list return JSON arrays, and vspace
+current matches the focused native Space ID. See [vspace](vspace.md) for fields,
+occupancy policy, and unmapped-current behavior. Check that `vspace`,
 `vspace --unknown`, and `vspace --ping extra` exit unsuccessfully. If a disposable
 window and a safe GUI session are available, query its ID and use
 `USER=yabai-fork-dev ./bin/yabai -m window --focus ID`. Replace `ID` with the
@@ -161,6 +167,16 @@ Space: this upstream base has a gesture fallback that does not require the
 scripting addition. Verify the visible result and query it again, then restore
 the original Space. Do not create/delete native Spaces or load the scripting
 addition; do not substitute `space --switch`, whose implementation differs.
+
+For Milestone 1, first record original visible native Spaces and focused window,
+then choose a mapped existing destination from `vspace --list`. Use its virtual
+`index` with `vspace --focus N`, observe it for five seconds, and check `--current`,
+`--list`, and native `query --spaces`. Restore the original mapped workspace by
+its virtual index and verify the return visually. If startup's globally active
+Space was empty, confirm it was still allocated. Compare native window IDs,
+Space associations, frames, and layout settings before/after; record intentional
+focus/visibility changes separately. Never use a Mission Control index as a
+virtual index or allocate/move windows merely to make the test pass.
 
 Stop only the foreground development process with Ctrl-C. An existing Homebrew
 binary, service plist, and user configuration must remain intact. If the original

@@ -33,6 +33,9 @@ Validation follow-ups:
 - [ ] Validate runtime behavior on macOS 26; no GUI host/session is available
   (confirmed by the user on 2026-11-02).
 
+Historical foundation follow-ups (the implementation gate is superseded by
+[D007](decisions.md#d007--align-the-roadmap-and-authorize-mappingfocusing)):
+
 Local follow-up, 2026-11-01: continue the foundation validation follow-ups before detailed
 design or implementation. Review the local commits, reproduce available local
 checks, inspect publication and GUI-test prerequisites, and record evidence and
@@ -87,7 +90,8 @@ Scope: agent instructions and development records.
 
 ## Milestone 1 — Virtual workspace mapping and focusing
 
-Status: in progress, authorized 2026-11-03.
+Status: implementation complete; CI and interactive validation pending approval,
+2026-11-03. Authorized scope remains limited to this milestone.
 Task branch: `feat/vspace-mapping`, based on local checkpoint `93a59ed`.
 The user explicitly authorizes implementation despite the unavailable macOS 26
 GUI host. Earlier validation gates are superseded for this scope; the missing
@@ -102,13 +106,18 @@ upstream domain semantics, layouts, build system, and installed service.
 - [x] Align earlier development tasks under Milestone 0 and record active scope.
 - [x] Initialize in native display/Space order using native IDs and occupancy.
 - [x] Include ordinary floating windows and conservatively retain unknown Spaces.
-- [ ] Implement documented JSON queries and native focus with CLI failures.
-- [ ] Test mapping, ordering, lookup, duplicate prevention, layouts, and bad input.
-- [ ] Build locally, verify persistent signing, and run headless/regression checks.
+- [x] Implement documented JSON queries and native focus with CLI failures.
+- [x] Test mapping, ordering, lookup, duplicate prevention, layouts, and bad input.
+- [x] Build locally, verify persistent signing, and run headless/regression checks.
 - [ ] Run macOS 15/26 CI for the new implementation when publication is approved.
 - [ ] Run an approved interactive focus smoke test and restore host state.
-- [ ] Update technical docs, validation, decisions, journal, and resume instructions.
-- [ ] Commit completed, validated units locally with Conventional Commits.
+- [x] Update technical docs, validation, decisions, journal, and resume instructions.
+- [x] Commit completed, validated units locally with Conventional Commits.
+
+Local validation: signed universal build, 22/22 headless tests, static analysis,
+read-only native occupancy/spare probe and original CLI queries, installation
+hashes, links, and whitespace passed.
+See [Milestone 1 evidence and test plan](../validation.md#milestone-1-commands-and-local-validation--2026-11-03).
 
 Gates: changing the running service and pushing this new branch require explicit
 approval. Existing macOS 15/26 CI results cover Milestone 0 only. macOS 26
