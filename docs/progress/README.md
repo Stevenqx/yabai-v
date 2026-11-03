@@ -38,9 +38,10 @@ disposable terminal windows from the confirmed repeat were left open as promised
 ## Resuming work
 
 Handoff checked on 2026-11-03. Use this checkout on `feat/vspace-smoke`, which
-includes the validation-record commit `dbdc0c0`. The published, CI-tested commit
-is `6359db7`; the later validation records are local, so a fresh GitHub clone
-needs those documentation commits before it has the same handoff context.
+includes the validation-record commit `dbdc0c0` and handoff audit `f92ea9d`.
+The published, CI-tested commit is `6359db7`; later validation and handoff
+documentation is local, so a fresh GitHub clone needs those documentation commits
+before it has the same handoff context.
 
 1. Inspect the branch and working tree, then read the milestones, decisions,
    latest journal entry, and linked technical guides. Treat recorded PIDs,
@@ -76,6 +77,10 @@ Before handing off, refresh this overview and append a journal entry with the
 date, changes, checks and results, unresolved issues, and next step. Include
 commit references when available. Preserve previous entries; explain corrections
 or superseded decisions in a later entry.
+
+Refresh `Resuming work` at every handoff with branch/checkpoint publication
+status, validation, blockers, next steps, and authorization or validation gates,
+as required by [AGENTS.md](../../AGENTS.md#development-records).
 
 Link to detailed technical documentation and validation evidence. Keep unrun or
 skipped checks explicit, and treat future plans as proposals rather than approval

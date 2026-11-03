@@ -86,7 +86,9 @@ describes the branch and pull request workflow.
 
 - Before each development task, read `docs/progress/README.md` and
   `docs/progress/milestones.md`, then the decision and journal entries relevant
-  to the task. Read the linked technical documentation when its subject is affected.
+  to the task. Follow the [resume instructions](docs/progress/README.md#resuming-work),
+  verifying their branch and checkpoint against the checkout. Read the linked
+  technical documentation when its subject is affected.
 - Record the active task and its scope in the milestone document before changing
   implementation. Future milestones are proposals until explicitly authorized.
 - Keep the main progress document current as work advances. Update the relevant
@@ -98,6 +100,13 @@ describes the branch and pull request workflow.
 - Before handing off work, update these records and any affected technical docs.
   Link to detailed validation reports; preserve earlier journal entries and
   distinguish passed, failed, skipped, and unrun checks.
+- Before every handoff, refresh the `Resuming work` section in
+  `docs/progress/README.md` so another agent can continue without the chat history.
+  Record the current task branch, relevant local and published checkpoints,
+  completed validation, remaining blockers, next concrete steps, and authorization
+  or validation gates. State when local documentation commits are not published.
+  Treat recorded PIDs, window IDs, and host/session state as historical and require
+  rechecking them before use. Do not present proposed work as authorized.
 - For documentation-only changes, check Markdown links and `git diff --check`;
   rebuilding or running the daemon is unnecessary unless executable behavior changes.
 

@@ -61,3 +61,15 @@ not authorize publication; pushes and merges still need user authorization,
 with review and applicable CI checks before integration.
 
 Reference: [Git and GitHub workflow](../../AGENTS.md#git-and-github-workflow).
+
+## D006 — Keep resume instructions current at every handoff
+
+Date: 2026-11-03. Status: accepted by the user's agent-instruction request.
+
+Agents read the progress index's `Resuming work` section at task start and refresh
+it before every handoff. Include local/published checkpoints, validation, blockers, next steps,
+and authorization or validation gates so another agent can continue without chat
+history. Recheck historical host identifiers before reuse, and keep proposed work
+distinct from authorized scope.
+
+Reference: [development records rules](../../AGENTS.md#development-records).

@@ -169,3 +169,23 @@ No executable or host state changed, so builds and runtime tests are unnecessary
 Next: resume the remaining macOS 26 runtime check when a host is supplied, or
 obtain an explicit revision of the validation gate before a separately
 authorized design milestone. No push or merge was performed for this audit.
+
+## 2026-11-03 — Require agents to maintain resume instructions
+
+Scope: the user requested the resume-instruction practice in `AGENTS.md` so other
+agents maintain the same handoff standard. Starting HEAD: `f92ea9d`, clean
+`feat/vspace-smoke` working tree.
+
+Required agents to read the resume instructions at task start and refresh them
+before every handoff, including local/published checkpoints, validation, blockers,
+next steps, and authorization or validation gates. Explicitly require sufficient
+context to continue without chat history, disclosure of unpublished records, and
+rechecking historical host identifiers. Mirrored the maintenance rule in the
+progress index and recorded accepted decision D006.
+
+Validation: all 36 local Markdown links, including anchors across eight
+documents, and `git diff --check` passed.
+Documentation only; no executable or host state changed. The next development
+step remains macOS 26 interactive runtime validation when a host is available,
+or an explicit gate revision before a separately authorized design milestone.
+No publication or merge is included in this task.
