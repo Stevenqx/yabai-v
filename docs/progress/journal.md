@@ -189,3 +189,23 @@ Documentation only; no executable or host state changed. The next development
 step remains macOS 26 interactive runtime validation when a host is available,
 or an explicit gate revision before a separately authorized design milestone.
 No publication or merge is included in this task.
+
+## 2026-11-03 — Start Milestone 1 and align roadmap numbering
+
+Scope: user-authorized virtual workspace mapping and focusing. All previous
+work is Milestone 0; earlier journal labels are historical, not new roadmap IDs.
+Starting HEAD: `93a59ed`, clean tree on `feat/vspace-smoke` (three unpublished
+documentation commits beyond `origin/feat/vspace-smoke` at `6359db7`). Inspected
+all prior source/test changes, build/signing/CI infrastructure, development and
+validation records, and native display/Space/window/focus APIs. Created focused
+branch `feat/vspace-mapping` without rewriting history.
+
+Updated agent scope, milestone checklists, progress overview, and decision D007.
+The user's new instruction supersedes the former implementation gate; macOS 26
+GUI evidence remains unavailable and is not claimed. No installed service,
+configuration, or binary was changed. Validation: local Markdown links and
+`git diff --check` passed before this documentation checkpoint. No executable
+changes; build/runtime checks are unnecessary for this checkpoint.
+
+Next: implement and test the independent manager and vspace commands. New CI
+publication and interactive service changes require separate approval.

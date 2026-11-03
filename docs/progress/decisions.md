@@ -73,3 +73,16 @@ history. Recheck historical host identifiers before reuse, and keep proposed wor
 distinct from authorized scope.
 
 Reference: [development records rules](../../AGENTS.md#development-records).
+
+## D007 — Align the roadmap and authorize mapping/focusing
+
+Date: 2026-11-03. Status: accepted by the user's Milestone 1 request.
+
+All earlier setup and documentation tasks belong to Milestone 0. Historical
+entries keep their original labels for traceability. The user authorizes
+Milestone 1 mapping/focusing now, revising the previous gate that deferred
+implementation until macOS 26 GUI validation. That runtime check remains unrun.
+Only this milestone is authorized; lifecycle, movement, persistence, GUI, and
+hotkeys remain deferred. Publication and service changes still require approval.
+
+Reference: [Milestone 1 scope](milestones.md#milestone-1--virtual-workspace-mapping-and-focusing).

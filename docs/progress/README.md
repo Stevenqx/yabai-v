@@ -5,54 +5,39 @@ working on the fork, and keep this overview aligned with the supporting document
 
 ## Current position
 
-The development environment and minimal `vspace --ping` extension are implemented.
-The signed universal binary, six headless tests, live ping, and existing query
-commands passed validation on macOS 15.6 arm64. Window focusing and switching
-existing Spaces also passed queries and user visual confirmation on 2026-11-02.
-The original yabai service, visible Spaces, and focus were restored; SIP remained
-enabled and the original installation files are unchanged.
+Milestone 0 contains all prior setup, ping, workflow, progress-record, CI, and
+GUI-validation work. The user authorized Milestone 1 (mapping and focusing) on
+2026-11-03 and revised the earlier implementation gate. macOS 26 interactive
+runtime remains a limitation; it does not block this authorized implementation.
+Historical journal entries retain their original milestone labels; those labels
+all refer to work now grouped under Milestone 0.
 
-The upstream base is `dd845723416f5fe92af49fad5ebab00369e07edd`.
-The setup work is recorded in four Conventional Commits ending at `3ec8c49`.
-All six commits through `de6a849` have now been reviewed with no blocking
-findings, and all six headless tests passed again. The reviewed task branch was
-published at `6359db7`; [both macOS 15/26 CI jobs passed](https://github.com/Stevenqx/yabai-v/actions/runs/41403274379)
-for that commit, including universal builds, ad-hoc signature verification, and
-six tests per host. Local GUI sessions used the persistent-certificate binary.
-macOS 26 interactive runtime remains unverified because no GUI host/session is
-available. See the [validation report](../validation.md) for evidence and limits.
+Milestone 0's upstream base is `dd845723416f5fe92af49fad5ebab00369e07edd`.
+The published checkpoint is `6359db7` on `origin/feat/vspace-smoke`, with
+[passing macOS 15/26 CI](https://github.com/Stevenqx/yabai-v/actions/runs/41403274379).
+The local foundation checkpoint is `93a59ed`; later documentation commits are
+unpublished. macOS 15.6 window/Space focus passed visual confirmation, and the
+original service was restored. See [validation](../validation.md).
 
-The progress folder and agent maintenance rules are established in M2 and
-committed as `724ba46`. M3, committed as `de6a849`, adds a
-[version-control workflow](../../AGENTS.md#git-and-github-workflow) that requires
-local Conventional Commits for validated work and review before GitHub integration.
-Virtual workspace management, the native GUI, and the hotkey engine are future
-work and require a separately authorized milestone.
-
-The completed publication and macOS 15 GUI checks are recorded in the
-[latest validation update](../validation.md#publication-and-gui-validation--2026-11-02).
-The remaining M1 follow-up is macOS 26 interactive runtime validation; detailed
-design and implementation remain deferred. At the 2026-11-02 handoff, the two
-disposable terminal windows from the confirmed repeat were left open as promised.
+Milestone 1 adds an independent daemon-owned manager and `vspace --list`,
+`--current`, and `--focus N`, preserving `--ping` and existing domain semantics.
+Only mapping and focusing are authorized; lifecycle, window movement, GUI,
+hotkeys, and Milestone 2 remain deferred.
 
 ## Resuming work
 
-Handoff checked on 2026-11-03. Use this checkout on `feat/vspace-smoke`, which
-includes the validation-record commit `dbdc0c0` and handoff audit `f92ea9d`.
-The published, CI-tested commit is `6359db7`; later validation and handoff
-documentation is local, so a fresh GitHub clone needs those documentation commits
-before it has the same handoff context.
+Handoff/task start checked on 2026-11-03. Active branch: `feat/vspace-mapping`,
+starting from `93a59ed`. The mapping branch and its new documentation are local;
+no new implementation has been published or CI-tested.
 
-1. Inspect the branch and working tree, then read the milestones, decisions,
-   latest journal entry, and linked technical guides. Treat recorded PIDs,
-   window IDs, and desktop state as historical; recheck them before use.
-2. Resume M1 with macOS 26 interactive runtime validation when a GUI host/session
-   becomes available. Follow the signed-build, GUI, and recovery procedure in
-   the development guide; keep the remaining check unrun until evidence exists.
-3. After that evidence or an explicit user revision of the validation gate,
-   define a separately authorized design milestone for daemon-owned workspace
-   state and SIP-compatible window visibility/assignment. Detailed design,
-   workspace implementation, GUI, and hotkey work are not currently authorized.
+1. Inspect branch/tree and read milestones, decisions, journal, architecture,
+   development guide, and latest validation. Recheck all historical host state.
+2. Implement the authorized Milestone 1 scope in the milestone checklist; run
+   focused tests, local build/signature verification, and regression checks.
+3. Obtain approval for publishing the completed branch before new macOS 15/26
+   CI and for changing the running service before interactive tests. Keep these
+   tests unrun until evidence exists. Preserve and restore the installed service.
+4. Update all records and create focused local commits. Do not begin Milestone 2.
 
 ## Supporting documents
 

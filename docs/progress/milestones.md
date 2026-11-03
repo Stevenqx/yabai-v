@@ -3,9 +3,13 @@
 Statuses: proposed, in progress, implementation complete, complete.
 Validation follow-ups remain open until their results are recorded.
 
-## M1 — Development environment and vspace smoke test
+## Milestone 0 — Foundation and validation
 
-Status: implementation complete, 2026-11-01.
+Status: complete for the foundation scope; macOS 26 interactive validation remains
+an explicitly recorded limitation. Milestone numbering was aligned with the
+user’s roadmap on 2026-11-03. All work predating this task belongs to Milestone 0.
+
+### Development environment and vspace smoke test
 
 - [x] Preserve complete upstream history and configure fork/upstream remotes.
 - [x] Inspect the build system and build unmodified upstream.
@@ -29,7 +33,7 @@ Validation follow-ups:
 - [ ] Validate runtime behavior on macOS 26; no GUI host/session is available
   (confirmed by the user on 2026-11-02).
 
-Local follow-up, 2026-11-01: continue the M1 validation follow-ups before detailed
+Local follow-up, 2026-11-01: continue the foundation validation follow-ups before detailed
 design or implementation. Review the local commits, reproduce available local
 checks, inspect publication and GUI-test prerequisites, and record evidence and
 remaining blockers. Publication and changes to the running service still require
@@ -59,7 +63,7 @@ The user has no macOS 26 GUI host/session, so that runtime follow-up remains
 unrun and detailed design/implementation remain deferred. See the
 [latest evidence](../validation.md#publication-and-gui-validation--2026-11-02).
 
-## M2 — Development process records
+### Development process records (formerly M2)
 
 Status: complete, 2026-11-01.
 
@@ -70,7 +74,7 @@ Scope: documentation and agent instructions.
 - [x] Require agents to read and maintain the records through `AGENTS.md`.
 - [x] Check document links and whitespace, then record the result in the journal.
 
-## M3 — Conventional Commits and GitHub workflow
+### Conventional Commits and GitHub workflow (formerly M3)
 
 Status: complete, 2026-11-01.
 
@@ -81,11 +85,39 @@ Scope: agent instructions and development records.
 - [x] Document focused staging, task branches, history preservation, and PR checks.
 - [x] Check documentation links and whitespace and commit the policy update.
 
-## Future milestones
+## Milestone 1 — Virtual workspace mapping and focusing
 
-Status: proposed; implementation is not authorized by this record.
+Status: in progress, authorized 2026-11-03.
+Task branch: `feat/vspace-mapping`, based on local checkpoint `93a59ed`.
+The user explicitly authorizes implementation despite the unavailable macOS 26
+GUI host. Earlier validation gates are superseded for this scope; the missing
+runtime evidence must remain visible.
 
-After validation follow-ups, define a separate design milestone for daemon-owned
-virtual workspace state and SIP-compatible window visibility/assignment. Resolve
-its requirements and architecture before approving implementation. Native GUI
-and hotkey-engine work need their own scoped milestones afterward.
+Scope: an independent daemon-owned VirtualWorkspaceManager, one-to-one native
+Space mappings, session-stable internal IDs and globally unique visible indices,
+and `vspace --list`, `--current`, and `--focus N`. Preserve `--ping` and all
+upstream domain semantics, layouts, build system, and installed service.
+
+- [x] Inspect the branch, clean tree, previous changes, records, and native APIs.
+- [x] Align earlier development tasks under Milestone 0 and record active scope.
+- [ ] Initialize in native display/Space order using native IDs and occupancy.
+- [ ] Include ordinary floating windows and conservatively retain unknown Spaces.
+- [ ] Implement documented JSON queries and native focus with CLI failures.
+- [ ] Test mapping, ordering, lookup, duplicate prevention, layouts, and bad input.
+- [ ] Build locally, verify persistent signing, and run headless/regression checks.
+- [ ] Run macOS 15/26 CI for the new implementation when publication is approved.
+- [ ] Run an approved interactive focus smoke test and restore host state.
+- [ ] Update technical docs, validation, decisions, journal, and resume instructions.
+- [ ] Commit completed, validated units locally with Conventional Commits.
+
+Gates: changing the running service and pushing this new branch require explicit
+approval. Existing macOS 15/26 CI results cover Milestone 0 only. macOS 26
+interactive runtime remains unrun without a GUI host/session.
+
+## Milestone 2 and later
+
+Status: proposed; implementation is not authorized.
+
+Workspace creation/destruction, window assignment/movement, reordering,
+persistence across restarts, GUI, and hotkeys are deferred. This task does not
+begin any of them.

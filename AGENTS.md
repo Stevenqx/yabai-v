@@ -6,14 +6,15 @@ small changes that can be rebased. Use Conventional Commits with focused commits
 ## Scope and compatibility
 
 - Preserve existing CLI behavior and the BSP, stack, and float layouts.
-- Put fork commands under `yabai -m vspace`. The only implemented command in
-  this milestone is `--ping`.
+- Put fork commands under `yabai -m vspace`. Milestone 1 adds `--list`,
+  `--current`, and `--focus N`, preserving Milestone 0's `--ping`.
 - Support macOS 15 and 26 with SIP fully enabled. Never require the scripting
   addition, root access, or changes to SIP for fork functionality.
 - Retain upstream scripting-addition code for compatibility. Its privileged
   operations remain unavailable with SIP enabled; do not promise otherwise.
-- Do not implement native Space creation/deletion, virtual workspace logic,
-  a GUI project, or a hotkey engine in this milestone.
+- Limit Milestone 1 to daemon-owned virtual workspace mapping and focusing.
+  Do not implement native Space creation/deletion, workspace lifecycle,
+  window movement/positioning, reordering, a GUI project, or a hotkey engine.
 
 ## Code and architecture
 
