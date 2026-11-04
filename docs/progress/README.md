@@ -13,57 +13,63 @@ Historical journal entries retain their original milestone labels; those labels
 all refer to work now grouped under Milestone 0.
 
 Milestone 0's upstream base is `dd845723416f5fe92af49fad5ebab00369e07edd`.
-The published checkpoint is `6359db7` on `origin/feat/vspace-smoke`, with
-[passing macOS 15/26 CI](https://github.com/Stevenqx/yabai-v/actions/runs/41403274379).
-The local foundation checkpoint is `93a59ed`; later documentation commits are
-unpublished. macOS 15.6 window/Space focus passed visual confirmation, and the
-original service was restored. See [validation](../validation.md).
+Its earlier published checkpoint is `6359db7` on `origin/feat/vspace-smoke`, with
+[passing foundation CI](https://github.com/Stevenqx/yabai-v/actions/runs/41403274379).
+Foundation records through `93a59ed` are now also published as ancestry of the
+Milestone 1 branch; the earlier smoke-test branch was not rewritten.
 
-Milestone 1 implementation is complete: the independent manager and `vspace
---list`, `--current`, and `--focus N` preserve `--ping` and native semantics.
-The signed universal build, 22 headless tests, static analysis, and local
-regression checks pass. [Commands and JSON](../vspace.md) and
-[detailed validation](../validation.md#milestone-1-commands-and-local-validation--2026-11-03)
-document the session snapshot policy and remaining tests. New CI and interactive
-validation are pending approval. Milestone 2 has not begun.
+Milestone 1 is complete for the authorized mapping/focusing scope. The independent
+manager and `vspace --list`, `--current`, and `--focus N` preserve ping and native
+semantics. Published source `6c4a354` passed the macOS 15/26 matrix (22 tests per
+host) and a macOS 15.6 virtual-focus round trip with user visual confirmation.
+The original service, desktop, window frames, and installation hashes were
+restored/verified; SIP stayed enabled. The first interrupted attempt and recovery
+helper assertions are retained separately in the
+[latest validation report](../validation.md#milestone-1-publication-and-interactive-validation--2026-11-04).
+The corrected local development config uses float `0.0` for animation duration.
+
+[Commands and JSON](../vspace.md) document startup/session policy and errors.
+macOS 26 interactive runtime remains unverified without a supplied GUI host.
+Milestone 2 has not begun.
 
 ## Resuming work
 
-Handoff checked on 2026-11-03. Active branch: `feat/vspace-mapping`, starting at
-`93a59ed`, with scope checkpoint `21a6e6f` and manager checkpoint `36e9ac8`.
-The subsequent command-integration commit contains the complete implementation,
-22 tests, command docs, and this handoff. All Milestone 1 changes and the three
-foundation documentation commits after published `6359db7` are local/unpublished.
-Inspect `git log` for the exact final local checkpoint; no Milestone 1 SHA has
-been tested by GitHub Actions yet.
+Handoff checked on 2026-11-04. Active branch: `feat/vspace-mapping`.
+Published source checkpoint: `6c4a354efb3a75c25906d48a49ad55c224fe175a`, with
+[passing CI run 41779098539](https://github.com/Stevenqx/yabai-v/actions/runs/41779098539).
+Scope/manager checkpoints are `21a6e6f` and `36e9ac8`.
+Local follow-ups are config fix `b195681` and the subsequent validation-record
+commit containing this handoff; these follow-ups are **not published**. Inspect
+`git log` for the exact final local record checkpoint. No C source changed after
+the CI-tested commit, and the local config fix passed the live repeat.
 
 1. Inspect branch/tree and read milestones, decisions, journal, architecture,
    development guide, and latest validation. Recheck all historical host state.
-2. Review the completed diff. Obtain explicit approval to publish only this
-   feature branch to `origin` and run the existing macOS 15/26 matrix. Record
-   exact tested SHA/results; no merge or force-push is authorized.
-3. Obtain approval to pause the original service for the prepared interactive
-   test in the validation report. Use the already signed checkout binary and
-   existing float development config, with only one managing daemon at a time.
-   Verify list/current/occupancy, a safe virtual-focus round trip, unchanged
-   frames/layout settings during focus, then restore and verify original service,
-   visible Spaces, focus, and installation hashes after startup.
-4. Local completed checks: universal `make` build with persistent signature,
-   22/22 tests (five existing upstream deprecation warnings), no static analyzer
-   findings, a passing read-only native adapter probe (occupied/spare Spaces),
-   unchanged native handler/build files, original query regressions,
-   original file hashes, shell syntax, Markdown links, and whitespace.
-5. Remaining limits: CI/interactive Milestone 1 checks are unrun pending approval;
-   macOS 26 GUI runtime still has no supplied host. Session mappings do not
-   dynamically allocate or reassociate Spaces, and conservative occupancy can
-   retain visually empty Spaces. Update records and commit test evidence locally.
-   Do not begin Milestone 2, GUI, hotkeys, lifecycle, or window movement.
+2. Milestone 1's requested build/headless/CI and local interactive checks are
+   complete. Review the local config/documentation follow-ups; publish them only
+   if authorized. No merge, force-push, or new milestone is authorized.
+3. If a macOS 26 GUI host is supplied, plan its runtime validation using the
+   existing signing, single-daemon, observation, and recovery procedures.
+   Keep that check unrun until real evidence exists. Future service changes
+   remain subject to the host-safety approval requirement.
+4. Completed evidence: signed universal local build; 22/22 tests, static analysis,
+   native-query probe and CLI regressions; universal build/signature/22 tests on
+   both hosted macOS versions; empty-active initialization and virtual focusing
+   on an inactive native Space on macOS 15.6 with visual confirmation and unchanged
+   frames/layouts. Final recovery audit independently passed all conditions.
+5. Session-only mapping, conservative unknown occupancy, external native
+   Space/display changes, and macOS 26 GUI runtime retain their documented
+   limits. Lifecycle, persistence, movement, reordering, GUI, and hotkeys remain
+   deferred. Do not begin Milestone 2 without explicit authorization.
 
-The read-only host baseline is `/private/tmp/yabai-v-m1-baseline.j8r6f3ko`.
-It observed one original Homebrew daemon (PID 9357), native active Space 589 on
-native display 2, and focus on Orca window 6369. These are historical identifiers,
-not permission to change the host. Original binary/config/LaunchAgent hashes
-still match Milestone 0. No new daemon or focus test has run in Milestone 1.
+The successful repeat evidence is `/private/tmp/yabai-v-m1-repeat.431h1ip7`;
+use its passed `final-recovery-audit.json` together with the retained helper
+assertion record and focus snapshots. The first/interrupted attempt and native
+control are `/private/tmp/yabai-v-m1-approved.shfxktq3`. Final audit observed one
+original Homebrew daemon (PID 13873), native visible/active Space 3 on display 1,
+and Orca window 6369 focused. Original window frames and installation hashes
+matched the immediate baseline. These are historical identifiers, not reusable
+host state or blanket authorization for future changes.
 
 ## Supporting documents
 

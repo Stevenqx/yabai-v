@@ -90,8 +90,8 @@ Scope: agent instructions and development records.
 
 ## Milestone 1 — Virtual workspace mapping and focusing
 
-Status: implementation complete; CI and interactive validation pending approval,
-2026-11-03. Authorized scope remains limited to this milestone.
+Status: complete for the authorized mapping/focusing scope, 2026-11-04.
+macOS 26 interactive runtime remains a documented follow-up without a GUI host.
 Task branch: `feat/vspace-mapping`, based on local checkpoint `93a59ed`.
 The user explicitly authorizes implementation despite the unavailable macOS 26
 GUI host. Earlier validation gates are superseded for this scope; the missing
@@ -109,8 +109,9 @@ upstream domain semantics, layouts, build system, and installed service.
 - [x] Implement documented JSON queries and native focus with CLI failures.
 - [x] Test mapping, ordering, lookup, duplicate prevention, layouts, and bad input.
 - [x] Build locally, verify persistent signing, and run headless/regression checks.
-- [ ] Run macOS 15/26 CI for the new implementation when publication is approved.
-- [ ] Run an approved interactive focus smoke test and restore host state.
+- [x] Publish approved `6c4a354` and pass macOS 15/26 CI (22 tests per host).
+- [x] Pass the approved macOS 15 interactive focus repeat with visual confirmation
+  and verified original-service/desktop/hash recovery.
 - [x] Update technical docs, validation, decisions, journal, and resume instructions.
 - [x] Commit completed, validated units locally with Conventional Commits.
 
@@ -119,9 +120,25 @@ read-only native occupancy/spare probe and original CLI queries, installation
 hashes, links, and whitespace passed.
 See [Milestone 1 evidence and test plan](../validation.md#milestone-1-commands-and-local-validation--2026-11-03).
 
-Gates: changing the running service and pushing this new branch require explicit
-approval. Existing macOS 15/26 CI results cover Milestone 0 only. macOS 26
-interactive runtime remains unrun without a GUI host/session.
+Validation execution, 2026-11-04: the user approved publication of `6c4a354` and
+an interactive session. [CI run 41779098539](https://github.com/Stevenqx/yabai-v/actions/runs/41779098539)
+passed both platform jobs. The interrupted first focus attempt is retained as
+inconclusive after reported manual Mission Control switching. An unchanged-native
+control and the idle virtual-focus repeat passed. The repeat registered empty
+active Space 7, left empty inactive Space 592 spare, and focused 7 → 3 → 7 → 3
+with stable IDs/indices and unchanged window frames/layouts. The user confirmed
+visible switching; a final independent audit verified recovery of original
+service, visible Space, focus, original window frames, file hashes, and SIP.
+
+The local config fix `b195681` uses accepted animation float `0.0`, replacing
+rejected integer `0`. It and the subsequent validation records are unpublished;
+no C source changed after the CI-tested checkpoint. Details, unsuccessful
+attempts, helper assertions, and evidence paths are in the
+[latest validation](../validation.md#milestone-1-publication-and-interactive-validation--2026-11-04).
+
+Remaining follow-up: macOS 26 GUI runtime requires a supplied host/session.
+Future publication/service changes remain subject to `AGENTS.md`; no merge or
+Milestone 2 implementation is authorized.
 
 ## Milestone 2 and later
 

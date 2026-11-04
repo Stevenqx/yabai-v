@@ -156,8 +156,8 @@ USER=yabai-fork-dev ./bin/yabai -m query --windows
 Check that the native queries and vspace list return JSON arrays, and vspace
 current matches the focused native Space ID. Confirm all development config
 commands succeed; `window_animation_duration` requires the float token `0.0`,
-and the existing parser rejects the integer token `0`. See [vspace](vspace.md) for fields,
-occupancy policy, and unmapped-current behavior. Check that `vspace`,
+and the existing parser rejects the integer token `0`. See [vspace](vspace.md)
+for fields, occupancy policy, and unmapped-current behavior. Check that `vspace`,
 `vspace --unknown`, and `vspace --ping extra` exit unsuccessfully. If a disposable
 window and a safe GUI session are available, query its ID and use
 `USER=yabai-fork-dev ./bin/yabai -m window --focus ID`. Replace `ID` with the
@@ -170,7 +170,10 @@ scripting addition. Verify the visible result and query it again, then restore
 the original Space. Do not create/delete native Spaces or load the scripting
 addition; do not substitute `space --switch`, whose implementation differs.
 
-For Milestone 1, first record original visible native Spaces and focused window,
+For Milestone 1, allow native transitions and startup/config commands to finish
+before the first focus call. Keep manual Space switching and other input idle
+during the observed sequence; record an interrupted attempt separately from a
+clean repeat. First record original visible native Spaces and focused window,
 then choose a mapped existing destination from `vspace --list`. Use its virtual
 `index` with `vspace --focus N`, observe it for five seconds, and check `--current`,
 `--list`, and native `query --spaces`. Restore the original mapped workspace by

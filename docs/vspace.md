@@ -110,5 +110,5 @@ fully enabled and does not require the scripting addition or root. Upstream's
 privileged operations retain their existing restrictions.
 
 Build/headless tests do not establish interactive compatibility. See the
-[latest Milestone 1 validation](validation.md#milestone-1-commands-and-local-validation--2026-11-03)
+[latest Milestone 1 validation](validation.md#milestone-1-publication-and-interactive-validation--2026-11-04)
 for checks actually performed and remaining approval/runtime gates.

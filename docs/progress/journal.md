@@ -289,3 +289,48 @@ this config fix; the production SHA passed both CI jobs with 22 tests each.
 
 This follow-up is local, beyond the explicitly published `6c4a354` checkpoint.
 Next: finish the detailed validation report and refresh the handoff records.
+
+## 2026-11-04 — Publish Milestone 1 and complete approved validation
+
+Scope: the user explicitly approved publishing `feat/vspace-mapping` at `6c4a354`,
+running CI, and a brief signed-development-daemon focus round trip with full
+original-service/desktop recovery. Inspected the clean branch, unchanged reviewed
+diff, remotes, current service, signature, SIP, native queries, and original file
+hashes. Published only the approved branch; no merge or history rewrite occurred.
+
+[CI run 41779098539](https://github.com/Stevenqx/yabai-v/actions/runs/41779098539)
+passed at `6c4a354efb3a75c25906d48a49ad55c224fe175a`: macOS 15.8.2 and 26.6.2
+arm64 runners each built/verified the universal binary and passed 22 tests and
+static checks, with the same five upstream CoreVideo warnings.
+
+Fresh host state had one display, occupied Space 3, and empty Spaces 7/592.
+Focusing existing empty Space 7 before development startup tested empty-active
+registration without creating Spaces or moving windows. The first attempt
+passed initialization and errors, then native activation failed and Mission
+Control was active; the user reported possible manual switching during it.
+Restored and audited the original service after the attempt. An unchanged-native
+control passed, and the idle repeat used local config fix `b195681` with no
+stderr/config errors. Virtual focus 7 → 3 → 7 → 3 passed current/list/native
+queries, stable mapping checks, and exact window-frame/association/layout
+comparisons. The user confirmed the repeated switches worked visibly.
+
+Both helpers retained generic recovery assertions; their precise cause was not
+established. Separate final recovery audits completed the checks explicitly.
+The successful repeat's final audit verified exactly one original Homebrew
+daemon (PID 13873), visible/active Space 3, Orca window 6369 focused, all original
+window frames/associations restored, all three original file hashes matching,
+and SIP enabled. No original config/binary/plist was overwritten. A Computer Use
+Dock inspection timed out and supplied no visual evidence; the user's repeat
+confirmation is recorded distinctly from command/query results.
+
+Updated milestones, overview/resume instructions, development guide, command
+validation link, and detailed validation report. All local Markdown links/anchors,
+shell syntax, and whitespace checks passed. These are records/procedure updates;
+C source remains unchanged after the CI/GUI-tested checkpoint. The config fix and
+this validation-record commit remain local/unpublished. Evidence and failed/skipped
+conditions are preserved in the [latest report](../validation.md#milestone-1-publication-and-interactive-validation--2026-11-04).
+
+Milestone 1's authorized scope and requested checks are complete. macOS 26 GUI
+runtime remains unrun without a host. Next: review local follow-ups and obtain
+publication authorization if desired, or validate on a supplied macOS 26 GUI host.
+No Milestone 2 implementation, pull request, or merge was started.

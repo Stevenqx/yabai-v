@@ -1,9 +1,10 @@
 # Validation report — 2026-11-01
 
-Latest update: [Milestone 1 commands and local validation](#milestone-1-commands-and-local-validation--2026-11-03).
-The [Milestone 0 publication and GUI validation](#publication-and-gui-validation--2026-11-02)
-remains historical evidence. New CI and interactive checks are pending approval;
-macOS 26 interactive runtime remains unavailable. Earlier results are retained.
+Latest update: [Milestone 1 publication and interactive validation](#milestone-1-publication-and-interactive-validation--2026-11-04).
+The macOS 15/26 matrix and a visually confirmed macOS 15 virtual-focus round trip
+passed. The original service, desktop, and file hashes were restored/verified.
+macOS 26 interactive runtime still lacks a supplied GUI host. Earlier results
+and unsuccessful attempts are retained as historical evidence.
 
 ## Environment and upstream
 
@@ -395,3 +396,133 @@ Both operations need user approval under `AGENTS.md`; earlier approval covered
 only the old smoke-test branch/session. The prepared result is fully local and
 reviewable. Milestone 1 implementation is complete, but these checks remain open;
 Milestone 2 has not begun.
+
+## Milestone 1 publication and interactive validation — 2026-11-04
+
+The user explicitly approved publishing `feat/vspace-mapping` at `6c4a354` to
+`origin`, running the existing macOS 15/26 matrix, and temporarily pausing the
+original service for a signed development-daemon focus round trip with recovery.
+Published source SHA: `6c4a354efb3a75c25906d48a49ad55c224fe175a`. No merge,
+force-push, installation, SIP change, or scripting-addition operation occurred.
+
+### GitHub Actions
+
+[Run 41779098539](https://github.com/Stevenqx/yabai-v/actions/runs/41779098539)
+passed for that exact SHA. Each job built the universal x86_64/arm64 binary,
+verified its ad-hoc signature, checked its version/architectures, passed 22/22
+headless tests, and passed whitespace and shell-syntax checks. Both test builds
+reported only the same five upstream CoreVideo deprecation warnings.
+
+| Job | Actual hosted OS/image | Result |
+| --- | --- | --- |
+| [macOS 15](https://github.com/Stevenqx/yabai-v/actions/runs/41779098539/job/126406264703) | 15.8.2, `macos-15-arm64` | Passed, 22/22 |
+| [macOS 26](https://github.com/Stevenqx/yabai-v/actions/runs/41779098539/job/126406264390) | 26.6.2, `macos-26-arm64` | Passed, 22/22 |
+
+Logs and job metadata are `/private/tmp/yabai-v-m1-ci-41779098539.log` and `.json`.
+Hosted build/headless tests do not establish macOS 26 interactive compatibility.
+
+### Local GUI setup and interrupted first attempt
+
+The existing universal checkout binary passed strict/all-architecture signature
+verification with `yabai-fork Development`, identifier
+`com.yabai-fork.development`, and the unchanged certificate leaf SHA-1
+`85c2410619477a69b324ed91bb1ff677f4e2e775`. No rebuild or TCC reset was needed.
+
+Fresh inspection found one display, occupied native Space 3, and empty native
+Spaces 7 and 592. The earlier two-display identifiers were historical. To test
+empty-active initialization without creating Spaces or moving windows, the
+original daemon focused existing empty Space 7 before being paused. Each session
+verified that no managing daemon remained before starting the checkout daemon.
+The explicit development config kept layout float and mouse focus disabled.
+
+The first session correctly mapped occupied Space 3 and active-empty Space 7,
+left Space 592 spare, and passed ping/list/current plus invalid-index,
+overflow/unmapped-index, extra-argument, and already-focused error checks. The
+first virtual activation then failed its observed-focus check, and the native
+recovery command reported Mission Control active. The user reported that they
+might have switched Spaces manually through Mission Control during the test.
+That interference is a plausible cause; this attempt does not establish a
+product regression or a successful focus round trip.
+
+The development process stopped and the original service restarted. An immediate
+helper recovery assertion was not diagnostic; an explicit follow-up restored and
+verified the captured original Chrome window 1052 on Space 3, one original daemon,
+and matching file hashes. One window frame differed across this attempt's
+original-service restart, so the attempt does not establish frame preservation.
+A Computer Use Dock inspection timed out; it supplied no visual evidence or UI
+input. No native/window-layout source change was made in response.
+
+The unchanged installed daemon then passed an independent native focus control,
+Space 3 → 7 → 3, holding each destination for five seconds and restoring the
+freshly captured focus. Its results are in the first session's evidence folder.
+
+The first session also exposed an existing example-config error: integer `0`
+was rejected for `window_animation_duration`. The checkout-only fix in local
+commit `b195681` changes it to float `0.0`; no native parser semantics changed.
+The published C source and CI-tested executable are unchanged. Earlier float
+layout checks did not establish success of this animation-setting line.
+
+### Successful repeat and visual confirmation
+
+The repeat allowed native transitions and startup/config processing to settle,
+and the user left manual switching idle. It used the same signed production
+binary with the corrected local config. Animation duration queried `0.000000`,
+global layout queried `float`, and development stderr was empty.
+
+Initialization and error checks passed again. `--list` had exactly these stable
+mappings, with unique IDs/indices and native display ID 1:
+
+| Virtual index | Internal ID | Native Space ID | Startup state |
+| --- | --- | --- | --- |
+| 1 | 1 | 3 | Occupied, inactive |
+| 2 | 2 | 7 | Empty, active |
+
+Native Space 592 remained unallocated. Each virtual-focus call succeeded and was
+checked with `--current`, `--list`, and native queries:
+
+| Operation | Query evidence | Visual evidence |
+| --- | --- | --- |
+| Virtual 2 → 1 (native 7 → 3) | Correct active native ID and focused JSON entry | User confirmed the repeated switches worked visibly |
+| Virtual 1 → 2 (native 3 → 7) | Correct empty active Space and stable mapping | Same confirmation; each destination held for 5 seconds |
+| Virtual 2 → 1 (native 7 → 3) | Original active Space and stable mapping | User confirmed return to the original desktop |
+
+All five ordinary windows retained exactly the same frames and display/Space
+associations across every focus call. All native view layout values were
+unchanged during those calls. The original native CLI handlers remained intact.
+This is a real SIP-enabled macOS 15.6 interactive test, including switching to
+an inactive empty mapped Space; it is separate from the headless CI evidence.
+
+### Recovery, local records, and remaining limits
+
+The repeat stopped only its development process and restored the original
+LaunchAgent. The helper again ended with a generic recovery assertion after its
+saved snapshot already showed the original Space/focus. A separate final audit
+explicitly restored focus, verified every recovery condition, and saved a passed
+result; the generic assertion's precise cause was not established and is not
+reported as a production failure.
+
+Final verification found exactly one original Homebrew daemon, PID 13873,
+running `/opt/homebrew/bin/yabai`; original visible/active Space 3 and Orca window
+6369 were restored. All five original window frames and Space associations also
+matched the repeat's immediate baseline after recovery. Original binary,
+configuration, and LaunchAgent hashes match the Milestone 0 values above. SIP is
+enabled. Host identifiers are historical and must be rechecked before reuse.
+
+Evidence folders:
+
+- First attempt, native control, and follow-up recovery:
+  `/private/tmp/yabai-v-m1-approved.shfxktq3`.
+- Successful repeat: `/private/tmp/yabai-v-m1-repeat.431h1ip7`, including
+  `events.json`, per-focus snapshots, `initial-vspaces.json`, daemon logs,
+  the helper's retained `results.json`, and passed `final-recovery-audit.json`.
+- Temporary test helpers: `/private/tmp/yabai-v-m1-approved-smoke.py`,
+  `yabai-v-m1-native-control.py`, and `yabai-v-m1-repeat-smoke.py`.
+
+Milestone 1's requested local GUI and macOS 15/26 CI checks are complete. The
+local config fix `b195681` and subsequent validation-record commit are not
+published or covered by a new GitHub run; the corrected config passed the live
+repeat and shell syntax checks. No C source changed after the tested SHA.
+macOS 26 interactive runtime remains unrun because no GUI host was supplied.
+Session-only mapping, conservative unknown occupancy, and external native
+Space/display changes retain the documented limitations. Milestone 2 has not
+begun, and no merge is authorized.
