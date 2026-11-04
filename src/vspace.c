@@ -81,6 +81,8 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
             daemon_fail(rsp, "cannot focus virtual workspace because the display is in the middle of an animation.\n");
         } else if (result == VIRTUAL_WORKSPACE_IN_MISSION_CONTROL) {
             daemon_fail(rsp, "cannot focus virtual workspace because mission-control is active.\n");
+        } else if (result == VIRTUAL_WORKSPACE_SCRIPTING_ADDITION) {
+            daemon_fail(rsp, "cannot focus virtual workspace due to an error with the scripting-addition.\n");
         } else if (result != VIRTUAL_WORKSPACE_SUCCESS) {
             daemon_fail(rsp, "could not focus virtual workspace with index '%d'.\n", index);
         }

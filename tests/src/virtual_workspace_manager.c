@@ -247,10 +247,11 @@ TEST_FUNC(virtual_workspace_focus_failures,
     virtual_workspace_test_state.focus_result = SPACE_OP_ERROR_IN_MISSION_CONTROL;
     TEST_CHECK(virtual_workspace_manager_focus(&vm, 1), VIRTUAL_WORKSPACE_IN_MISSION_CONTROL);
     virtual_workspace_test_state.focus_result = SPACE_OP_ERROR_SCRIPTING_ADDITION;
-    TEST_CHECK(virtual_workspace_manager_focus(&vm, 1), VIRTUAL_WORKSPACE_FOCUS_FAILED);
+    TEST_CHECK(virtual_workspace_manager_focus(&vm, 1), VIRTUAL_WORKSPACE_SCRIPTING_ADDITION);
     virtual_workspace_test_state.focus_result = SPACE_OP_ERROR_SUCCESS;
     virtual_workspace_test_state.focus_changes_space = false;
-    TEST_CHECK(virtual_workspace_manager_focus(&vm, 1), VIRTUAL_WORKSPACE_FOCUS_FAILED);
+    /* Native success is dispatch success, even before macOS changes focus. */
+    TEST_CHECK(virtual_workspace_manager_focus(&vm, 1), VIRTUAL_WORKSPACE_SUCCESS);
     TEST_CHECK(virtual_workspace_test_state.active_sid == 300, true);
     buf_free(vm.workspaces);
 });

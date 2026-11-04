@@ -128,7 +128,11 @@ TEST_FUNC(vspace_focus_errors,
     virtual_workspace_test_state.focus_result = SPACE_OP_ERROR_IN_MISSION_CONTROL;
     TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", FAILURE_MESSAGE "cannot focus virtual workspace because mission-control is active.\n"), true);
     virtual_workspace_test_state.focus_result = SPACE_OP_ERROR_SCRIPTING_ADDITION;
-    TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", FAILURE_MESSAGE "could not focus virtual workspace with index '1'.\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", FAILURE_MESSAGE "cannot focus virtual workspace due to an error with the scripting-addition.\n"), true);
+    virtual_workspace_test_state.focus_result = SPACE_OP_ERROR_SUCCESS;
+    virtual_workspace_test_state.focus_changes_space = false;
+    TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", ""), true);
+    TEST_CHECK(virtual_workspace_test_state.active_sid == 300, true);
     virtual_workspace_test_state.spaces[0][0] = 999;
     TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", FAILURE_MESSAGE "cannot focus virtual workspace because its native space or display is unavailable.\n"), true);
     vspace_test_end();

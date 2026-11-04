@@ -145,12 +145,7 @@ enum virtual_workspace_error virtual_workspace_manager_focus(struct virtual_work
     if (result == SPACE_OP_ERROR_SAME_SPACE) return VIRTUAL_WORKSPACE_SAME_SPACE;
     if (result == SPACE_OP_ERROR_DISPLAY_IS_ANIMATING) return VIRTUAL_WORKSPACE_DISPLAY_IS_ANIMATING;
     if (result == SPACE_OP_ERROR_IN_MISSION_CONTROL) return VIRTUAL_WORKSPACE_IN_MISSION_CONTROL;
+    if (result == SPACE_OP_ERROR_SCRIPTING_ADDITION) return VIRTUAL_WORKSPACE_SCRIPTING_ADDITION;
     if (result != SPACE_OP_ERROR_SUCCESS) return VIRTUAL_WORKSPACE_FOCUS_FAILED;
-
-    /* Upstream's gesture path can report success without activating the target. */
-    for (int i = 0; i < 20; ++i) {
-        if (vm->source->active_space() == workspace->sid) return VIRTUAL_WORKSPACE_SUCCESS;
-        usleep(50000);
-    }
-    return VIRTUAL_WORKSPACE_FOCUS_FAILED;
+    return VIRTUAL_WORKSPACE_SUCCESS;
 }

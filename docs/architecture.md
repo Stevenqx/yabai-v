@@ -67,8 +67,8 @@ Failed queries and incomplete native iteration are also unknown. Known desktop
 and nonordinary windows do not alone allocate a Space. No BSP tree is consulted.
 
 Focus resolves only a virtual index, checks the native display association, and
-calls `space_manager_focus_space` unchanged. It translates native failures and
-checks native active state for approximately one second, because upstream's
-gesture fallback can report success without switching. No new scripting-addition
-requirement is introduced. External Space/display changes do not reassign IDs;
-stale targets fail and startup rebuilding remains the recovery mechanism.
+calls `space_manager_focus_space` unchanged. M2-A translates its results directly,
+including already-focused and scripting-addition errors, without M1's extra
+polling or timeout. Native gesture dispatch success does not establish observed
+activation under SIP. External Space/display changes do not reassign IDs; stale
+targets fail and startup rebuilding remains the recovery mechanism.

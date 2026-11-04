@@ -334,3 +334,19 @@ Milestone 1's authorized scope and requested checks are complete. macOS 26 GUI
 runtime remains unrun without a host. Next: review local follow-ups and obtain
 publication authorization if desired, or validate on a supplied macOS 26 GUI host.
 No Milestone 2 implementation, pull request, or merge was started.
+
+## 2026-11-04 — Match native virtual-focus results
+
+Scope: first M2-A unit, authorized by the user's create/native-focus task.
+Started clean on `feat/vspace-mapping` at `8c5d0b3`, preserving M1 history.
+Recorded active M2-A scope before implementation. Removed the extra focus polling
+loop/timeout, retained virtual lookup and stale association checks, and preserved
+native focus failure categories including scripting-addition errors. Updated
+headless regressions and current command/architecture guidance; D009 supersedes
+D008's polling policy. Historical validation reports remain unchanged.
+
+Validation: universal `make` passed without warnings; 22/22 headless tests passed
+with five existing CoreVideo warnings. Local Markdown links and whitespace passed.
+These checks do not establish GUI switching. No daemon/service, installed files,
+TCC, SIP, or remote branch was changed. M2-A allocation remains in progress; next
+implement/revalidate focused-display spare allocation and record later proposals.

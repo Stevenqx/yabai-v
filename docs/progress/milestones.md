@@ -137,13 +137,34 @@ attempts, helper assertions, and evidence paths are in the
 [latest validation](../validation.md#milestone-1-publication-and-interactive-validation--2026-11-04).
 
 Remaining follow-up: macOS 26 GUI runtime requires a supplied host/session.
-Future publication/service changes remain subject to `AGENTS.md`; no merge or
-Milestone 2 implementation is authorized.
+Future publication/service changes remain subject to `AGENTS.md`; no merge is
+authorized. The M2-A request below supersedes the former Milestone 2 gate.
 
-## Milestone 2 and later
+## Milestone 2-A — Allocate existing spares and use native focus
 
-Status: proposed; implementation is not authorized.
+Status: in progress, authorized by the user on 2026-11-04.
+Task branch: `feat/vspace-mapping`, clean baseline `8c5d0b3` (M1 descendant).
 
-Workspace creation/destruction, window assignment/movement, reordering,
-persistence across restarts, GUI, and hotkeys are deferred. This task does not
-begin any of them.
+Scope: `vspace --create` maps the first confirmed-empty, hidden, unmapped native
+desktop on the focused display, with current-state revalidation and no desktop
+mutation. Append session-local identity/global index without changing survivors.
+Make virtual focus return the native focus result without M1 polling. Preserve
+all existing commands, layouts, native handlers, signing, and service boundaries.
+Record M2-B/C/D and native MRU proposals; only M2-A implementation is authorized.
+
+- [x] Inspect clean branch, M1 checkpoint, records, build system, and native paths.
+- [x] Implement native focus result parity and regression coverage.
+- [ ] Implement conservative focused-display allocation and revalidation.
+- [ ] Cover one/two-display exhaustion, ordering/identity, unsafe and stale state.
+- [ ] Build/sign/verify locally; run headless tests and appropriate checks.
+- [ ] Record available runtime evidence separately from simulations and CI.
+- [ ] Update technical docs, follow-on design, decisions, journal, and resume notes.
+- [ ] Create focused local commits; publication and service changes need approval.
+
+## Milestone 2-B/C/D and native MRU
+
+Status: design proposals only; implementation is not authorized.
+
+Destroy, manual refresh, persistence, and native Space/window MRU will be recorded
+with their safety and policy boundaries during M2-A. Native Space lifecycle,
+reordering, GUI, and hotkeys remain deferred.

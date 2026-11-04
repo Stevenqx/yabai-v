@@ -58,11 +58,10 @@ zero. Missing, malformed, overflowing, or unmapped indices fail. Focusing the
 already focused workspace fails, matching upstream's native focus convention.
 
 Other failures include a missing or reassociated native Space/display, an active
-Mission Control session, display animation, and failed native activation. The
-manager checks observed native focus for approximately one second after dispatch;
-a successful gesture dispatch alone does not count as successful activation.
-A timeout is a failure to observe focus within that interval; delayed native
-switching is still possible, so query and visually verify the final state.
+Mission Control session, display animation, and native focus errors. M2-A returns
+the native `space --focus` result directly after virtual lookup/stale validation.
+It adds no polling or timeout. Under SIP, native gesture dispatch can succeed
+without a completed visible switch; query and visually verify the final state.
 
 All errors use yabai's existing daemon failure marker: the CLI prints the message
 to stderr and exits unsuccessfully. If startup enumeration failed, mapping

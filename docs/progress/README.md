@@ -30,46 +30,31 @@ The corrected local development config uses float `0.0` for animation duration.
 
 [Commands and JSON](../vspace.md) document startup/session policy and errors.
 macOS 26 interactive runtime remains unverified without a supplied GUI host.
-Milestone 2 has not begun.
+Milestone 2-A is authorized and in progress: spare mapping creation and native
+focus result parity. Later milestone implementations remain proposals.
 
 ## Resuming work
 
-Handoff checked on 2026-11-04. Active branch: `feat/vspace-mapping`.
-Published source checkpoint: `6c4a354efb3a75c25906d48a49ad55c224fe175a`, with
-[passing CI run 41779098539](https://github.com/Stevenqx/yabai-v/actions/runs/41779098539).
-Scope/manager checkpoints are `21a6e6f` and `36e9ac8`.
-Local follow-ups are config fix `b195681` and the subsequent validation-record
-commit containing this handoff; these follow-ups are **not published**. Inspect
-`git log` for the exact final local record checkpoint. No C source changed after
-the CI-tested commit, and the local config fix passed the live repeat.
+Active task checked on 2026-11-04: M2-A, branch `feat/vspace-mapping`, clean
+starting checkpoint `8c5d0b3`. This descends from published M1 source `6c4a354`;
+config/validation follow-ups `b195681` and `8c5d0b3` are present. No push is
+authorized in this task; inspect remote refs before assuming publication state.
 
-1. Inspect branch/tree and read milestones, decisions, journal, architecture,
-   development guide, and latest validation. Recheck all historical host state.
-2. Milestone 1's requested build/headless/CI and local interactive checks are
-   complete. Review the local config/documentation follow-ups; publish them only
-   if authorized. No merge, force-push, or new milestone is authorized.
-3. If a macOS 26 GUI host is supplied, plan its runtime validation using the
-   existing signing, single-daemon, observation, and recovery procedures.
-   Keep that check unrun until real evidence exists. Future service changes
-   remain subject to the host-safety approval requirement.
-4. Completed evidence: signed universal local build; 22/22 tests, static analysis,
-   native-query probe and CLI regressions; universal build/signature/22 tests on
-   both hosted macOS versions; empty-active initialization and virtual focusing
-   on an inactive native Space on macOS 15.6 with visual confirmation and unchanged
-   frames/layouts. Final recovery audit independently passed all conditions.
-5. Session-only mapping, conservative unknown occupancy, external native
-   Space/display changes, and macOS 26 GUI runtime retain their documented
-   limits. Lifecycle, persistence, movement, reordering, GUI, and hotkeys remain
-   deferred. Do not begin Milestone 2 without explicit authorization.
+Read milestones, decisions, journal, architecture, development, and validation.
+M2-A removes virtual-focus polling and adds focused-display spare allocation.
+Record M2-B/C/D and native MRU design only. Retain session-local mapping state,
+all existing native commands/layouts, and the single-daemon safety boundary.
 
-The successful repeat evidence is `/private/tmp/yabai-v-m1-repeat.431h1ip7`;
-use its passed `final-recovery-audit.json` together with the retained helper
-assertion record and focus snapshots. The first/interrupted attempt and native
-control are `/private/tmp/yabai-v-m1-approved.shfxktq3`. Final audit observed one
-original Homebrew daemon (PID 13873), native visible/active Space 3 on display 1,
-and Orca window 6369 focused. Original window frames and installation hashes
-matched the immediate baseline. These are historical identifiers, not reusable
-host state or blanket authorization for future changes.
+The M1 macOS 15/26 CI and macOS 15.6 GUI results remain historical evidence for
+M1, not validation of new M2-A code. New build/tests/signature and GUI results
+will be recorded in the latest validation entry. An existing service must be
+rechecked; do not stop or replace it without explicit approval, start a competing
+daemon, or reuse historical PIDs/Space/window IDs. New CI requires publication
+authorization; macOS 26 GUI still requires a supplied session.
+
+Next: finish M2-A implementation and conservative regression coverage, run local
+checks, record concrete runtime gates, then commit locally. Do not implement
+follow-on proposals, publish, or merge without authorization.
 
 ## Supporting documents
 

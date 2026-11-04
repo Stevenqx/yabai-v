@@ -1,6 +1,6 @@
 # Validation report — 2026-11-01
 
-Latest update: [Milestone 1 publication and interactive validation](#milestone-1-publication-and-interactive-validation--2026-11-04).
+Previous completed milestone: [Milestone 1 publication and interactive validation](#milestone-1-publication-and-interactive-validation--2026-11-04).
 The macOS 15/26 matrix and a visually confirmed macOS 15 virtual-focus round trip
 passed. The original service, desktop, and file hashes were restored/verified.
 macOS 26 interactive runtime still lacks a supplied GUI host. Earlier results
@@ -526,3 +526,18 @@ macOS 26 interactive runtime remains unrun because no GUI host was supplied.
 Session-only mapping, conservative unknown occupancy, and external native
 Space/display changes retain the documented limitations. Milestone 2 has not
 begun, and no merge is authorized.
+
+## Milestone 2-A native focus — 2026-11-04
+
+Baseline: clean `feat/vspace-mapping` at `8c5d0b3`, an M1 descendant. `make`
+passed the universal debug build without warnings. `make -C tests` passed 22/22
+with the existing five CoreVideo deprecation warnings. Updated focus tests cover
+native success while active state remains unchanged, native failures, invalid
+indices, stale targets, cross-display native-ID dispatch, and existing CLI/layout
+regressions. Virtual focus no longer polls or adds a timeout. These are headless
+results; no new GUI/CI result or installed-service change is claimed.
+
+Logs: `/private/tmp/yabai-v-m2a-focus-build.log` and
+`/private/tmp/yabai-v-m2a-focus-tests.log`. SIP reports enabled on macOS 15.6.
+Sandbox process-list inspection was unavailable; recheck outside the sandbox
+before any real daemon session. Creation and final signing/runtime audit follow.

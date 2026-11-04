@@ -105,3 +105,18 @@ focus unchanged and verify observed activation to catch silent gesture failure.
 A small query-source interface supports deterministic headless policy tests.
 
 Reference: [manager architecture](../architecture.md#milestone-1-manager-foundation).
+
+## D009 — Return native focus semantics
+
+Date: 2026-11-04. Status: accepted for the authorized M2-A task.
+
+Supersedes D008's observed-activation polling requirement. After virtual index
+lookup and stale association validation, use the existing native focus path and
+return its result. Preserve already-focused, Mission Control, animation, and
+scripting-addition failures. Remove the extra one-second polling timeout:
+dispatch success has the same guarantee as `space --focus`, including its SIP
+gesture fallback limits. Observe actual switching separately in GUI validation.
+
+The same user request authorizes spare mapping creation in M2-A and recording
+follow-on designs, without authorizing later implementation, publication, or
+installed service changes.
