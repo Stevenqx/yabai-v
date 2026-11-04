@@ -350,3 +350,35 @@ with five existing CoreVideo warnings. Local Markdown links and whitespace passe
 These checks do not establish GUI switching. No daemon/service, installed files,
 TCC, SIP, or remote branch was changed. M2-A allocation remains in progress; next
 implement/revalidate focused-display spare allocation and record later proposals.
+
+## 2026-11-04 — Allocate revalidated native spares and record M2 follow-ons
+
+Scope: complete authorized M2-A implementation after focus checkpoint `86dabb5`.
+Added strict `vspace --create`, guarded focused-display resolution, native desktop
+and visibility checks, existing conservative occupancy reuse, fresh selection
+revalidation, and append-only session IDs/global indices. Failures leave mappings
+and allocation counters unchanged. Tightened unfamiliar AX role/subrole handling
+to unknown. No native focus, placement, layout, or Space order changes occur on
+creation. Updated CLI help, commands, architecture, development guide, and D010.
+Recorded M2-B destroy/partial failure, M2-C all-display conservative refresh,
+M2-D persistence, and native-identity/observed-focus MRU proposals under D011.
+Later implementations remain unauthorized; no MRU seam was necessary.
+
+Validation: final signed universal build and strict/all-architecture verification
+passed with the persistent identity; 30/30 headless tests passed with five
+existing CoreVideo warnings. Arm64 analyzer has no findings. Shell syntax,
+local Markdown links/anchors and whitespace passed. Native handlers/layouts,
+makefiles, and CI remain unchanged. Native read-only process-local mapping probes
+passed one-display exhaustion and, after an external topology change, final-source
+two-display focused-pool exhaustion without falling back to another display's
+spare. These probes never start a daemon or focus/move anything. Original native
+queries and all installation hashes passed; original service stayed running.
+
+An early test-macro fixture compilation error and sandbox signing failure were
+corrected; the final builds/tests/signature passed. An audit's nonexistent config
+path was corrected from repository records. See
+[detailed M2-A evidence](../validation.md#milestone-2-a-allocation-and-local-validation--2026-11-04).
+New live daemon/focus/layout sessions and hosted CI are unrun: service-pause and
+publication require approval. macOS 26 GUI still needs a supplied session. Next:
+review local commits, obtain explicit live-session authorization, execute the
+recorded recovery plan against fresh topology, and publish/run CI only if approved.

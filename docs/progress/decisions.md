@@ -120,3 +120,30 @@ gesture fallback limits. Observe actual switching separately in GUI validation.
 The same user request authorizes spare mapping creation in M2-A and recording
 follow-on designs, without authorizing later implementation, publication, or
 installed service changes.
+
+## D010 — Allocate only a revalidated focused-display spare
+
+Date: 2026-11-04. Status: accepted for M2-A.
+
+Extend the session snapshot by explicit `--create` only. Select the first
+unmapped hidden desktop confirmed empty on the focused display using existing
+native queries. Unknown state is ineligible, including unfamiliar AX roles.
+Repeat topology/visibility/type/occupancy/mapping selection and recheck focus
+before mutation. Fail without allocation if state changed; never fall back to
+another display. Append a fresh monotonic virtual ID and highest-index-plus-one
+without rewriting survivors or changing the native desktop. Empty allocations
+stay mapped. This supersedes D008's frozen-snapshot restriction only for explicit
+creation; native focus uses D009. External macOS changes remain observable races.
+
+## D011 — Record lifecycle, persistence, and native MRU proposals
+
+Date: 2026-11-04. Status: proposed for future implementation.
+
+The user's follow-on design constraints are recorded under
+[architecture proposals](../architecture.md#follow-on-proposals): evacuate before
+destroying mappings with explicit cross-display targeting and retained mappings
+on partial failure; manual refresh conservatively releases hidden empty mappings
+and globally compacts indices; later persistence restores logical identity/order
+after native revalidation. Native Space/window MRU is a separate observed-focus
+feature, independent of virtual numbering. Final destroy policies, MRU storage,
+commands, and selection scope remain deferred. No MRU seam is needed by M2-A.

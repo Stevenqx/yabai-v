@@ -27,6 +27,14 @@ typedef TEST_SIG(function);
     TEST_ENTRY(virtual_workspace_window_occupancy)              \
     TEST_ENTRY(virtual_workspace_focus_native_id)               \
     TEST_ENTRY(virtual_workspace_focus_failures)                \
+    TEST_ENTRY(virtual_workspace_create_one_display)          \
+    TEST_ENTRY(virtual_workspace_create_two_displays)         \
+    TEST_ENTRY(virtual_workspace_create_unsafe_candidates)    \
+    TEST_ENTRY(virtual_workspace_create_unavailable_state)    \
+    TEST_ENTRY(virtual_workspace_create_revalidation)         \
+    TEST_ENTRY(virtual_workspace_create_limits)               \
+    TEST_ENTRY(vspace_create_revalidation_errors)              \
+    TEST_ENTRY(vspace_create)                                  \
     TEST_ENTRY(vspace_ping)                                    \
     TEST_ENTRY(vspace_missing_command)                         \
     TEST_ENTRY(vspace_unknown_command)                         \

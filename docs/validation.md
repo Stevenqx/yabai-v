@@ -1,10 +1,10 @@
 # Validation report — 2026-11-01
 
-Previous completed milestone: [Milestone 1 publication and interactive validation](#milestone-1-publication-and-interactive-validation--2026-11-04).
-The macOS 15/26 matrix and a visually confirmed macOS 15 virtual-focus round trip
-passed. The original service, desktop, and file hashes were restored/verified.
-macOS 26 interactive runtime still lacks a supplied GUI host. Earlier results
-and unsuccessful attempts are retained as historical evidence.
+Latest update: [Milestone 2-A allocation and local validation](#milestone-2-a-allocation-and-local-validation--2026-11-04).
+M2-A's signed universal build, 30 headless tests, static checks, and read-only
+native allocation probes passed. New live daemon/GUI checks need service-pause
+approval; new hosted CI needs publication authorization. macOS 26 GUI remains
+unavailable. Earlier M1 CI/GUI evidence is historical and does not validate M2-A.
 
 ## Environment and upstream
 
@@ -541,3 +541,122 @@ Logs: `/private/tmp/yabai-v-m2a-focus-build.log` and
 `/private/tmp/yabai-v-m2a-focus-tests.log`. SIP reports enabled on macOS 15.6.
 Sandbox process-list inspection was unavailable; recheck outside the sandbox
 before any real daemon session. Creation and final signing/runtime audit follow.
+
+## Milestone 2-A allocation and local validation — 2026-11-04
+
+Baseline: clean `feat/vspace-mapping` at `8c5d0b3ec02b6fdf78ee48aa0fcd785c09b6e3a9`,
+an M1 descendant. Local native-focus checkpoint: `86dabb5`; allocation and records
+are the following local commit. The local remote-tracking ref also points at
+`8c5d0b3`; no fetch/push or new CI run was performed. Earlier notes describing
+that checkpoint as unpublished are historical. Neither M2-A change is published.
+The original upstream baseline/build evidence above remains applicable; this task
+does not recreate or rebase that base.
+
+### Local build and headless checks
+
+Host: macOS 15.6 (24G84), arm64, SIP enabled; existing CLT/SDK and build system.
+
+| Check | Result |
+| --- | --- |
+| `./scripts/build-dev.sh` (`make` plus persistent signing) | Passed final universal x86_64/arm64 build, no build warnings |
+| Strict/all-architecture signature verification and designated requirement | Passed, `com.yabai-fork.development`, existing `yabai-fork Development` certificate leaf `85c2410619477a69b324ed91bb1ff677f4e2e775` |
+| `lipo -verify_arch x86_64 arm64`, version/help | Passed; help includes create/native-focus semantics |
+| `make -C tests` | 30/30 passed; five existing upstream CoreVideo deprecation warnings |
+| arm64 Clang static analyzer | Passed, no findings |
+| Shell syntax, local Markdown links/anchors, `git diff --check` | Passed |
+| Original native handlers/layouts/build/test makefiles/CI versus baseline | Unchanged; only fork manager/handler and CLI help changed production behavior |
+| Original daemon display/Space/window queries | Passed; service remained running |
+| Original binary/configuration/LaunchAgent hashes | Match the three foundation hashes above |
+| New macOS 15/26 hosted matrix | **Unrun**; existing workflow retained, publication not authorized |
+| New daemon/GUI/focus/layout session | **Unrun**; needs explicit service-pause approval |
+| macOS 26 GUI | **Unrun**; no supplied session |
+
+Tests cover one/two-display native-order selection through exhaustion; no fallback
+when the focused display is exhausted; exact survivor IDs/indices/order;
+independent virtual IDs and indices; empty allocation retention and subsequent
+focus; visible unmapped and non-desktop candidates; floating-window occupancy
+without a layout node; unknown/custom AX state; unavailable display, topology,
+and visibility; changes in visibility, occupancy (occupied/unknown), type,
+topology/ownership, focused display, and query availability during revalidation;
+index/ID exhaustion; CLI JSON, strict arguments, and failure atomicity. Existing
+ping/current/list, malformed/stale/reassociated focus, native focus error
+categories, delayed native success, and BSP/stack/float dispatcher checks pass.
+Unknown/incomplete native window-query results use the existing conservative
+adapter; deterministic fixtures inject unknown occupancy, rather than claiming
+that a real WindowServer query failed during this session.
+
+Logs: `/private/tmp/yabai-v-m2a-signed-build-final.log`,
+`yabai-v-m2a-tests-final.log`, and `yabai-v-m2a-analysis-final.log`.
+The first sandbox signing attempt reported invalid parameters; signing outside
+the sandbox with the same existing identity passed. An initial new test fixture
+failed compilation because the upstream test macro requires parentheses around
+comma-containing compound literals; corrected before the passing runs.
+
+### Read-only native allocation probes
+
+Temporary probe: `/private/tmp/yabai-v-m2a-native-probe.m`, with build log,
+`.jsonl` mapping snapshots, and `.log` native observations at the same prefix.
+It initializes native query access and empty lookup tables only, never native
+managers/event processing, and invokes the production allocation policy against
+current WindowServer state. It does not start a managing daemon or call focus,
+window movement, layout, Space lifecycle, or service operations. Untracked
+ordinary windows are conservatively unknown in this probe, unlike a full daemon
+with AX tracking; safety classification is additionally tested headlessly.
+
+An initial one-display probe mapped native Space 3 at startup, then allocated
+hidden empty desktops 7 and 592 in enumeration order and failed at exhaustion,
+leaving prior mapping bytes and next ID unchanged on failure. Current/list stayed
+consistent and native window IDs/frames/associations matched the immediate
+one-display baseline. That probe preceded the final custom-AX tightening; the
+final probe was rebuilt from the final production source.
+
+Host topology changed between observations without any service/focus commands
+from this task. The final probe saw two displays and focused display 2:
+
+| Display | Native Space order | Probe occupancy/visibility |
+| --- | --- | --- |
+| 1 | 3, 7 | 3 visible/unknown; 7 hidden/empty |
+| 2 (focused) | 666, 592 | 666 visible/unknown; 592 hidden/empty |
+
+Startup mapped 3 and 666. Creation appended 592 with a fresh ID/index; the next
+call failed with no spare on display 2 even though hidden empty Space 7 on display
+1 remained unmapped. Survivor bytes, counter on failure, and globally focused
+current mapping were preserved. The original Homebrew daemon remained PID 13873.
+All identifiers and topology are historical; recheck before use. Do not compare
+frames across the external display-topology change as proof of preservation.
+The first audit tried nonexistent `~/.yabairc`; rerunning with the repository's
+recorded `~/.dotfile/yabai/yabairc` confirmed all original hashes.
+
+These are native adapter/policy checks in process-local memory, not evidence of
+IPC execution in a real development daemon or visible focus behavior.
+
+### Concrete live/CI follow-ups
+
+With explicit approval under `AGENTS.md`, recheck current processes, native
+queries, signed binary, original hashes, visible Spaces and focused window.
+Pause only the original Homebrew service, confirm no daemon remains, and launch
+the signed checkout binary with `examples/yabairc.dev` and dedicated IPC names.
+Use the current topology rather than the historical IDs above.
+
+1. Check ping/list/current and native queries; record stable virtual IDs/indices.
+2. Create mappings in current-display enumeration order through exhaustion;
+   verify no focus/frame/layout/native-order changes or mutation on failure.
+   With two displays, leave a spare on one while exhausting the focused display,
+   then focus the other display and allocate there. Check visible unmapped and
+   floating occupancy when safe existing state permits; retain fixture evidence
+   for unsafe/unavailable state that cannot be produced without disruption.
+3. Compare native and virtual focus to the same mapped native Space, restoring
+   the source between controls and letting transitions settle. Record native
+   exit status separately from five-second query/visual observations. Include
+   already-focused and cross-display cases; bad/stale targets remain covered
+   headlessly when native removal would be unsafe.
+4. Smoke-test float/BSP/stack on safe disposable/empty workspaces, restore view
+   settings, all original visible Spaces and focus, then stop only the development
+   daemon and restore the original service. Independently audit original-service
+   queries, focus, frames, hashes, SIP, and one-daemon state after recovery.
+
+Do not start this session alongside the existing daemon. Publication/CI is a
+separate authorization gate: push only reviewed M2-A commits when approved, then
+run the existing macOS 15/26 matrix for that exact published SHA. Historical M1
+CI is not a substitute. A macOS 26 GUI host and real two-display session are
+still required for their interactive compatibility claims.

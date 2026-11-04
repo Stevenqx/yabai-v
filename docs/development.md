@@ -113,8 +113,10 @@ git diff --check
 
 The vspace tests exercise the production manager and message dispatcher with a
 deterministic native-query source, without initializing WindowServer managers.
-They cover mapping/order, occupancy, BSP/float independence, duplicates, session
-stability, lookup, JSON, focus outcomes, strict input, and the exact ping response.
+They cover mapping/order, conservative occupancy, layout independence, duplicates,
+session stability, lookup, JSON, native focus outcomes, strict input, exact ping,
+and one/two-display allocation/exhaustion and revalidation failures. Simulated
+displays do not establish behavior on physical displays.
 The existing upstream tests run alongside them. These checks require neither
 Accessibility permissions nor a running daemon. GitHub Actions repeats the build,
 ad-hoc signature verification, and tests on `macos-15` and `macos-26`; hosted
@@ -182,6 +184,26 @@ Space was empty, confirm it was still allocated. Compare native window IDs,
 Space associations, frames, and layout settings before/after; record intentional
 focus/visibility changes separately. Never use a Mission Control index as a
 virtual index or allocate/move windows merely to make the test pass.
+
+For M2-A, capture list/current, native display/Space/window queries, and existing
+IDs/indices before `vspace --create`. Confirm native enumeration order selects
+the first eligible hidden empty desktop on the focused display. Repeat to
+exhaustion, checking that failures do not mutate mappings and empty allocations
+stay mapped. On two displays, exhaust the focused display while another still
+has a spare; creation must fail. Switch focused display and repeat there. Check
+visible unmapped, fullscreen, occupied floating-window, and unknown-state
+candidates using safe existing state or headless fixtures; do not change the
+user's desktop merely to manufacture cases.
+
+Compare native `space --focus` and virtual `vspace --focus` for the same native
+ID, including already-focused and cross-display targets. M2-A returns native
+results without polling/timeout; observe switching separately through queries
+and visually after allowing transitions to settle. Test bad/stale indices,
+ping/list/current, original queries, and float/BSP/stack with disposable windows
+where approved. Restore original visible Spaces, focus, service, frames, layouts,
+and installation hashes. Report live results separately from native read-only
+probes, deterministic fixtures, and hosted CI. See the current
+[M2-A validation plan](validation.md#milestone-2-a-allocation-and-local-validation--2026-11-04).
 
 Stop only the foreground development process with Ctrl-C. An existing Homebrew
 binary, service plist, and user configuration must remain intact. If the original

@@ -1,6 +1,7 @@
 # Virtual workspace mapping and focusing
 
-Milestone 1 adds a daemon-owned VirtualWorkspaceManager. Each allocated virtual
+Milestone 1 adds a daemon-owned VirtualWorkspaceManager; M2-A adds explicit
+spare allocation and native focus results. Each allocated virtual
 workspace maps to exactly one native macOS Space, identified by its native ID,
 and records its native display ID. It does not position windows or choose a
 layout. Existing `space`, `window`, and `query` commands keep their native meaning.
@@ -11,6 +12,7 @@ layout. Existing `space`, `window`, and `query` commands keep their native meani
 yabai -m vspace --ping
 yabai -m vspace --list
 yabai -m vspace --current
+yabai -m vspace --create
 yabai -m vspace --focus 2
 ```
 
@@ -39,7 +41,7 @@ add these commands to an older running daemon.
 | `index` | Positive, one-based user-visible index, unique across all displays; the argument to `--focus` |
 | `id` | Opaque internal virtual ID, separate from index and native ID; stable only within this daemon session |
 | `space-id` | Native 64-bit Space ID, never a Mission Control index |
-| `display-id` | Native display ID associated with this mapping at initialization, matching `query --displays` IDs |
+| `display-id` | Native display ID associated with this mapping at allocation, matching `query --displays` IDs |
 | `has-focus` | Whether this is the globally focused native Space at query time; distinct from merely visible on a display |
 
 IDs are JSON integers. Clients must preserve 64-bit integer precision. Internal
@@ -50,6 +52,28 @@ identity contract. Display IDs and Space IDs are not persistent virtual IDs.
 fails with `current native space is not mapped to a virtual workspace.` when the
 user has switched natively to an unallocated spare or newly created Space, or
 native focus cannot be determined. In that case `--list` has no focused entry.
+
+`--create` appends one virtual workspace mapped to the first eligible existing
+native desktop in enumeration order **on the currently focused display**. It
+requires an unmapped, nonvisible desktop confirmed empty using current native
+window state. It excludes fullscreen/non-desktop Spaces, visible unmapped Spaces,
+floating/hidden/minimized ordinary windows, and unknown occupancy. It never
+falls back to another display or treats a missing layout node as empty.
+
+The command re-enumerates topology, visibility, desktop type, occupancy, and
+mapping eligibility before committing, and rechecks the focused display. Native
+state changes during selection fail without allocation; retry explicitly. A
+missing focused display, unavailable topology/visibility, no eligible spare on
+that display, and exhausted virtual IDs/indices also fail without mutation.
+Commands/events use the existing serial daemon loop; macOS can still change
+external state after the last native observation.
+
+Success has no output and exits zero. Find the new mapping in `--list`, then use
+its `index` with `--focus`. The appended workspace receives a fresh session-local
+ID and the index after the highest existing index. All existing IDs, indices,
+and relative order remain unchanged. Allocation changes no focus, window,
+layout, or native Space order. Even while empty, it stays mapped for this session
+until a future explicit lifecycle operation releases it.
 
 `--focus N` accepts a positive decimal integer up to `2147483647`; leading zeros
 are accepted. It resolves the virtual index to a native Space ID and calls the
@@ -67,7 +91,7 @@ All errors use yabai's existing daemon failure marker: the CLI prints the messag
 to stderr and exits unsuccessfully. If startup enumeration failed, mapping
 commands report `virtual workspace mapping is not initialized.` and ping and
 upstream domains remain available. Each vspace request accepts exactly one
-command and its documented arguments; extra arguments fail before any focus.
+command and its documented arguments; extra arguments fail before any focus or allocation.
 
 ## Startup policy and session stability
 
@@ -82,8 +106,8 @@ virtual workspaces do not change native fullscreen behavior.
 Occupancy comes from native window enumeration with minimized/hidden windows
 included, then tracked window roles. Standard, floating, and dialog windows
 count regardless of BSP/stack/float layout, management rules, or float flags.
-The BSP tree is never an occupancy source. Missing/unknown roles, untracked
-ordinary-window candidates, failed queries, and incomplete native iteration are
+The BSP tree is never an occupancy source. Missing, unknown, or custom AX roles
+or subroles, untracked ordinary-window candidates, failed queries, and incomplete native iteration are
 uncertain and conservatively register the Space. This may allocate a visually
 empty Space containing unidentified system UI; it avoids treating uncertain
 occupied Spaces as spare. Confirmed desktop/background windows alone do not
@@ -93,21 +117,23 @@ The startup snapshot is atomic. Duplicate native IDs produce no duplicate
 workspace, and conflicting display ownership or incomplete Space enumeration
 leaves mapping commands unavailable instead of exposing a partial map.
 
-IDs, indices, and associations stay fixed for the current daemon session.
+Existing IDs, indices, and associations stay fixed for the current daemon session.
 Closing all windows does not remove a mapping; opening windows on a spare does
-not allocate it. Native reordering does not renumber virtual indices. Newly
-created native Spaces and new displays remain unmapped; stale or reassociated
+not allocate it. Native reordering does not renumber virtual indices. New native
+Spaces and displays are not mapped automatically; `--create` can allocate an
+eligible spare on the currently focused connected display. Stale or reassociated
 focus targets fail. Rebuilding at daemon startup is the current recovery path;
 changing an installed service still requires approval.
 
 ## Limits and validation
 
-No create/destroy, move-window, reordering, window positioning, new layouts,
-persistence across restarts, GUI, or hotkeys are implemented. Milestone 2 has not
-begun. Fork focus works through upstream's existing gesture fallback with SIP
+No destroy, refresh, move-window, reordering, window positioning, new layouts,
+persistence across restarts, GUI, or hotkeys are implemented. Follow-on designs
+are recorded in [architecture](architecture.md#follow-on-proposals).
+Fork focus works through upstream's existing gesture fallback with SIP
 fully enabled and does not require the scripting addition or root. Upstream's
 privileged operations retain their existing restrictions.
 
 Build/headless tests do not establish interactive compatibility. See the
-[latest Milestone 1 validation](validation.md#milestone-1-publication-and-interactive-validation--2026-11-04)
+[latest M2-A validation](validation.md#milestone-2-a-allocation-and-local-validation--2026-11-04)
 for checks actually performed and remaining approval/runtime gates.

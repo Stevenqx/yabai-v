@@ -71,6 +71,7 @@ TEST_FUNC(vspace_uninitialized,
 {
     TEST_CHECK(vspace_test_response("vspace\0--list\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--current\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--ping\0", "{\"status\":\"ok\",\"component\":\"vspace\"}\n"), true);
 });
@@ -100,6 +101,7 @@ TEST_FUNC(vspace_invalid_indices,
 TEST_FUNC(vspace_reject_extra_arguments,
 {
     TEST_CHECK(vspace_test_begin(), true);
+    TEST_CHECK(vspace_test_response("vspace\0--create\0extra\0", FAILURE_MESSAGE "unexpected argument 'extra' for command '--create' for domain 'vspace'\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--list\0extra\0", FAILURE_MESSAGE "unexpected argument 'extra' for command '--list' for domain 'vspace'\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--current\0extra\0", FAILURE_MESSAGE "unexpected argument 'extra' for command '--current' for domain 'vspace'\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0extra\0", FAILURE_MESSAGE "unexpected argument 'extra' for command '--focus' for domain 'vspace'\n"), true);
@@ -160,4 +162,40 @@ TEST_FUNC(vspace_preserve_existing_dispatch,
     TEST_CHECK(vspace_test_response("query\0--current\0", FAILURE_MESSAGE "unknown command '--current' for domain 'query'\n"), true);
     TEST_CHECK(vspace_test_response("vspace-extra\0--list\0", FAILURE_MESSAGE "unknown domain 'vspace-extra'\n"), true);
     g_space_manager.layout = original_layout;
+});
+
+TEST_FUNC(vspace_create,
+{
+    TEST_CHECK(vspace_test_begin(), true);
+    TEST_CHECK(vspace_test_response("vspace\0--create\0", ""), true);
+    TEST_CHECK(buf_len(g_virtual_workspace_manager.workspaces), 5);
+    TEST_CHECK(vspace_test_response("vspace\0--list\0", "[{\"index\":1,\"id\":1,\"space-id\":700,\"display-id\":90,\"has-focus\":false},{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true},{\"index\":3,\"id\":3,\"space-id\":500,\"display-id\":12,\"has-focus\":false},{\"index\":4,\"id\":4,\"space-id\":400,\"display-id\":12,\"has-focus\":false},{\"index\":5,\"id\":5,\"space-id\":80,\"display-id\":90,\"has-focus\":false}]\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true}\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "no eligible spare native desktop space on the current display.\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--focus\0" "5\0", ""), true);
+    TEST_CHECK(virtual_workspace_test_state.focused_sid == 80, true);
+    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":5,\"id\":5,\"space-id\":80,\"display-id\":90,\"has-focus\":true}\n"), true);
+    virtual_workspace_test_state.active_did = 0;
+    TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "cannot create virtual workspace because the current display could not be resolved.\n"), true);
+    virtual_workspace_test_state.active_did = 90;
+    virtual_workspace_test_state.visible_sid[0] = 0;
+    TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "cannot create virtual workspace because current native space state is unavailable.\n"), true);
+    TEST_CHECK(buf_len(g_virtual_workspace_manager.workspaces), 5);
+    vspace_test_end();
+});
+
+TEST_FUNC(vspace_create_revalidation_errors,
+{
+    TEST_CHECK(vspace_test_begin(), true);
+    virtual_workspace_test_state.space_queries = 0;
+    virtual_workspace_test_state.change_on_query = 2;
+    virtual_workspace_test_state.change = 2;
+    TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "cannot create virtual workspace because native state changed; retry the command.\n"), true);
+    TEST_CHECK(buf_len(g_virtual_workspace_manager.workspaces), 4);
+    virtual_workspace_test_state.occupied_sid = 0;
+    g_virtual_workspace_manager.workspaces[0].index = INT_MAX;
+    TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "cannot create virtual workspace because virtual IDs or indices are exhausted.\n"), true);
+    TEST_CHECK(buf_len(g_virtual_workspace_manager.workspaces), 4);
+    TEST_CHECK(g_virtual_workspace_manager.next_id == 5, true);
+    vspace_test_end();
 });

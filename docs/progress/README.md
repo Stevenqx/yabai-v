@@ -18,43 +18,65 @@ Its earlier published checkpoint is `6359db7` on `origin/feat/vspace-smoke`, wit
 Foundation records through `93a59ed` are now also published as ancestry of the
 Milestone 1 branch; the earlier smoke-test branch was not rewritten.
 
-Milestone 1 is complete for the authorized mapping/focusing scope. The independent
-manager and `vspace --list`, `--current`, and `--focus N` preserve ping and native
-semantics. Published source `6c4a354` passed the macOS 15/26 matrix (22 tests per
-host) and a macOS 15.6 virtual-focus round trip with user visual confirmation.
-The original service, desktop, window frames, and installation hashes were
-restored/verified; SIP stayed enabled. The first interrupted attempt and recovery
-helper assertions are retained separately in the
-[latest validation report](../validation.md#milestone-1-publication-and-interactive-validation--2026-11-04).
-The corrected local development config uses float `0.0` for animation duration.
+Milestone 1 is complete for its authorized scope. Its published source `6c4a354`
+passed the macOS 15/26 matrix (22 tests per host) and an approved macOS 15.6 focus
+round trip with user visual confirmation and audited recovery. That is historical
+M1 evidence; see [validation](../validation.md#milestone-1-publication-and-interactive-validation--2026-11-04).
 
-[Commands and JSON](../vspace.md) document startup/session policy and errors.
-macOS 26 interactive runtime remains unverified without a supplied GUI host.
-Milestone 2-A is authorized and in progress: spare mapping creation and native
-focus result parity. Later milestone implementations remain proposals.
+M2-A implementation is complete locally: `vspace --create` allocates the first
+revalidated hidden empty native desktop on the focused display; `--focus` returns
+native results without extra polling. Existing IDs/indices/order survive creation.
+Only explicit mapping creation is new; focus, windows, layouts, and native order
+are untouched by allocation. M2-B/C/D and native MRU are design proposals only.
+[Commands](../vspace.md) and [architecture](../architecture.md) describe the contract.
+
+Final local validation passed: persistent-signed universal build, 30/30 headless
+tests, arm64 static analysis, shell/Markdown/whitespace checks, original daemon
+queries/hashes, and native read-only mapping probes. The probes covered one
+display and then fresh two-display topology, including focused-display exhaustion
+with another display's spare still available. They did not start a daemon or
+validate GUI focus. New live daemon/GUI and hosted matrix checks remain open;
+macOS 26 GUI has no supplied session. See the
+[latest report and concrete plan](../validation.md#milestone-2-a-allocation-and-local-validation--2026-11-04).
 
 ## Resuming work
 
-Active task checked on 2026-11-04: M2-A, branch `feat/vspace-mapping`, clean
-starting checkpoint `8c5d0b3`. This descends from published M1 source `6c4a354`;
-config/validation follow-ups `b195681` and `8c5d0b3` are present. No push is
-authorized in this task; inspect remote refs before assuming publication state.
+Handoff checked on 2026-11-04. Active branch: `feat/vspace-mapping`.
+M1 baseline `8c5d0b3ec02b6fdf78ee48aa0fcd785c09b6e3a9` is also the current local
+`origin/feat/vspace-mapping` tracking checkpoint (no network refresh this task).
+Earlier notes calling its config/validation follow-ups unpublished are historical.
+New local focus checkpoint: `86dabb52075ded8ebd794c28b6808478346ccaf5`.
+The following allocation/tests/design-record commit contains this handoff; inspect
+`git log` for its exact ID. **Neither M2-A commit is published.** No merge,
+rebase, service change, installed-file replacement, or later implementation ran.
 
-Read milestones, decisions, journal, architecture, development, and validation.
-M2-A removes virtual-focus polling and adds focused-display spare allocation.
-Record M2-B/C/D and native MRU design only. Retain session-local mapping state,
-all existing native commands/layouts, and the single-daemon safety boundary.
+1. Inspect branch/tree/checkpoints and read milestones, decisions D009–D011,
+   journal, architecture, development, and latest validation before continuing.
+2. Code/local validation is complete. Do not redo implementation or infer GUI
+   success from headless/native-probe results. Native handlers/layouts, build
+   system, and macOS 15/26 workflow remain unchanged.
+3. Obtain explicit approval before pausing the existing Homebrew service for the
+   recorded signed-checkout daemon test. Recheck current topology, processes,
+   mappings, visible Spaces, focused window, and hashes; never reuse recorded
+   PIDs/IDs as live state or start a competing managing daemon. Recovery must
+   restore/audit the original service, desktop, focus, frames, layouts, and files.
+4. The host changed from one to two displays during read-only checks; the latest
+   probe saw display 2 focused, native orders 3/7 and 666/592, with original daemon
+   PID 13873. These are historical only. No focus/service command caused a change
+   during this task, and old frame/topology snapshots are not a recovery baseline.
+5. Publication requires separate authorization. Push reviewed commits only when
+   approved, then run the existing macOS 15/26 matrix for the exact new SHA.
+   M1 CI run 41779098539 does not cover M2-A. macOS 26 interactive compatibility
+   still requires a supplied GUI host/session.
+6. Destroy, refresh, persistence, and MRU implementation remain proposals;
+   native Space lifecycle, explicit reordering, GUI, and hotkeys are deferred.
+   Keep SIP enabled and follow existing manual Accessibility/Keychain rules.
 
-The M1 macOS 15/26 CI and macOS 15.6 GUI results remain historical evidence for
-M1, not validation of new M2-A code. New build/tests/signature and GUI results
-will be recorded in the latest validation entry. An existing service must be
-rechecked; do not stop or replace it without explicit approval, start a competing
-daemon, or reuse historical PIDs/Space/window IDs. New CI requires publication
-authorization; macOS 26 GUI still requires a supplied session.
-
-Next: finish M2-A implementation and conservative regression coverage, run local
-checks, record concrete runtime gates, then commit locally. Do not implement
-follow-on proposals, publish, or merge without authorization.
+Evidence: `/private/tmp/yabai-v-m2a-{signed-build-final,tests-final,analysis-final}.log`
+and `/private/tmp/yabai-v-m2a-native-probe.{m,jsonl,log}`. Temporary evidence is not
+committed. Current tests, docs, and the detailed validation report are the durable
+handoff. The first sandbox signing attempt and test-fixture compile failure are
+recorded separately from final passing results.
 
 ## Supporting documents
 

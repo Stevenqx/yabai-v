@@ -197,6 +197,9 @@ static void parse_arguments(int argc, char **argv)
                         "    --verbose, -V          Output debug information to stdout.\n"
                         "    --version, -v          Print version to stdout and exit.\n"
                         "    --help, -h             Print options to stdout and exit.\n"
+                        "Fork messages: yabai -m vspace --ping | --list | --current | --create | --focus N\n"
+                        "    --create maps an empty hidden desktop on the focused display; no focus change.\n"
+                        "    --focus uses native space focus results; visible switching is not confirmed.\n"
                         "Type `man yabai` for more information, or visit: "
                         "https://github.com/asmvik/yabai/blob/v%d.%d.%d/doc/yabai.asciidoc\n", MAJOR, MINOR, PATCH);
         exit(EXIT_SUCCESS);

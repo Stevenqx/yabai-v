@@ -142,7 +142,8 @@ authorized. The M2-A request below supersedes the former Milestone 2 gate.
 
 ## Milestone 2-A — Allocate existing spares and use native focus
 
-Status: in progress, authorized by the user on 2026-11-04.
+Status: implementation complete, 2026-11-04; live daemon/GUI and new hosted
+CI follow-ups remain open. Authorized by the user on 2026-11-04.
 Task branch: `feat/vspace-mapping`, clean baseline `8c5d0b3` (M1 descendant).
 
 Scope: `vspace --create` maps the first confirmed-empty, hidden, unmapped native
@@ -154,17 +155,35 @@ Record M2-B/C/D and native MRU proposals; only M2-A implementation is authorized
 
 - [x] Inspect clean branch, M1 checkpoint, records, build system, and native paths.
 - [x] Implement native focus result parity and regression coverage.
-- [ ] Implement conservative focused-display allocation and revalidation.
-- [ ] Cover one/two-display exhaustion, ordering/identity, unsafe and stale state.
-- [ ] Build/sign/verify locally; run headless tests and appropriate checks.
-- [ ] Record available runtime evidence separately from simulations and CI.
-- [ ] Update technical docs, follow-on design, decisions, journal, and resume notes.
-- [ ] Create focused local commits; publication and service changes need approval.
+- [x] Implement conservative focused-display allocation and revalidation.
+- [x] Cover one/two-display exhaustion, ordering/identity, unsafe and stale state.
+- [x] Build/sign/verify locally; run headless tests and appropriate checks.
+- [x] Record available runtime evidence separately from simulations and CI.
+- [x] Update technical docs, follow-on design, decisions, journal, and resume notes.
+- [x] Create focused local commits; publication and service changes need approval.
+
+Focus checkpoint: `86dabb5`. Allocation, help, tests, and design records follow in
+the next local commit; neither M2-A commit is published. Final local checks:
+signed universal build, 30/30 headless tests, zero arm64 analyzer findings,
+shell/Markdown/whitespace checks, and read-only native-state allocation probes.
+The probes exercised one display, then fresh two-display topology, including
+focused-display exhaustion while another display retained an eligible spare.
+They did not start a daemon, change focus, or establish GUI behavior.
+
+Open validation:
+
+- [ ] Live M2-A daemon allocation and native/virtual focus comparisons on macOS 15.
+- [ ] Live two-display/cross-display focus and layout smoke checks.
+- [ ] New macOS 15/26 hosted matrix for M2-A (publication not authorized).
+- [ ] macOS 26 interactive runtime (no supplied GUI session).
+
+See [M2-A evidence and execution plan](../validation.md#milestone-2-a-allocation-and-local-validation--2026-11-04).
 
 ## Milestone 2-B/C/D and native MRU
 
 Status: design proposals only; implementation is not authorized.
 
-Destroy, manual refresh, persistence, and native Space/window MRU will be recorded
-with their safety and policy boundaries during M2-A. Native Space lifecycle,
+Destroy, manual refresh, persistence, and native Space/window MRU are recorded
+with their safety and policy boundaries in
+[architecture proposals](../architecture.md#follow-on-proposals). Native Space lifecycle,
 reordering, GUI, and hotkeys remain deferred.

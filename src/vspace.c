@@ -7,6 +7,7 @@ extern struct virtual_workspace_manager g_virtual_workspace_manager;
 #define COMMAND_VSPACE_LIST     "--list"
 #define COMMAND_VSPACE_CURRENT  "--current"
 #define COMMAND_VSPACE_FOCUS    "--focus"
+#define COMMAND_VSPACE_CREATE   "--create"
 
 static bool vspace_parse_index(struct token token, int *index)
 {
@@ -39,7 +40,8 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
     bool list = token_equals(command, COMMAND_VSPACE_LIST);
     bool current = token_equals(command, COMMAND_VSPACE_CURRENT);
     bool focus = token_equals(command, COMMAND_VSPACE_FOCUS);
-    if (!(ping || list || current || focus)) {
+    bool create = token_equals(command, COMMAND_VSPACE_CREATE);
+    if (!(ping || list || current || focus || create)) {
         daemon_fail(rsp, "unknown command '%.*s' for domain '%.*s'\n", command.length, command.text, domain.length, domain.text);
         return;
     }
@@ -66,6 +68,24 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
     struct virtual_workspace_manager *vm = &g_virtual_workspace_manager;
     if (!vm->did_begin) {
         daemon_fail(rsp, "virtual workspace mapping is not initialized.\n");
+        return;
+    }
+
+    if (create) {
+        enum virtual_workspace_error result = virtual_workspace_manager_create(vm);
+        if (result == VIRTUAL_WORKSPACE_DISPLAY_UNAVAILABLE) {
+            daemon_fail(rsp, "cannot create virtual workspace because the current display could not be resolved.\n");
+        } else if (result == VIRTUAL_WORKSPACE_STATE_UNAVAILABLE) {
+            daemon_fail(rsp, "cannot create virtual workspace because current native space state is unavailable.\n");
+        } else if (result == VIRTUAL_WORKSPACE_NO_SPARE) {
+            daemon_fail(rsp, "no eligible spare native desktop space on the current display.\n");
+        } else if (result == VIRTUAL_WORKSPACE_STATE_CHANGED) {
+            daemon_fail(rsp, "cannot create virtual workspace because native state changed; retry the command.\n");
+        } else if (result == VIRTUAL_WORKSPACE_LIMIT) {
+            daemon_fail(rsp, "cannot create virtual workspace because virtual IDs or indices are exhausted.\n");
+        } else if (result != VIRTUAL_WORKSPACE_SUCCESS) {
+            daemon_fail(rsp, "could not create virtual workspace.\n");
+        }
         return;
     }
 
