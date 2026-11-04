@@ -126,7 +126,11 @@ are documented in the [GitHub runner images catalog](https://github.com/actions/
 ## Manual daemon smoke test
 
 First inspect the existing service and confirm its executable, configuration,
-and current state. Never stop or replace it without explicit approval. If it is
+and current state. Verify an unlocked, completed console session and usable AX
+window/focus metadata before pausing it. Keep keyboard/mouse activity idle during
+focus comparisons. On this host the console lock key is absent after unlock;
+record raw state rather than treating every missing key as a locked session.
+Never stop or replace it without explicit approval. If it is
 running, defer the real daemon test until an approved test session is available.
 Do not run two window-managing daemons against the same desktop, even if their
 sockets differ. Prefer a separate macOS login session for manual testing.
@@ -196,7 +200,11 @@ candidates using safe existing state or headless fixtures; do not change the
 user's desktop merely to manufacture cases.
 
 Compare native `space --focus` and virtual `vspace --focus` for the same native
-ID, including already-focused and cross-display targets. M2-A returns native
+ID, including already-focused and cross-display targets. Restore all displays'
+visible Spaces as well as global focus between controls when comparing identical
+starting conditions. A native call can make a target visible while keyboard
+focus remains on another display; restoring only source focus leaves a different
+visibility setup for the next call. M2-A returns native
 results without polling/timeout; observe switching separately through queries
 and visually after allowing transitions to settle. Test bad/stale indices,
 ping/list/current, original queries, and float/BSP/stack with disposable windows
@@ -209,6 +217,12 @@ Stop only the foreground development process with Ctrl-C. An existing Homebrew
 binary, service plist, and user configuration must remain intact. If the original
 service was stopped during an approved test, restore its prior state explicitly
 and verify its queries; do not leave recovery to an automated cleanup guess.
+Original-service startup can reapply existing rules and change floating-window
+frames. If recovery needs to restore them, validate surviving PID/Space/display
+associations and restore only captured frames through existing native commands;
+verify actual results because application size constraints may require restoring
+position before a final size adjustment. Do not recreate closed user windows.
+
 Verify the original visible Spaces and focused window again after the original
 service starts: startup can change focus even if it was restored before stopping
 the development daemon. Keep visual confirmation distinct from command exits

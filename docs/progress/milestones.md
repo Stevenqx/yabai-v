@@ -142,8 +142,9 @@ authorized. The M2-A request below supersedes the former Milestone 2 gate.
 
 ## Milestone 2-A — Allocate existing spares and use native focus
 
-Status: implementation complete, 2026-11-04; live daemon/GUI and new hosted
-CI follow-ups remain open. Authorized by the user on 2026-11-04.
+Status: complete for authorized implementation and available local validation,
+2026-11-04. New hosted CI and additional runtime configurations remain follow-ups.
+Authorized by the user on 2026-11-04.
 Task branch: `feat/vspace-mapping`, clean baseline `8c5d0b3` (M1 descendant).
 
 Scope: `vspace --create` maps the first confirmed-empty, hidden, unmapped native
@@ -176,11 +177,18 @@ and auditing the original service/desktop. Recheck fresh topology (currently two
 displays), test allocation/native-focus parity and safe layout modes, and record
 results. This approval does not authorize publication or later implementation.
 
+Unlocked repeat, authorized 2026-11-04: the user manually unlocked the Mac and
+requested continuation. AX focus metadata is available again. External display
+identity/topology, native Spaces, and windows changed since the locked attempt;
+use a fresh recovery baseline. Continue allocation/focus/layout checks under the
+existing single-daemon approval, with no publication or implementation changes.
+
 Open validation:
 
 - [x] Live macOS 15 focused-display allocation/exhaustion and no cross-display fallback.
-- [ ] Other-display allocation and native/virtual focus comparisons in an unlocked GUI.
-- [ ] Live two-display/cross-display focus and layout smoke checks.
+- [x] Allocation/exhaustion and native/virtual focus comparisons in an unlocked GUI.
+- [x] Live two-display/cross-display focus results and empty-view layout smoke checks.
+- [ ] Standalone single-display GUI repeat and populated layout smoke (native/headless coverage exists).
 - [ ] New macOS 15/26 hosted matrix for M2-A (publication not authorized).
 - [ ] macOS 26 interactive runtime (no supplied GUI session).
 
@@ -195,6 +203,21 @@ checks were not reached. Original service, Spaces, frames, layouts, hashes and
 SIP were independently audited after recovery; window focus is unverified while
 locked. Await manual unlock, then recheck recovery and continue under the existing
 approval. See [the attempt and recovery](../validation.md#milestone-2-a-approved-gui-validation--2026-11-04).
+
+Unlocked result: the user supplied an unlocked idle session and confirmed visible
+switching/return. `iaus8mt4` passed creation of 7/592 in order, display-2 exhaustion
+with other-display spares, native/virtual same-display and visible cross-display
+focus, already-focused errors, and invariant checks. The completion `chsprfea`
+passed remaining focus-result and empty-Space float/BSP/stack checks. Native
+hidden cross-display dispatch made the target visible without global keyboard
+focus; a subsequent virtual call focused the then-visible target. These different
+visibility conditions are recorded, with no stronger native guarantee claimed.
+
+Final independent recovery passed against the first idle baseline, including
+exact original frames after restoring two floating windows affected by original
+service startup rules. Original service/desktop/focus/layouts/hashes/SIP recovered;
+no source changed after `5b199fb`. Interrupted/locked attempts remain separate.
+See [final evidence and limits](../validation.md#unlocked-repeats-and-final-recovery).
 
 ## Milestone 2-B/C/D and native MRU
 

@@ -416,3 +416,43 @@ in [approved GUI validation](../validation.md#milestone-2-a-approved-gui-validat
 Docs links/anchors and whitespace passed; no build/headless rerun is necessary
 for these documentation-only records. Next: after manual unlock, re-audit focus
 recovery and finish the approved GUI sequence. New CI/publication remains gated.
+
+## 2026-11-04 — Complete approved unlocked M2-A GUI validation
+
+Scope: continue under the user's existing service-pause approval after manual
+unlock and a subsequent idle-session confirmation. Checkout `157bae2` was clean;
+production source remains `5b199fb`, preserving native-focus checkpoint `86dabb5`.
+The host's display/Space/window state had changed externally since the locked
+attempt, so rechecked AX metadata and captured a fresh recovery baseline. The
+first unlocked attempt was interrupted by focus/window lifecycle changes and is
+retained separately; no closed/transient windows were recreated for recovery.
+
+Controlled evidence `iaus8mt4` passed CLI regressions, creation of hidden 7 then
+592, display-2 exhaustion despite other-display spares, unchanged mappings/focus/
+frames/layout/order on allocation, native/virtual same-display and visible
+cross-display focus, and matching already-focused errors. A native hidden-target
+call returned zero and made the target visible without global focus; the helper's
+extra activation assertion was too strong for the requested native semantics.
+Focused completion `chsprfea` passed result-parity and empty-view float/BSP/stack
+checks. The subsequent virtual call globally focused the already-visible empty
+target; target visibility differed between those two controls and is explicitly
+recorded. The user confirmed visible switching and return. No native-path change
+was made to compensate for its observed SIP focus behavior.
+
+Both development sessions stopped their sole daemon and restored the original
+service. Startup of the original service changed two surviving floating frames;
+restored their captured positions/sizes using native commands after PID/association
+checks. One constrained width needed a second pass after position restoration.
+The final independent audit in `chsprfea` passed all conditions against the first
+idle baseline: one original Homebrew daemon, native topology/order/visible and
+active Spaces, original Orca focus, every original frame/association, layouts,
+hashes, and SIP. Helper failures and the initial frame audit remain retained.
+
+Updated validation, milestone state, development guidance, and resume notes.
+Markdown links/anchors and whitespace passed. No executable behavior changed;
+the existing signed universal build and 30/30 headless results still apply, and
+no rebuild was necessary for this documentation unit. New hosted macOS 15/26 CI
+needs publication approval; macOS 26 GUI, a standalone single-display GUI repeat,
+and populated layout smoke remain unrun. No push, merge, installed-file overwrite,
+TCC reset, SA, SIP change, or follow-on implementation occurred. Next: review
+local commits and publish/run the exact-SHA matrix only when separately approved.

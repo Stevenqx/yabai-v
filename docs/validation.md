@@ -1,13 +1,13 @@
 # Validation report — 2026-11-01
 
-Latest update: [Milestone 2-A approved GUI validation](#milestone-2-a-approved-gui-validation--2026-11-04).
-M2-A's signed build, 30 headless tests, analysis/static checks, native probes,
-and real daemon focused-display allocation/exhaustion passed. The approved GUI
-sequence stopped when native focus was not observed; the screen was locked.
-Original service, Spaces, frames, layouts, hashes and SIP were audited after
-recovery. Window focus and remaining GUI checks await manual unlock. New hosted
-CI needs publication authorization; macOS 26 GUI still needs a supplied session.
-Earlier results are preserved with their exact scope and limitations.
+Latest update: [M2-A unlocked GUI repeats and recovery](#unlocked-repeats-and-final-recovery).
+M2-A has passed the signed universal build, 30 headless tests, native probes,
+real daemon allocation/exhaustion, native/virtual focus result comparisons, and
+empty-Space float/BSP/stack smoke checks on SIP-enabled macOS 15.6. The user
+confirmed visible switching and return. Independent final recovery passed every
+condition against the idle-session baseline. Native gesture dispatch retains its
+observed cross-display focus limits. New hosted CI needs publication approval;
+macOS 26 GUI and a standalone single-display GUI repeat remain unrun.
 
 ## Environment and upstream
 
@@ -712,3 +712,100 @@ hashes, and SIP enabled. Window focus remains **unverified while locked**:
 expected 5943, native query reports no focused window. Do not report full
 window-focus recovery until an unlocked-session audit verifies it. The native
 service is running; no development daemon remains.
+
+### Unlocked repeats and final recovery
+
+The user manually unlocked the Mac and authorized continuation, then confirmed
+an idle desktop for the controlled repeat. Source is unchanged at `5b199fb`;
+checkout records were at `157bae2`. No push or implementation change occurred.
+AX roles and focused-window queries became available again. On this host the
+console lock key is absent after unlock; the helper records that absence and
+requires an active completed console login rather than mistaking it for a lock.
+
+External host changes had replaced the second display UUID/frame and native
+Space 674 with Space 733, moved windows, and opened new application windows.
+Rechecking the historical recovery baseline therefore reported mismatches; those
+are not a new fork mutation or a valid baseline for this repeat. The old audit
+helper regenerated `independent-recovery-audit.json` and its current snapshot on
+recheck; its post-unlock comparison is copied to
+`post-unlock-historical-baseline-comparison.json`. The earlier locked-state audit
+results are retained in the preceding report and conversation evidence.
+
+The first unlocked attempt (`/private/tmp/yabai-v-m2a-gui.g55ljkm7`) was interrupted
+by actual focus and application-window changes. Its cross-display baseline already
+showed target Space 3 focused before the native command, which correctly rejected
+it as already focused. Transient windows closed/opened during the attempt, so
+original focus/frame recovery for those historical windows could not be claimed.
+The original service restarted; a fresh idle baseline was captured next rather
+than trying to recreate closed windows or undo the user's changed desktop.
+
+Controlled idle evidence: `/private/tmp/yabai-v-m2a-gui.iaus8mt4`.
+Baseline had one original Homebrew daemon (PID 40328), native order 3/7/592 on
+display 1 and 733 on display 2, visible Spaces 3/733, active Space 3, and Orca
+window 6369 focused. Signed checkout startup preserved all native window frames.
+The sole development daemon initialized mappings `(index,id,space,display)` as
+`(1,1,3,1)` and `(2,2,733,2)`.
+
+| Live check | Evidence/result |
+| --- | --- |
+| Ping/list/current, native display/Space/window queries, invalid/overflow/unmapped index, extra create/ping arguments | Passed |
+| Focused display 2 exhausted while display 1 has hidden spares 7/592 | Create failed without mapping mutation or fallback |
+| Allocate on display 1 | Appended 7 as index/ID 3, then 592 as index/ID 4, in native order; subsequent exhaustion failed without mutation |
+| Creation invariants | Existing IDs/indices/order, current/focus/visibility, frames/associations, layouts, and native order unchanged |
+| Native and virtual focus from 3 to visible cross-display 733 | Both returned zero and observed the correct global focus; each held five seconds |
+| Native and virtual focus from 3 to newly allocated 7 | Both returned zero and observed the correct focus; each held five seconds |
+| Already-focused controls for both targets | Native and virtual both failed with their matching already-focused errors |
+| Occupancy safety | Existing occupied Spaces remained mapped; artificial unknown/non-desktop/floating-candidate and stale-mapping cases remain headless evidence, not manufactured live failures |
+
+The initial idle helper stopped at a stricter-than-native assertion on the next
+cross-display hidden target. Its native call to 592 returned zero and made 592
+visible on display 1, while global keyboard focus remained on 733/display 2.
+That is an observed native behavior, not a virtual timeout or a fork regression.
+The helper was corrected to compare dispatch status and log visibility/global
+focus separately, consistent with D009 and the requested native guarantee.
+
+Focused completion evidence: `/private/tmp/yabai-v-m2a-gui.chsprfea`, using the
+same source and native topology. Repeated CLI/allocation/exhaustion/invariant
+checks passed. Native focus from 733 to 592 returned zero, made 592 visible, and
+retained global focus on 733 during the eight-second observation. The virtual
+call to the same native ID also returned zero and then globally focused 592.
+**The target was already visible for that second call**: setup restored the
+source focus but did not restore the target display's earlier visible Space.
+Thus this pair establishes native dispatch-result parity and a successful virtual
+cross-display activation of a visible empty mapping; it does not establish equal
+activation timing or identical hidden-target starting conditions. The earlier
+visible cross-display and same-display comparisons had observed success for both.
+No stronger SIP activation guarantee is claimed and no native path was modified.
+Already-focused native/virtual calls to 592 both failed as expected.
+
+Float → BSP → stack → float smoke checks passed on both empty mapped Spaces
+7/592, restored each development view setting, and preserved all window frames,
+focus, native order, and mapping identities. They exercise empty-view layout
+commands; populated tiling/layout algorithms were not retested on user windows.
+The completion helper has no test/recovery errors and empty development stderr.
+The user explicitly confirmed: **“Yes, switching and return were visible.”**
+That confirmation is separate from the command/query observations above.
+
+Original-service recovery reapplied its existing window rules and changed two
+surviving floating-window frames (13736/13727); all frames remained unchanged
+during the allocation/focus commands themselves. After stopping the development
+daemon and restarting the original service, restored only those captured floating
+frames using existing native move/resize commands, checking PID and native
+associations first. One width needed a second adjustment after its original
+position was restored; the first constrained-width audit is retained as
+`first-frame-recovery-audit.json`. No config/rule/native layout was modified.
+
+The final independent audit, against the **first idle pre-test baseline** in
+`iaus8mt4`, passed every condition: one original `/opt/homebrew/bin/yabai` daemon
+(PID 42612), original display UUIDs/topology/native Space order, visible 3/733,
+active 3, Orca window 6369 focused, every original window ID/frame/association,
+original stack layouts, all three installation hashes, and SIP enabled. Use
+`chsprfea/independent-final-recovery-audit.json` as the final recovery evidence,
+plus its user visual-confirmation record. PIDs/IDs/topology are historical.
+
+The locked/interrupted attempts and their helper exits are retained separately;
+they are not represented as clean passes. Manual single-display GUI allocation
+was not repeated because the available unlocked host had two displays; earlier
+one-display native-adapter and deterministic coverage passed. macOS 26 GUI,
+populated layout smoke, and new macOS 15/26 CI remain unrun. New CI requires a
+separately authorized publication; no push, merge, TCC reset, SA, or SIP change ran.
