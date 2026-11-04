@@ -154,7 +154,9 @@ USER=yabai-fork-dev ./bin/yabai -m query --windows
 ```
 
 Check that the native queries and vspace list return JSON arrays, and vspace
-current matches the focused native Space ID. See [vspace](vspace.md) for fields,
+current matches the focused native Space ID. Confirm all development config
+commands succeed; `window_animation_duration` requires the float token `0.0`,
+and the existing parser rejects the integer token `0`. See [vspace](vspace.md) for fields,
 occupancy policy, and unmapped-current behavior. Check that `vspace`,
 `vspace --unknown`, and `vspace --ping extra` exit unsuccessfully. If a disposable
 window and a safe GUI session are available, query its ID and use

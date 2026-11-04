@@ -268,3 +268,24 @@ unknown occupancy may conservatively allocate a visually empty Space.
 Evidence and concrete next checks: [Milestone 1 validation](../validation.md#milestone-1-commands-and-local-validation--2026-11-03).
 Next: request approval for the completed branch's publication/CI and a brief
 interactive virtual-focus round trip with full original-service/focus recovery.
+
+## 2026-11-04 — Correct the development animation value
+
+Scope: repair the existing checkout-only development config discovered during
+the approved Milestone 1 smoke test. The published production implementation
+remains `6c4a354`. Upstream's parser accepts a float token for animation duration;
+the old example supplied integer `0`, which emitted an error and stopped the
+config script. Changed that one value to `0.0` and documented the requirement,
+without changing native parser/domain behavior or user configuration.
+
+Validation: shell syntax and whitespace checks passed. During the approved
+repeat session, the development daemon reported animation duration `0.000000`,
+layout `float`, and empty stderr. The virtual-focus round trip passed queries,
+frame/layout comparisons, and user visual confirmation. Detailed CI/session and
+recovery evidence follows in the validation-record task. The original service,
+visible Space, focus, hashes, and SIP were verified after the session.
+No executable source changed, so another build/headless run is unnecessary for
+this config fix; the production SHA passed both CI jobs with 22 tests each.
+
+This follow-up is local, beyond the explicitly published `6c4a354` checkpoint.
+Next: finish the detailed validation report and refresh the handoff records.

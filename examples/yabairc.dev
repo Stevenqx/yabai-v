@@ -6,4 +6,4 @@ yabai_dev="$(dirname "$0")/../bin/yabai"
 "$yabai_dev" -m config layout float
 "$yabai_dev" -m config focus_follows_mouse off
 "$yabai_dev" -m config mouse_follows_focus off
-"$yabai_dev" -m config window_animation_duration 0
+"$yabai_dev" -m config window_animation_duration 0.0
