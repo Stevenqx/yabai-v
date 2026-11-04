@@ -382,3 +382,37 @@ New live daemon/focus/layout sessions and hosted CI are unrun: service-pause and
 publication require approval. macOS 26 GUI still needs a supplied session. Next:
 review local commits, obtain explicit live-session authorization, execute the
 recorded recovery plan against fresh topology, and publish/run CI only if approved.
+
+## 2026-11-04 — Run approved M2-A live allocation; defer focus while locked
+
+Scope: the user approved the planned Homebrew pause, sole signed-checkout daemon
+session, and original-service/desktop recovery. Started clean at `5b199fb` on
+`feat/vspace-mapping`; no source or installed file changed. Recorded active
+validation scope, verified persistent signature and original hashes, and captured
+fresh two-display topology and recovery state. No publication was authorized.
+
+Real daemon/IPC checks passed ping/list/current, native queries, invalid indices,
+extra arguments, and allocation on focused display 2: mapped 592 as ID/index 3,
+then failed without mutation while display 1 retained spare 7. Existing mapping
+bytes/order, focus, visibility, native order, frames, and layouts were unchanged.
+The native cross-display focus control returned zero but was not observed; the
+helper stopped before virtual comparison/second-display allocation/layout smoke.
+Both restarted daemons lacked AX window/focus metadata. Console inspection then
+established that the screen was locked; this cannot validate visible focus or
+establish a fork regression. Added a lock-state guard to the temporary helper.
+
+The development daemon stopped and original service restarted. Independent
+recovery audit passed original executable, one daemon, native Space visibility/
+focus/order, all original window frames/associations/layouts, all three original
+hashes, and SIP. Window focus is unverified while locked (expected 5943, queried
+0). Manual unlock was requested; existing live-session authorization remains in
+force. No automated unlock, TCC reset, trust change, SA, or SIP operation ran.
+
+The preflight helper initially read only signature stderr and exited without
+service changes; corrected combined stdout/stderr check passed. Two temporary
+console-parser attempts were corrected for pipe/root-dictionary handling before
+the successful read-only lock observation. Full results and limits are retained
+in [approved GUI validation](../validation.md#milestone-2-a-approved-gui-validation--2026-11-04).
+Docs links/anchors and whitespace passed; no build/headless rerun is necessary
+for these documentation-only records. Next: after manual unlock, re-audit focus
+recovery and finish the approved GUI sequence. New CI/publication remains gated.

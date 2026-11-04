@@ -170,14 +170,31 @@ The probes exercised one display, then fresh two-display topology, including
 focused-display exhaustion while another display retained an eligible spare.
 They did not start a daemon, change focus, or establish GUI behavior.
 
+Live validation authorized, 2026-11-04: the user approved briefly pausing the
+Homebrew service, running the signed checkout as the only daemon, and restoring
+and auditing the original service/desktop. Recheck fresh topology (currently two
+displays), test allocation/native-focus parity and safe layout modes, and record
+results. This approval does not authorize publication or later implementation.
+
 Open validation:
 
-- [ ] Live M2-A daemon allocation and native/virtual focus comparisons on macOS 15.
+- [x] Live macOS 15 focused-display allocation/exhaustion and no cross-display fallback.
+- [ ] Other-display allocation and native/virtual focus comparisons in an unlocked GUI.
 - [ ] Live two-display/cross-display focus and layout smoke checks.
 - [ ] New macOS 15/26 hosted matrix for M2-A (publication not authorized).
 - [ ] macOS 26 interactive runtime (no supplied GUI session).
 
 See [M2-A evidence and execution plan](../validation.md#milestone-2-a-allocation-and-local-validation--2026-11-04).
+
+Approved live attempt: real daemon/IPC creation on display 2 allocated hidden
+Space 592, then failed without mutation while display 1 retained spare 7. CLI
+regressions and startup/frame/allocation invariants passed. The native focus
+control returned zero without observed activation; read-only console state then
+confirmed the screen was locked. Virtual focus/other-display allocation/layout
+checks were not reached. Original service, Spaces, frames, layouts, hashes and
+SIP were independently audited after recovery; window focus is unverified while
+locked. Await manual unlock, then recheck recovery and continue under the existing
+approval. See [the attempt and recovery](../validation.md#milestone-2-a-approved-gui-validation--2026-11-04).
 
 ## Milestone 2-B/C/D and native MRU
 

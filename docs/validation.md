@@ -1,10 +1,13 @@
 # Validation report — 2026-11-01
 
-Latest update: [Milestone 2-A allocation and local validation](#milestone-2-a-allocation-and-local-validation--2026-11-04).
-M2-A's signed universal build, 30 headless tests, static checks, and read-only
-native allocation probes passed. New live daemon/GUI checks need service-pause
-approval; new hosted CI needs publication authorization. macOS 26 GUI remains
-unavailable. Earlier M1 CI/GUI evidence is historical and does not validate M2-A.
+Latest update: [Milestone 2-A approved GUI validation](#milestone-2-a-approved-gui-validation--2026-11-04).
+M2-A's signed build, 30 headless tests, analysis/static checks, native probes,
+and real daemon focused-display allocation/exhaustion passed. The approved GUI
+sequence stopped when native focus was not observed; the screen was locked.
+Original service, Spaces, frames, layouts, hashes and SIP were audited after
+recovery. Window focus and remaining GUI checks await manual unlock. New hosted
+CI needs publication authorization; macOS 26 GUI still needs a supplied session.
+Earlier results are preserved with their exact scope and limitations.
 
 ## Environment and upstream
 
@@ -660,3 +663,52 @@ separate authorization gate: push only reviewed M2-A commits when approved, then
 run the existing macOS 15/26 matrix for that exact published SHA. Historical M1
 CI is not a substitute. A macOS 26 GUI host and real two-display session are
 still required for their interactive compatibility claims.
+
+## Milestone 2-A approved GUI validation — 2026-11-04
+
+The user approved the documented service pause, signed checkout daemon session,
+and restoration/audit. Source remains `5b199fb` with focus checkpoint `86dabb5`;
+no publication is authorized. Fresh preflight found two displays, native orders
+3/7 and 674/592, original daemon PID 13873, active Space 674 and focused Zotero
+window 5943. Persistent signature and all original installation hashes passed.
+
+### Locked-screen attempt and recovery
+
+Evidence: `/private/tmp/yabai-v-m2a-gui.f2_iljuh`, helper
+`/private/tmp/yabai-v-m2a-gui-smoke.py`. The first preflight-only helper attempt
+(`/private/tmp/yabai-v-m2a-gui.kpx8ldjh`) incorrectly checked only signature stderr
+for a designated requirement printed to stdout. It stopped before any service
+change; the corrected combined-output check passed.
+
+Paused the original service and verified no daemon remained before starting the
+signed checkout daemon as the only managing process. Float config, animation
+`0.0`, ping/list/current, native queries, invalid/overflow/unmapped indices, and
+strict create/ping argument checks passed. Startup preserved native order and
+window frames. Startup mapped Spaces 3/674 as IDs/indices 1/2. Creation appended
+hidden empty Space 592 as ID/index 3 on focused display 2. Focus, visibility,
+window frames/associations, layouts, native order, and survivor JSON were unchanged.
+The next create failed without mutation while display 1 retained unmapped spare
+7. This is real daemon/IPC evidence for allocation and no cross-display fallback.
+
+The unchanged native cross-display focus control to Space 3 returned zero but
+was not observed within eight seconds. The helper stopped the sequence before
+virtual focus, second-display allocation, and layout checks. Both development
+and original window-focus recovery commands could not locate captured window
+5943 in tracked AX state. Native queries still enumerated all five windows, but
+newly started daemons had no AX role/subrole or focused-window metadata.
+
+Read-only console inspection established `CGSSessionScreenIsLocked: true`.
+The screen lock explains the unavailable interactive test conditions; this
+attempt does not establish a fork focus regression or a successful GUI switch.
+The helper now checks the console lock state before any future service pause.
+No TCC reset, Keychain change, unlock attempt, scripting addition, or SIP change
+was made. Manual unlock is requested before further dependent GUI work.
+
+The development process stopped and original service restarted. Independent
+`independent-recovery-audit.json` confirmed one original Homebrew daemon (PID
+98745), original visible Spaces 3/674 and active Space 674, unchanged native
+order/layouts, all original window frames/associations, all three installation
+hashes, and SIP enabled. Window focus remains **unverified while locked**:
+expected 5943, native query reports no focused window. Do not report full
+window-focus recovery until an unlocked-session audit verifies it. The native
+service is running; no development daemon remains.
