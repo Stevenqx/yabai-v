@@ -809,3 +809,64 @@ was not repeated because the available unlocked host had two displays; earlier
 one-display native-adapter and deterministic coverage passed. macOS 26 GUI,
 populated layout smoke, and new macOS 15/26 CI remain unrun. New CI requires a
 separately authorized publication; no push, merge, TCC reset, SA, or SIP change ran.
+
+## Standard vspace test runner — 2026-11-04
+
+User-authorized follow-up from clean `4f637d7` on `feat/vspace-mapping`: maintain
+a script that users can run on their own Macs, including other OS versions later.
+The user chose macOS 15 for ongoing validation and explicitly deferred macOS 26
+tests. This revises earlier dual-OS follow-up gates; it does not turn unrun
+macOS 26 checks into passes. Production daemon source remains `5b199fb`.
+
+Added [scripts/test-vspace.py](../scripts/test-vspace.py), with default automatic
+build/sign/headless checks, read-only daemon contract checks, and opt-in terminal
+interactive allocation/focus/empty-layout checks. It saves private JSON reports
+with version/source/binary metadata, command outputs, individual results, and live
+baseline/recovery snapshots. It does not manage services or install files.
+Focus comparisons restore every display's visibility and Space/window focus
+between controls; native results, observed activation, and visual confirmation
+remain separate. Public-query empty candidates are not treated as proof of native
+occupancy. Unsafe-state injection stays in the production deterministic fixtures.
+
+Updated the development guide, agent workflow, compatibility notes, and progress
+records. CI calls this same script on macOS 15 by default; a manual dispatch can
+include macOS 26 later. No hosted workflow has run for this unpublished change.
+
+Executed locally on macOS 15.6 arm64, SDK 15.5, with SIP enabled:
+
+- Passed full `./scripts/test-vspace.py headless`: universal build through the
+  existing helper, persistent development signing, strict all-architecture
+  verification, version/help, production tests, initial runner regressions, and
+  static checks. No production build warnings. Full-build evidence:
+  `/var/folders/cf/byjbs_c51nb5gm4vtq8jkpv40000gn/T/yabai-v-tests-my64ynpj/report.json`.
+- Passed final `./scripts/test-vspace.py headless --skip-build` after runner-only
+  refinements: signature/architecture/version/help, **30/30 production tests**,
+  **14/14 runner tests**, shell syntax and whitespace. Build was explicitly
+  skipped, retaining the already verified build of unchanged daemon source.
+  Existing five CoreVideo deprecation warnings remain in the production test
+  compilation. Final report:
+  `/var/folders/cf/byjbs_c51nb5gm4vtq8jkpv40000gn/T/yabai-v-tests-nmtuhy6f/report.json`.
+- Runner fixtures cover a full interactive sequence, append/exhaustion with
+  other-display candidates, distinct IDs/index gaps and survivor preservation,
+  visible/floating/fullscreen candidates, uncertain public-query candidates,
+  identical cross-display starting visibility, unobserved native dispatch success,
+  already-focused with one workspace, interruption recovery, reused window IDs,
+  layout restoration after a failed command, and nonterminal interactive refusal.
+- Passed all 14 runner regressions with Apple's Python 3.9.6 as well as the
+  default Homebrew Python 3.15 used by the standard automatic run.
+- Passed runner help and rejection of an infinite observation budget; workflow
+  YAML parsing/runner wiring, local Markdown links/anchors and whitespace passed.
+
+Two sandbox attempts stopped at local signing/trust access (first signing
+parameters, later `CSSMERR_TP_NOT_TRUSTED` during verification). Both were retried
+with the established unsandboxed signing/verification workflow and passed; no
+certificate, trust, or TCC settings changed. Failed reports remain separately in
+`yabai-v-tests-vncv3fr6` and `yabai-v-tests-lxed_045` under the same temporary root.
+The recorded source SHA is `4f637d7` with the task's pre-commit working-tree diff;
+the new runner commit is the next local checkpoint, not a claimed hosted result.
+
+**Not run:** the new script's query/interactive modes against a real daemon,
+new hosted CI, or macOS 26. Live orchestration is fixture evidence; the earlier
+M2-A GUI sessions above remain separate runtime evidence. No desktop/service
+change was needed for this task. One-display GUI and populated layout smoke
+remain limitations to exercise later using a prepared session/manual procedure.

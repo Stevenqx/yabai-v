@@ -77,7 +77,9 @@ small changes that can be rebased. Use Conventional Commits with focused commits
 - Use a focused pull request for integration when requested. Explain
   the problem, changes, validation, and remaining limitations; link relevant
   milestones or issues. Obtain review and pass applicable CI checks before merge,
-  including the macOS 15/26 build matrix. Do not bypass required reviews or checks.
+  including the active macOS 15 build/headless check. Additional OS validation
+  is deferred to the standard test runner; see `docs/development.md`. Do not
+  bypass required reviews or checks.
 
 References: [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
 defines the message format; [GitHub flow](https://docs.github.com/en/get-started/using-github/github-flow)

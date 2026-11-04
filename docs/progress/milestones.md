@@ -189,8 +189,8 @@ Open validation:
 - [x] Allocation/exhaustion and native/virtual focus comparisons in an unlocked GUI.
 - [x] Live two-display/cross-display focus results and empty-view layout smoke checks.
 - [ ] Standalone single-display GUI repeat and populated layout smoke (native/headless coverage exists).
-- [ ] New macOS 15/26 hosted matrix for M2-A (publication not authorized).
-- [ ] macOS 26 interactive runtime (no supplied GUI session).
+- [ ] New macOS 15 hosted checks for M2-A (publication not authorized).
+- [ ] macOS 26 build/runtime checks (deferred by the later standard-runner request).
 
 See [M2-A evidence and execution plan](../validation.md#milestone-2-a-allocation-and-local-validation--2026-11-04).
 
@@ -218,6 +218,29 @@ exact original frames after restoring two floating windows affected by original
 service startup rules. Original service/desktop/focus/layouts/hashes/SIP recovered;
 no source changed after `5b199fb`. Interrupted/locked attempts remain separate.
 See [final evidence and limits](../validation.md#unlocked-repeats-and-final-recovery).
+
+## Reusable vspace validation runner
+
+Status: complete locally, authorized by the user on 2026-11-04.
+
+Maintain a repository script for automatic headless checks, read-only daemon
+checks, and explicitly selected interactive allocation/focus/layout checks on
+users' own Macs. Reuse existing tests and the completed M2-A GUI procedures,
+record host/version and skipped checks, and preserve the manual single-daemon
+service workflow. macOS 15 is the active local runtime target; defer macOS 26
+runtime/build checks to a later run of this same script. Default hosted CI uses
+macOS 15, with macOS 26 retained as an optional manual run. Report unrun platforms
+without claiming compatibility. This supersedes earlier dual-OS validation gates.
+
+- [x] Implement and document the portable runner and result/recovery records.
+- [x] Exercise automatic checks and 14 runner regression tests on macOS 15.
+- [x] Update validation, decisions, journal, and resume instructions; commit locally.
+
+The signed automatic workflow passed 30 production tests and 14 runner tests on
+macOS 15.6. Interactive orchestration passed fake-daemon regressions, including a
+full sequence and interruption recovery; the new runner itself has not had a live
+desktop run. Earlier M2-A GUI results are separate. Hosted CI remains unrun for
+this unpublished change. See [runner validation](../validation.md#standard-vspace-test-runner--2026-11-04).
 
 ## Milestone 2-B/C/D and native MRU
 

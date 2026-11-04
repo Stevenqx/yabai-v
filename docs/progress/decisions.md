@@ -147,3 +147,25 @@ and globally compacts indices; later persistence restores logical identity/order
 after native revalidation. Native Space/window MRU is a separate observed-focus
 feature, independent of virtual numbering. Final destroy policies, MRU storage,
 commands, and selection scope remain deferred. No MRU seam is needed by M2-A.
+
+## D012 — Maintain portable validation; focus current checks on macOS 15
+
+Date: 2026-11-04. Status: accepted by the user's standard-test-script request.
+
+Maintain `scripts/test-vspace.py` as the shared automatic/read-only/interactive
+entry point, reusing production safety fixtures and the M2-A GUI procedures.
+Record OS/SDK/architecture/source/binary and each passed/failed/skipped/unobserved
+outcome. Restore all displays' visibility and focus between focus controls;
+record native results separately from queried/visual activation. Avoid host IDs,
+new package dependencies, daemon/service management, and unsafe live-state
+injection. New commands must extend the applicable tests and guide.
+
+The user explicitly deferred macOS 26 testing and chose macOS 15 for ongoing
+development. Default CI now checks macOS 15 via the runner; optional manual CI
+can include macOS 26 later. This revises the earlier dual-OS validation gate,
+including the corresponding AGENTS.md workflow instruction. Support targets
+remain 15/26; unrun platforms remain unverified. Cross-version runtime testing
+will use the same script when suitable hosts are available. No publication,
+service operation, or later milestone implementation is authorized by this task.
+
+Reference: [standard runner and validation policy](../development.md#standard-vspace-test-script).

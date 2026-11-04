@@ -118,10 +118,126 @@ session stability, lookup, JSON, native focus outcomes, strict input, exact ping
 and one/two-display allocation/exhaustion and revalidation failures. Simulated
 displays do not establish behavior on physical displays.
 The existing upstream tests run alongside them. These checks require neither
-Accessibility permissions nor a running daemon. GitHub Actions repeats the build,
-ad-hoc signature verification, and tests on `macos-15` and `macos-26`; hosted
-runners do not validate an interactive window-management session. Runner labels
-are documented in the [GitHub runner images catalog](https://github.com/actions/runner-images).
+Accessibility permissions nor a running daemon. The standard runner below wraps
+these checks and is also the CI entry point. Hosted runners do not validate an
+interactive window-management session. Runner labels are documented in the
+[GitHub runner images catalog](https://github.com/actions/runner-images).
+
+## Standard vspace test script
+
+Maintain [scripts/test-vspace.py](../scripts/test-vspace.py) as the shared test
+entry point for developers and users on their own Macs. When a vspace command or
+contract changes, update its deterministic fixtures, applicable live checks, and
+this guide together. Keep host-specific IDs, paths, and service commands out of
+the runner. It uses Python 3's standard library (available with the development
+toolchain), the existing build/signing helper, and the existing C/Objective-C
+tests; it adds no package dependency.
+
+**Current validation policy:** focus ongoing development and runtime testing on
+macOS 15. The user explicitly deferred macOS 26 tests on 2026-11-04; they are not
+an ongoing local validation gate. Use this same script on macOS 26 or another
+version when a suitable machine is available later. Compatibility targets remain
+15/26, but a script's existence is not evidence of a pass on an untested OS.
+Automatic push/PR CI now uses macOS 15. A manual `workflow_dispatch` can opt into
+the retained macOS 26 build/headless job with `include_macos_26`; no GUI test runs
+in hosted CI. Historical 15/26 CI results remain historical evidence.
+
+From any directory, run the checkout script (examples below assume its root):
+
+```sh
+# Default: build with make, sign, verify universal binary, run all headless checks.
+./scripts/test-vspace.py
+# Reuse an already built/signed checkout binary.
+./scripts/test-vspace.py headless --skip-build
+# Build-only CI without a persistent signing identity; never use this for GUI tests.
+YABAI_FORK_SIGN_IDENTITY=- ./scripts/test-vspace.py headless
+```
+
+Headless mode includes all 30 current production tests: mapping/order/identity,
+JSON/parsing/native dispatch, one/two-display selection and exhaustion, no
+cross-display fallback, floating and uncertain occupancy, visible/non-desktop
+exclusion, missing state, stale mappings, and allocation revalidation. It also
+runs the runner's orchestration regressions, signature/architecture/version/help,
+shell syntax, and Git whitespace checks. It neither starts a daemon nor sends
+IPC commands. Builds replace only the checkout binary; use the persistent local
+certificate for later GUI work. `--skip-build` records that rebuilding was skipped.
+
+For live checks, first prepare a sole compatible checkout daemon using the
+[manual workflow](#manual-daemon-smoke-test) below, with persistent signing,
+manual Accessibility permission, and SIP fully enabled. An older running daemon
+does not acquire vspace commands just because the client is new. The runner
+**never starts/stops services or daemons**, overwrites configuration/installation
+files, loads the scripting addition, or changes macOS permissions. Service pause
+and recovery remain manual, explicitly approved operations.
+
+```sh
+# Read-only contract/query checks against the already running development daemon.
+./scripts/test-vspace.py query --user yabai-fork-dev
+# Interactive test with typed approval, switching, allocation and empty layouts.
+./scripts/test-vspace.py interactive --user yabai-fork-dev
+# Focus comparison without allocating mappings or changing layouts.
+./scripts/test-vspace.py interactive --user yabai-fork-dev --skip-allocation --skip-layout
+```
+
+`query` checks exact ping, list/current/native queries, invalid commands/indices,
+and rejected requests without mapping mutation. It sends no valid create/focus/
+layout request. Use `--binary PATH` and `--user NAME` to select the client and
+existing daemon's socket namespace; neither option isolates window management.
+
+`interactive` requires a terminal, exactly one daemon running the selected
+checkout executable, a persistent signature, an unlocked completed console
+session, usable AX focus metadata, and both mouse-focus options off (as in
+`examples/yabairc.dev`). Read the printed plan, type `RUN`, and leave the desktop,
+keyboard and mouse idle until prompted for separate visual confirmation. Allow
+several minutes; displays/Spaces and native focus observations determine duration.
+Use existing disposable test Spaces/windows in a suitable login session.
+
+The interactive stages capture a fresh recovery baseline; exhaust the smallest
+apparent spare pool first, then try each connected display; verify append-only
+IDs/indices/order and native frame/layout/focus invariants; compare same-display,
+visible cross-display, and hidden cross-display native/virtual focus where
+targets exist; check already-focused errors; and cycle float/BSP/stack only on
+newly allocated, still-empty Spaces. All displays' visible Spaces and global
+Space/window focus are restored between focus controls, giving identical starting
+visibility. Each comparison dispatches once; setup/recovery retries are separate.
+Native return status, observed activation, and user visual confirmation are
+recorded separately. A native SIP gesture can return success without observed
+keyboard focus; that is reported as `unobserved`, not changed into a vspace timeout.
+
+Successful `--create` tests leave their mappings allocated for that daemon
+session. There is currently no supported release command. The script does not
+create/delete/reorder native Spaces or move windows to manufacture cases. Public
+window queries cannot prove native emptiness: apparent spare candidates and
+other-display candidates are recorded as observations. Exact deterministic
+ordering, uncertain/incomplete AX state, stale mappings, and missing displays
+are covered by the production headless fixtures; they are not fabricated live.
+Unavailable targets are skipped explicitly. Use `--skip-allocation`, `--skip-focus`,
+or `--skip-layout` to omit stages; display setup/recovery can still switch focus.
+`--observe-seconds` and `--hold-seconds` adjust observation/visual pauses only.
+Run on both one- and two-display configurations later for separate physical
+coverage. Populated layout checks still require prepared disposable windows and
+the manual procedure below; empty-view smoke is not populated tiling coverage.
+
+Recovery runs in `finally`, including Ctrl-C during the test stages. It restores
+captured visibility/focus and each touched layout, then audits native order,
+window lifetimes/associations, exact frames, and layouts. It refuses to focus a
+reused window ID with a changed PID/association. It does not recreate closed
+windows or guess how to repair a changed desktop; a recovery failure is reported
+with baseline/final snapshots. After manually restoring an original service,
+perform the separate original-installation recovery audit below: the script's
+baseline describes the already running **development daemon**, not a previous
+service. A killed process or lost daemon can prevent automatic recovery.
+
+Every run prints a private result-directory path containing `report.json`.
+`--output /path/to/NEW-directory` chooses it explicitly; existing directories are
+refused to avoid overwriting evidence. Reports contain host/OS/SDK/architecture,
+source SHA and dirty-tree status, binary version/hash, commands/outputs/statuses,
+passed/failed/skipped/unobserved checks and, for live modes, window metadata and
+snapshots. Review/redact them before sharing. Exit 1 means a failure (including
+recovery or negative visual confirmation); exit 0 can include skipped/unobserved
+checks and does not establish complete GUI or cross-version compatibility. Check
+`completed` and each check's status. Archive results with the tested commit and
+OS/display configuration; temporary paths are not durable project evidence.
 
 ## Manual daemon smoke test
 

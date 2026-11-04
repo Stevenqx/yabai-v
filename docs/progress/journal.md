@@ -456,3 +456,52 @@ needs publication approval; macOS 26 GUI, a standalone single-display GUI repeat
 and populated layout smoke remain unrun. No push, merge, installed-file overwrite,
 TCC reset, SA, SIP change, or follow-on implementation occurred. Next: review
 local commits and publish/run the exact-SHA matrix only when separately approved.
+
+## 2026-11-04 — Maintain a portable vspace validation script
+
+Scope: the user requested a maintained automatic/interactive test script for
+their own Macs and other OS versions later, then chose to focus ongoing checks
+on macOS 15 and defer macOS 26. Started clean at `4f637d7` on
+`feat/vspace-mapping`, ahead of `origin/feat/vspace-mapping` by four commits.
+Read agent/development/architecture/validation/progress records and inspected
+the build, tests, CI, and temporary M2-A GUI helper before implementing.
+
+Added `scripts/test-vspace.py`: default headless build/sign/checks, read-only
+daemon contract/query checks, and typed opt-in interactive allocation/focus/empty
+layout stages. Reused all 30 production fixtures and promoted the available GUI
+procedures without host-specific IDs or service management. Reports contain OS/
+SDK/source/binary metadata, individual results, commands, and live recovery
+snapshots. Focus comparisons restore all displays' visibility and global focus
+between controls; native return status and observed/visual activation remain
+separate. Unknown public-query occupancy remains a candidate observation, not
+proof of emptiness. New mappings persist for the daemon session. Recovery covers
+the running development daemon; original-service preparation/recovery stays manual.
+
+Added 14 focused runner regressions, including full fake-daemon orchestration,
+append/exhaustion, identical focus setup, already-focused with one mapping,
+interruption recovery, changed window lifetimes, layout-command failure recovery,
+and nonterminal refusal. Updated development maintenance/run instructions,
+compatibility notes, decision D012, and resume/milestone records. Default CI now
+runs this same script on macOS 15, with macOS 26 opt-in for a later manual run;
+updated the earlier AGENTS.md dual-OS gate to match the user's latest instruction.
+No production C/Objective-C source changed after `5b199fb`.
+
+Passed on SIP-enabled macOS 15.6 arm64: full persistent-signed universal build
+through the runner, signature/version/help checks, 30/30 production tests and the
+initial runner suite. After runner refinements, final `headless --skip-build`
+passed all 30 production and 14 runner tests, strict signature/architectures and
+static checks. The full production build had no warnings; the test compile kept
+five existing CoreVideo deprecations. All 14 runner tests also passed with Apple
+Python 3.9.6 (default Python 3.15). Help, invalid infinite observation budget,
+workflow YAML/wiring, Markdown links/anchors, and whitespace passed. Initial
+sandbox signing/trust failures are retained separately; retries under the
+established signing workflow passed with no trust/TCC changes. Detailed reports
+and exact temporary paths are in [runner validation](../validation.md#standard-vspace-test-runner--2026-11-04).
+
+Not run: new runner query/interactive modes against a real daemon, hosted CI, or
+macOS 26. Fake-daemon results are not live GUI evidence. Earlier M2-A runtime and
+recovery evidence remains separate. No service, desktop, user configuration,
+installed binary, SIP, or scripting-addition state changed. Create the focused
+local checkpoint; no publication/merge is authorized. Next: use this runner for
+future macOS 15 work and prepared interactive sessions; use the same script on
+other OS versions later when supplied, without treating deferred tests as passes.

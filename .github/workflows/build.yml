@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      include_macos_26:
+        description: Also run the deferred macOS 26 build/headless checks
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -16,22 +21,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15, macos-26]
+        os: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.include_macos_26 && '["macos-15","macos-26"]' || '["macos-15"]') }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Build and verify ad-hoc signature
+      - name: Run standard automatic validation
         env:
           YABAI_FORK_SIGN_IDENTITY: '-'
-        run: ./scripts/build-dev.sh
-      - name: Check universal binary
-        run: |
-          lipo ./bin/yabai -verify_arch x86_64 arm64
-          ./bin/yabai --version
-      - name: Run headless tests
-        run: make -C tests
-      - name: Check whitespace and shell syntax
-        run: |
-          git show --format= --check HEAD
-          sh -n scripts/build-dev.sh examples/yabairc.dev
+        run: ./scripts/test-vspace.py headless --output "$RUNNER_TEMP/vspace-tests"

@@ -21,8 +21,10 @@ and hotkey clients must use the message interface; they do not exist yet.
 
 ## Compatibility and limitations
 
-- macOS 15 and 26 are the target platforms. CI checks builds and headless tests;
-  actual GUI behavior requires separate tests on both operating systems.
+- macOS 15 and 26 are the target platforms. Active development/CI validation
+  focuses on macOS 15. macOS 26 checks are deferred to a later standard-runner
+  session; optional hosted checks remain available. Actual GUI behavior requires
+  separate evidence on each OS; see the [validation policy](development.md#standard-vspace-test-script).
 - SIP stays fully enabled. Fork functionality must work without a scripting
   addition. Upstream's CLI commands remain present, including commands whose
   privileged behavior cannot work under this restriction.
