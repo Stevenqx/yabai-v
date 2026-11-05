@@ -191,7 +191,10 @@ existing daemon's socket namespace; neither option isolates window management.
 `interactive` requires a terminal, exactly one daemon running the selected
 checkout executable, a persistent signature, an unlocked completed console
 session, usable AX focus metadata, and both mouse-focus options off (as in
-`examples/yabairc.dev`). Read the printed plan, type `RUN`, and leave the desktop,
+`examples/yabairc.dev`). The native `focus_follows_mouse` query reports `disabled`
+for the `off` setting; `mouse_follows_focus` reports `off`. The preflight validates
+these query values and still rejects enabled modes.
+Read the printed plan, type `RUN`, and leave the desktop,
 keyboard and mouse idle until prompted for separate visual confirmation. Allow
 several minutes; displays/Spaces and native focus observations determine duration.
 Use existing disposable test Spaces/windows in a suitable login session.

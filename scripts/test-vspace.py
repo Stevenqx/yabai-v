@@ -272,8 +272,9 @@ class Runner:
         require(session and session.get("kCGSessionLoginDoneKey") is True
                 and not session.get("CGSSessionScreenIsLocked", False),
                 "unlock the Mac manually and complete console login")
-        for option in ("focus_follows_mouse", "mouse_follows_focus"):
-            require(self.message("config", option).stdout.strip() == "off",
+        # Config accepts 'off' for FFM, but its native query returns 'disabled'.
+        for option, disabled in (("focus_follows_mouse", "disabled"), ("mouse_follows_focus", "off")):
+            require(self.message("config", option).stdout.strip() == disabled,
                     "use examples/yabairc.dev with " + option + " off before interactive tests")
         print("\nThis uses the ALREADY RUNNING checkout daemon. It will append session-local\n"
               "mappings through exhaustion on reachable displays, switch Spaces/windows,\n"

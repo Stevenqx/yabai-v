@@ -3,6 +3,7 @@
 import copy
 import importlib.util
 import json
+import plistlib
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -115,6 +116,52 @@ class RunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(runner.TestFailure, "terminal"):
                 fake.interactive_preflight()
             commands.assert_not_called()
+
+    def preflight_fixture(self, ffm="disabled", mff="off"):
+        fake = FakeRunner()
+        fake.binary = runner.ROOT / "bin/yabai"
+        fake.report = {}
+        fake.save = lambda: None
+        session = {"kCGSSessionUserIDKey": runner.os.getuid(), "kCGSSessionOnConsoleKey": True,
+                   "kCGSessionLoginDoneKey": True}
+
+        def read_host(args, **kwargs):
+            command = args[0]
+            if command == "codesign":
+                stdout = "Authority=yabai-fork Development\n"
+            elif command == "csrutil":
+                stdout = "System Integrity Protection status: enabled.\n"
+            elif command == "pgrep":
+                stdout = "123\n"
+            elif command == "ps":
+                stdout = str(fake.binary) + "\n"
+            elif command == "ioreg":
+                stdout = plistlib.dumps({"IOConsoleUsers": [session]}).decode()
+            else:
+                raise AssertionError("unexpected preflight host command: " + repr(args))
+            return SimpleNamespace(returncode=0, stdout=stdout, stderr="")
+
+        fake.run = read_host
+        fake.message = lambda domain, option: SimpleNamespace(stdout={"focus_follows_mouse": ffm,
+                                                                       "mouse_follows_focus": mff}[option] + "\n")
+        return fake
+
+    @patch("builtins.print")
+    @patch("builtins.input", return_value="RUN")
+    @patch.object(runner.sys.stdin, "isatty", return_value=True)
+    def test_interactive_accepts_native_disabled_focus_query(self, isatty, answer, output):
+        fake = self.preflight_fixture()
+        fake.interactive_preflight()
+        self.assertEqual(fake.report["daemon_pid"], 123)
+        answer.assert_called_once()
+
+    @patch.object(runner.sys.stdin, "isatty", return_value=True)
+    def test_interactive_rejects_enabled_mouse_focus(self, isatty):
+        for ffm, mff in (("autofocus", "off"), ("autoraise", "off"), ("disabled", "on")):
+            with self.subTest(ffm=ffm, mff=mff):
+                fake = self.preflight_fixture(ffm, mff)
+                with self.assertRaisesRegex(runner.TestFailure, "off before interactive tests"):
+                    fake.interactive_preflight()
 
     def test_interrupt_in_allocation_runs_recovery(self):
         fake = FakeRunner()

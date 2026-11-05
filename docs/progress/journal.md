@@ -672,3 +672,70 @@ D012. The coherent change is recorded in the local feature commit containing thi
 entry, with only this task's implementation/tests/docs staged.
 Next: obtain applicable approval for a measured sole-daemon refresh GUI session,
 verify release/compaction/create/focus, then independently audit original recovery.
+
+## 2026-11-05 — Validate M2-C in the approved GUI session
+
+The user approved the prepared Homebrew pause/sole signed checkout daemon/test/
+restore plan. Verified source `31b3035`, signature/hash, unlocked macOS 15.6/SIP
+session, original executable/service and current two-display native topology.
+Recorded the active follow-up before testing. Captured independent WindowServer
+bounds, owners and exact native memberships for all five original windows before
+the first pause, alongside cached frames, configuration/layout/padding/gaps and
+installation hashes. Daemon source and signed binary stayed unchanged throughout.
+
+The first `xxa84kya` attempt exposed a runner preflight bug before refresh: native
+`focus_follows_mouse` queries return `disabled`, although the setter accepts `off`.
+Corrected only the Python runner's expected value; mouse-follows-focus remains
+`off`, and enabled mouse-focus modes remain rejected. Added realistic preflight
+regressions and updated the guide. All 21 runner tests passed with Python 3.15 and
+Apple's 3.9.6. The standard headless `--skip-build` run passed the unchanged signed
+universal binary, 52 production and 21 runner tests, help/syntax/whitespace. The
+previous full build and zero-finding analysis remain applicable to unchanged C.
+Report: `/private/tmp/yabai-v-m2c-gui-runner-fix-headless/report.json`.
+
+Core `jungx6qq` and repeated `9otq8z8c` checks passed maintained read-only query and
+real interactive refresh modes, empty destroy/recreate gaps, release of only
+hidden empty ID 5/native 871, preservation of background-visible ID 6/native 867,
+index 6 → 4 compaction with stable identity/order/mapping, diagnostics for real
+uncertain occupancy at 848, idempotence, fresh-ID appended create, compact/current/
+fresh focus and native/virtual already-focused parity. Per-refresh native state
+and original independent window bounds/memberships stayed invariant.
+
+Those two attempts stopped later at fixture preconditions: AppKit initially
+placed its window on the primary display; after explicit fixture-only placement,
+the source remained visible on the other display and correctly returned `visible`
+rather than the harness's expected `occupied`. Recorded both partial attempts
+without relabeling them. The focused `5tf4x6i3` follow-up hid the source correctly,
+then passed ordinary/floating/minimized/application-hidden occupancy one live
+window at a time, exact native membership and preserved flags/frames. Each case
+returned `occupied`; closing the last fixture window permitted explicit release,
+and repeat refresh was unchanged. This completion had no test/recovery errors.
+
+The user had not watched and explicitly requested another visual repeat. Primary
+Space 3 → 7 → 3 switching passed in `bga1388z`; its secondary activation was
+unobserved despite dispatch success, so that attempt stopped/recovered. The
+focused `r63fdz3z` repeat logged first-dispatch visibility of 867 while global
+focus remained at 3, then a separate request focused the now-visible target and
+completed return through 848 to 3. Eight-/six-second viewing pauses were used.
+The user confirmed: “Yes, switching and return looked correct.” Recorded that
+feedback separately from the maintained runner's earlier `unobserved` answer.
+No stronger native SIP focus guarantee or daemon-code fix is claimed.
+
+Every original-service recovery passed, including original stack layouts and all
+10-pixel padding/gaps. After the watched repeat, an independent read-only audit
+against the **very first pre-pause native baseline** passed every service/topology/
+visibility/global/window-focus/lifetime/native-owner/membership/state/frame/hash/
+SIP condition, with matching cached frames and no fixture/development daemon.
+Evidence: `/private/tmp/yabai-v-m2c-gui.r63fdz3z/independent-final-recovery-audit.json`
+and `user-visual-confirmation.json`; the final original PID 48377 is historical.
+The original installation/configuration/plist/TCC/trust/SA/SIP were preserved.
+
+Updated validation, CLI/development guidance, milestones and resume notes. Checked
+Markdown links/anchors and staged whitespace before the focused local follow-up
+commit. No push/merge was authorized or performed. Physical single-display GUI,
+simultaneously empty visible Spaces on both displays, unsafe live fault injection,
+new hosted CI and macOS 26 remain headless-only/unrun/deferred as specified in the
+[full M2-C GUI report](../validation.md#milestone-2-c-approved-gui-validation--2026-11-05).
+No more service action is pending; next work needs its applicable scope/publication
+or service authorization. Persistence, native MRU and broader topology work remain
+proposals, not newly authorized implementation.

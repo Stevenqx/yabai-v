@@ -255,8 +255,10 @@ fully enabled and does not require the scripting addition or root. Upstream's
 privileged operations retain their existing restrictions.
 
 Build/headless tests do not establish interactive compatibility. See the
-[M2-C local validation](validation.md#milestone-2-c-refresh-and-local-validation--2026-11-05)
-for refresh checks and remaining GUI/approval gates; the earlier
+[M2-C GUI validation](validation.md#milestone-2-c-approved-gui-validation--2026-11-05)
+for available two-display runtime checks, native-focus limits and remaining
+platform/scenario coverage; [local validation](validation.md#milestone-2-c-refresh-and-local-validation--2026-11-05)
+records the build/headless checks. The earlier
 [M2-B GUI validation](validation.md#milestone-2-b-approved-gui-validation--2026-11-05)
 applies to that source. Run the
 [standard test script](development.md#standard-vspace-test-script) for automatic

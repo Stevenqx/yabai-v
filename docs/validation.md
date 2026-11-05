@@ -1162,3 +1162,132 @@ explicit service approval under AGENTS.md; completed M2-B sessions are historica
 evidence only. Hosted CI requires authorized publication; macOS 26 stays deferred
 under D012. No service/configuration/installed binary, TCC/Keychain trust, scripting
 addition or SIP setting changed; no push or merge occurred.
+
+## Milestone 2-C approved GUI validation — 2026-11-05
+
+The user approved pausing Homebrew yabai, running the signed checkout as the sole
+daemon for refresh/create/focus checks, and restoring/auditing the original
+desktop/service. The first fresh baseline had two displays, native Spaces `3/7`
+and `848/867/871`, visible `3/848`, global Space 3 and Orca window 6369 focused.
+Desktops 867/871 were empty. Independent WindowServer bounds, owners and exact
+memberships were captured for all five original windows before the first pause.
+All IDs/PIDs are historical and require rechecking.
+
+Daemon source stayed **`31b3035b75063d925fcdc060b719472a177da018`** and the signed
+universal binary stayed SHA-256
+`880b45f22307dda5651c6abe58482b30bc586ea19ab6fdf5508f1589ca6632f0` throughout.
+macOS 15.6 arm64/SDK 15.5, SIP fully enabled, no scripting addition. The only
+repository executable change during validation was the narrow Python runner
+preflight fix below; no daemon, native handler, configuration or layout code
+changed. Temporary recovery/fixture scripts remain outside Git.
+
+### Runner preflight correction and distinct attempts
+
+`/private/tmp/yabai-v-m2c-gui.xxa84kya` passed startup, maintained read-only query
+checks and empty destroy/recreate setup, then stopped before refresh: the runner
+expected `focus_follows_mouse` to query as `off`, but upstream serializes this
+setting as **`disabled`**. The dev config's `off` command had succeeded. Corrected
+only the runner's expected native query value; `mouse_follows_focus` still requires
+`off`, and autofocus/autoraise/enabled mouse modes remain rejected. Added two
+preflight regressions. This is a runner defect, not a vspace or configuration fix.
+Every original-service recovery condition passed.
+
+`jungx6qq` then passed the maintained interactive refresh stage, compaction and
+create/focus checks below, but stopped at fixture setup: AppKit's explicit window
+coordinates placed the disposable window on the primary display. `9otq8z8c` added
+explicit native placement of only the fixture, then exposed a second harness
+precondition: switching global focus to display 1 left the source visible on
+display 2, so refresh correctly reported `visible`. The harness's expectation of
+`occupied` was inappropriate for that setup. Both attempts independently
+recovered every original condition and remain recorded as partial attempts.
+
+The focused follow-up `5tf4x6i3` explicitly selected the original desktop on the
+source display before each occupancy refresh, ensuring the source was hidden.
+It completed all four isolated window cases, empty release and repeat checks
+with no test/recovery errors. Only disposable windows were placed/minimized/hidden/
+closed; original windows were never moved, minimized, hidden or closed by tests.
+
+### Live results
+
+Core report: **`/private/tmp/yabai-v-m2c-gui.jungx6qq`** (also repeated in
+`9otq8z8c`). Occupancy completion: **`/private/tmp/yabai-v-m2c-gui.5tf4x6i3`**.
+
+| Live check | Observed result |
+| --- | --- |
+| Maintained runner query mode | Passed ping/list/current, native queries and negative CLI/no-mutation checks |
+| Empty allocation and destroy gap | Allocated IDs 4/5 at 867/871, destroyed hidden ID 4, then recreated 867 as fresh ID 6/index 6; survivor indices remained `1,2,3,5,6` until refresh |
+| Real `interactive --refresh-mappings` stage | Released only hidden empty ID 5/native 871; kept empty background-visible ID 6/native 867 and compacted its index from 6 to 4 |
+| Identity, order and diagnostics | Survivors remained IDs `1,2,3,6` with the same native/display associations; focused 1, occupied 2, uncertain-occupancy 3 and visible 6 were diagnosed separately |
+| Repeat refresh | Maintained runner's second refresh and later direct repeats changed no IDs, mappings or indices |
+| Empty visible Space on unfocused display | Native 867 remained mapped while display 1 retained global focus; explicit refresh returned `visible` for it |
+| Explicit empty release | After selecting original native 848 on display 2, refresh released the now-hidden empty 867 mapping |
+| Create/focus after compaction | Fresh ID 7 appended at index 4 (`N+1`); compact-index and new-index focus/current resolved correctly; native/virtual same-display focus and already-focused parity passed |
+| Isolated ordinary/floating/minimized/hidden application | One disposable source window at a time, exact native source membership, source hidden; all four returned `occupied` and retained the mapping with window state preserved |
+| Fixture close then refresh | Once its last window closed, refresh released that hidden mapping; next refresh was unchanged |
+| Refresh native invariants | Per-call native topology/order, visibility/global/window focus, layouts, cached frames/associations and original independent native bounds/memberships remained unchanged |
+
+The maintained interactive runner used a pseudo-terminal with the already
+approved `RUN` input; its visual answer was explicitly **`unobserved`**, not an
+agent-supplied positive confirmation. Actual user visual feedback is separate.
+Native setup/recovery focus sometimes needed a retry after successful dispatch;
+these are separately logged and do not change M2-A's native result semantics.
+
+### User-observed repeat
+
+The user had not watched the initial checks and explicitly requested a repeat.
+`/private/tmp/yabai-v-m2c-gui.bga1388z` passed observed virtual focus on the primary
+display from native 3 to 7 and back, with eight-/six-second viewing pauses. Its
+secondary-display request returned zero but global activation was unobserved;
+the harness stopped and fully recovered, so that attempt is not a full pass.
+
+The focused secondary repeat **`/private/tmp/yabai-v-m2c-gui.r63fdz3z`** recorded
+the same native fallback limit: its first request made 867 visible while global
+focus remained at native 3. A separately logged second request then focused the
+already-visible target. It held that desktop eight seconds, returned display 2
+to native 848 for six seconds, then returned the original primary desktop for
+six seconds. Actual activation was observed at each successful stage. These are
+different visibility conditions; no guaranteed first-dispatch activation or
+stronger SIP behavior is claimed. No daemon code change was made.
+
+The user then confirmed: **“Yes, switching and return looked correct.”**
+This feedback is stored in `r63fdz3z/user-visual-confirmation.json`, separate from
+the maintained runner's earlier `unobserved` answer. All service/desktop recovery
+conditions passed after both repeats. The final independent audit after the
+watched repeat, again against the very first `xxa84kya` native baseline, is
+`r63fdz3z/independent-final-recovery-audit.json`; **every condition passed**.
+The sole original daemon's observed PID was 48377 (historical). No fixture or
+development daemon remains, and no further service action is pending.
+
+The occupancy fixtures used the development float layout. Prior populated
+BSP/stack/float M2-B evidence remains historical; original stack layouts and all
+10-pixel padding/gaps were restored and verified here. No new layout behavior
+or native Space creation/deletion/reordering was introduced.
+
+### Validation and recovery
+
+**Passed:** all **21 runner tests** on Python 3.15 and Apple's 3.9.6. The standard
+headless runner with `--skip-build` passed strict signature/universal/version/help,
+**52/52 production tests**, **21/21 runner tests**, syntax and whitespace:
+`/private/tmp/yabai-v-m2c-gui-runner-fix-headless/report.json`. Rebuilding was
+explicitly skipped because no daemon C/Objective-C source changed; the existing
+persistently signed binary was checked and used throughout. The prior full build
+and zero-finding analyzer evidence remain unchanged.
+
+A separate read-only recovery audit after occupancy completion compared against
+the **first pre-pause baseline** from `xxa84kya`, not merely the last daemon's
+snapshot: `5tf4x6i3/independent-final-recovery-audit.json`. Every condition passed:
+one original executable/service, exact native topology/order/visibility/global
+Space/window focus, all original window lifetimes/owners/memberships/states/native
+frames, matching cached frames, original per-Space stack layouts/10-pixel padding/
+gaps, original binary/config/service-definition hashes, unchanged signed checkout
+binary, no remaining fixture, and SIP fully enabled. Each earlier recovery also
+passed. No TCC/trust, installed file/config/service definition, scripting addition,
+SIP, push or merge change occurred.
+
+**Still headless-only/unrun:** simultaneously empty visible mappings on both
+physical displays (display 1 had occupied desktops), interleaved occupied global
+survivors, last-total-mapping protection, pending destroy conflict, forced query/
+identity/topology/arrival races, physical single-display M2-C GUI, new hosted CI,
+and macOS 26. Real uncertain occupancy retention was observed for native 848;
+unsafe fault injection and user-window relocation were not manufactured. Hosted
+macOS 15 checks need authorized publication; macOS 26 stays deferred under D012.

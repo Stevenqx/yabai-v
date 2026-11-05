@@ -314,7 +314,8 @@ No further service work or publication is pending/authorized by this handoff.
 ## Milestone 2-C — Explicit refresh and global compaction
 
 Status: implementation and available local validation complete;
-daemon/GUI and additional platform checks remain gated/unrun.
+available macOS 15.6 two-display daemon/GUI checks also passed; additional
+platform/scenario coverage remains open.
 Authorized by `tmp/yabai-v-m2c-codex-prompt.md` on 2026-11-05.
 Task branch: `feat/vspace-mapping`, clean baseline `e23bd17`, descendant of
 completed M2-A/M2-B. Implement only explicit `vspace --refresh`: release confirmed
@@ -329,20 +330,53 @@ Reject refresh while destroy is pending. Preserve native state, MRU and IDs.
 - [x] Update technical/progress records and record remaining runtime/OS gates.
 - [x] Review and commit the coherent validated change locally.
 
-Passed: signed universal build, 52 production tests, 19 runner tests (Python 3.15
+Initial local validation passed: signed universal build, 52 production tests,
+19 runner tests (Python 3.15
 and Apple's 3.9.6), zero-finding arm64 analysis, Markdown/whitespace checks,
 two-display native-query probe with isolated mappings and read-only original
 daemon queries. Refresh's maintained runner stage is opt-in and fixture-tested.
 No native focus/window/layout mutation, service change or publication occurred.
 See [M2-C evidence](../validation.md#milestone-2-c-refresh-and-local-validation--2026-11-05).
 
-- [ ] Real M2-C daemon/IPC/GUI session with measured independent recovery (needs service approval).
+- [x] Real M2-C daemon/IPC/GUI checks with measured independent recovery and user visual confirmation.
 - [ ] Physical single-display GUI repeat.
 - [ ] New hosted macOS 15 CI (needs authorized publication).
 - [ ] Deferred macOS 26 build/runtime using the standard runner.
 
-Existing service changes and publication need separate approval. macOS 15 remains
+Future service changes and publication need separate approval. macOS 15 remains
 the active validation target under D012; macOS 26 stays deferred.
+
+GUI follow-up authorization, 2026-11-05: the user approved pausing Homebrew yabai,
+running signed source `31b3035` as the sole daemon for refresh/create/focus checks,
+then restoring and independently auditing the original service/desktop. Recheck
+console/topology/identities and capture native bounds/memberships before the pause.
+Use existing empty desktops and disposable fixture windows; preserve original
+windows/configuration and keep publication unauthorized. Record actual GUI
+outcomes separately from the completed headless/native-query evidence.
+
+The live runner exposed an existing preflight mismatch: native
+`focus_follows_mouse` queries return `disabled` for the accepted `off` setting.
+Corrected that narrow runner check, retained enabled-mode rejection, and added
+focused regressions as part of this validation follow-up. Native daemon source
+and the persistently signed binary stay at `31b3035`.
+
+GUI follow-up complete: core `jungx6qq`/`9otq8z8c` evidence passed real maintained
+query/refresh stages, destroy-gap compaction (ID 6/index 6 → 4), retained empty
+visible/uncertain mappings, release/idempotence and fresh-ID create/focus. Focused
+`5tf4x6i3` completed isolated hidden-source ordinary/floating/minimized/hidden-app
+occupancy and close-to-empty release with no errors. Earlier runner/fixture
+precondition failures remain distinct; every service recovery passed.
+
+The corrected runner passed 21 regressions on Python 3.15/3.9.6; headless
+`--skip-build` passed the unchanged signed binary, 52 production and 21 runner
+tests. The user requested a watched focus repeat and confirmed switching/return
+looked correct. Primary-display switching passed in `bga1388z`; `r63fdz3z` passed
+the secondary repeat after separately logging the native visibility-only dispatch
+and a retry. No stronger native activation guarantee is claimed.
+The final independent audit in `r63fdz3z` matched the first `xxa84kya` native
+baseline for every original service/desktop/window/layout/hash/SIP condition.
+No development daemon/fixture remains or further service action is pending.
+See [M2-C GUI evidence](../validation.md#milestone-2-c-approved-gui-validation--2026-11-05).
 
 ## Milestone 2-D and native MRU
 
