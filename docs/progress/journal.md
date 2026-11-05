@@ -621,3 +621,54 @@ push or merge occurred. User-created native desktops remain. Physical single-
 display checks, unsafe fault injection and macOS 26 remain unrun/headless-only;
 new hosted macOS 15 CI requires separate publication approval. Next: hand off the
 validated local M2-B work; later milestone implementation remains unauthorized.
+
+## 2026-11-05 — Implement M2-C manual refresh
+
+The user invoked `tmp/yabai-v-m2c-codex-prompt.md`. Verified clean
+`feat/vspace-mapping` at `e23bd17`, descendant of completed M2-A/M2-B; cached
+published checkpoint remains `cf20e36`. Read development/progress/architecture,
+D009–D014 and the latest M2-B GUI evidence. Recorded the authorized task before
+implementation; M2-D/MRU and broader display reconciliation remain proposals.
+
+Added manager-owned explicit refresh with complete display/Space/visibility/focus
+snapshots, conservative occupancy/identity checks and candidate revalidation.
+Protect every display's visible Space/global focus, retain uncertain/disconnected/
+stale mappings with reasons, preserve at least one mapping, and reject pending
+destroy before mutation. A separate candidate array filters authoritative global
+order and publishes removals/`1..N` numbering together; survivor IDs/native mappings/
+display association/relative order and `next_id` survive. Native state, layouts,
+focus and recency paths are unchanged. Recorded accepted D015 and preserved
+future observed-native-focus MRU guidance.
+
+Extended isolated CLI handling/help with `--refresh` and JSON release/index-change/
+retention results, keeping list semantics. Added deterministic safety regressions
+and standard-runner `interactive --refresh-mappings` opt-in with report/invariant/
+repeat checks. No default command or timer refreshes metadata. Updated CLI,
+architecture, development, milestones and resume records together.
+
+Passed on macOS 15.6 arm64/SDK 15.5/SIP enabled: persistent-signed universal `make`
+build, strict signature, 52/52 production tests, 19/19 runner regressions on Python
+3.15 and Apple's 3.9.6, zero-diagnostic arm64 analysis, shell/Markdown link/anchor
+and whitespace checks. Source build has no warnings; tests retain five upstream
+CoreVideo deprecations. Initial fixture macro/shadowing/release-order errors were
+corrected before the final complete pass. Sandbox signing/verification limitations
+were resolved by approved execution with the existing trusted identity, without
+changing trust/TCC. Final report: `/private/tmp/yabai-v-m2c-validated/report.json`.
+
+Read-only native-query probe with isolated hypothetical mappings on two physical
+displays/six native Spaces released two hidden empty local mappings, retained
+uncertain/visible/non-desktop mappings, passed idempotence, and preserved native
+topology/order/visibility/global focus with zero guarded mutation calls. No daemon
+or tracked AX window manager was initialized. Original-service read-only native
+query regressions passed with the new client. These are distinct from M2-C real
+daemon/IPC/GUI evidence; see [full M2-C validation](../validation.md#milestone-2-c-refresh-and-local-validation--2026-11-05).
+
+The original Homebrew service remains running; no pause/second daemon, installed
+file/configuration/service definition, TCC/trust, scripting addition or SIP change,
+push or merge occurred. Real M2-C GUI and physical single-display checks are unrun;
+new service approval is needed, and earlier completed M2-B approval is historical.
+Hosted macOS 15 CI awaits authorized publication; macOS 26 remains deferred under
+D012. The coherent change is recorded in the local feature commit containing this
+entry, with only this task's implementation/tests/docs staged.
+Next: obtain applicable approval for a measured sole-daemon refresh GUI session,
+verify release/compaction/create/focus, then independently audit original recovery.

@@ -311,11 +311,44 @@ The disposable fixture was closed only during teardown; original applications/
 windows remained open. The user confirmed switching and return looked correct.
 No further service work or publication is pending/authorized by this handoff.
 
-## Milestone 2-C/D and native MRU
+## Milestone 2-C — Explicit refresh and global compaction
+
+Status: implementation and available local validation complete;
+daemon/GUI and additional platform checks remain gated/unrun.
+Authorized by `tmp/yabai-v-m2c-codex-prompt.md` on 2026-11-05.
+Task branch: `feat/vspace-mapping`, clean baseline `e23bd17`, descendant of
+completed M2-A/M2-B. Implement only explicit `vspace --refresh`: release confirmed
+empty hidden valid mappings, protect every display's visible Space and global
+focus, retain uncertain mappings, and compact survivors in existing global order.
+Prepare and revalidate a separate candidate before atomic daemon publication.
+Reject refresh while destroy is pending. Preserve native state, MRU and IDs.
+
+- [x] Verify prerequisites, clean checkout, progress and technical records.
+- [x] Implement manager operation, CLI/result/help and focused safety regressions.
+- [x] Run signed build, headless/static checks and available native probes.
+- [x] Update technical/progress records and record remaining runtime/OS gates.
+- [x] Review and commit the coherent validated change locally.
+
+Passed: signed universal build, 52 production tests, 19 runner tests (Python 3.15
+and Apple's 3.9.6), zero-finding arm64 analysis, Markdown/whitespace checks,
+two-display native-query probe with isolated mappings and read-only original
+daemon queries. Refresh's maintained runner stage is opt-in and fixture-tested.
+No native focus/window/layout mutation, service change or publication occurred.
+See [M2-C evidence](../validation.md#milestone-2-c-refresh-and-local-validation--2026-11-05).
+
+- [ ] Real M2-C daemon/IPC/GUI session with measured independent recovery (needs service approval).
+- [ ] Physical single-display GUI repeat.
+- [ ] New hosted macOS 15 CI (needs authorized publication).
+- [ ] Deferred macOS 26 build/runtime using the standard runner.
+
+Existing service changes and publication need separate approval. macOS 15 remains
+the active validation target under D012; macOS 26 stays deferred.
+
+## Milestone 2-D and native MRU
 
 Status: design proposals only; implementation is not authorized.
 
-Manual refresh, persistence, and native Space/window MRU are recorded
+Persistence and native Space/window MRU are recorded
 with their safety and policy boundaries in
 [architecture proposals](../architecture.md#follow-on-proposals). Native Space lifecycle,
 reordering, GUI, and hotkeys remain deferred.

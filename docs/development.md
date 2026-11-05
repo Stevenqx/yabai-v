@@ -117,8 +117,10 @@ They cover mapping/order, conservative occupancy, layout independence, duplicate
 session stability, lookup, JSON, native focus outcomes, strict input, exact ping,
 and one/two-display allocation/exhaustion and revalidation failures. M2-B adds
 evacuation/retry, visibility/focus handoff, stable survivor gaps, topology/window
-races, native window-class policy, and deferred socket ownership regressions. Simulated
-displays do not establish behavior on physical displays.
+races, native window-class policy, and deferred socket ownership regressions.
+M2-C adds global interleaving/compaction, all-display visibility, conservative
+retention, snapshot/arrival races, pending-destroy rejection and coherent
+publication tests. Simulated displays do not establish behavior on physical displays.
 The existing upstream tests run alongside them. These checks require neither
 Accessibility permissions nor a running daemon. The standard runner below wraps
 these checks and is also the CI entry point. Hosted runners do not validate an
@@ -155,7 +157,7 @@ From any directory, run the checkout script (examples below assume its root):
 YABAI_FORK_SIGN_IDENTITY=- ./scripts/test-vspace.py headless
 ```
 
-Headless mode includes all 43 current production tests: mapping/order/identity,
+Headless mode includes all 52 current production tests: mapping/order/identity,
 JSON/parsing/native dispatch, one/two-display selection and exhaustion, no
 cross-display fallback, floating and uncertain occupancy, visible/non-desktop
 exclusion, missing state, stale mappings, and allocation revalidation. It also
@@ -225,6 +227,17 @@ or `--skip-layout` to omit stages; display setup/recovery can still switch focus
 Run on both one- and two-display configurations later for separate physical
 coverage. Populated layout checks still require prepared disposable windows and
 the manual procedure below; empty-view smoke is not populated tiling coverage.
+
+Opt into M2-C with `interactive --refresh-mappings`. This explicitly sends
+`vspace --refresh` twice after allocation/focus/layout and optional destroy checks.
+It may release **all** eligible mappings, including preexisting ones, and compact
+their global indices. It verifies survivor ID/mapping/order, exact release and
+index-change reports, retention diagnostics, observed occupied/visible protections,
+native desktop invariants and settled-state idempotence. Refresh never runs in
+default headless/query/interactive checks. `--skip-allocation --skip-focus
+--skip-layout --refresh-mappings` isolates this stage (setup/recovery still applies).
+Only the daemon's native scanner proves emptiness; public queries supplement it.
+The report keeps the exact refresh results. Use current `--list` indices afterward.
 
 Recovery runs in `finally`, including Ctrl-C during the test stages. It restores
 captured visibility/focus and each touched layout, then audits native order,
@@ -378,6 +391,17 @@ memberships/frames/states and original visibility/focus/layouts before the
 separate original-service recovery audit. The runner deliberately does not
 automatically populate, minimize/hide, or evacuate existing user workspaces.
 See [M2-B evidence and remaining gates](validation.md#milestone-2-b-evacuation-and-release--2026-11-05).
+
+For M2-C, capture mappings and native topology/visibility/focus/windows/layouts
+before `--refresh`. Allocate hidden empty spares explicitly if available, keep
+empty visible mappings on both displays, and observe floating/minimized/hidden
+windows without moving user windows to manufacture cases. Verify exact survivor
+IDs/native mappings/global order and compact indices, per-workspace diagnostics,
+unchanged native state, repeated refresh, and fresh-ID create/focus afterward.
+The maintained runner's `--refresh-mappings` automates report/invariant/idempotence
+checks; pending destroy and unsafe native query/topology races use headless
+fixtures. Recheck current indices after compaction. An original-service pause
+still requires explicit approval and an independent measured recovery baseline.
 
 Stop only the foreground development process with Ctrl-C. An existing Homebrew
 binary, service plist, and user configuration must remain intact. If the original

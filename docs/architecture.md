@@ -10,7 +10,8 @@ The new `vspace` domain is dispatched through the same daemon message interface.
 Command handling belongs in `src/vspace.c`, included after the shared token
 helpers are available. Milestone 0's exact `--ping` response is preserved.
 Milestone 1 adds `--list`, `--current`, and `--focus N`; M2-A adds `--create`
-and native focus result parity; M2-B adds `--destroy SOURCE [--to TARGET]`. See the
+and native focus result parity; M2-B adds `--destroy SOURCE [--to TARGET]`;
+M2-C adds `--refresh`. See the
 [command and JSON contract](vspace.md). Existing native selectors and domain
 handlers are unchanged.
 
@@ -36,8 +37,8 @@ and hotkey clients must use the message interface; they do not exist yet.
   a successful CLI exit does not establish that a synthesized gesture worked.
 - Window focusing and tiling require Accessibility permission and a GUI session.
   Screen Recording is only relevant to optional upstream animation features.
-- Virtual mapping, explicit spare allocation, focusing, and evacuation/release are implemented.
-  Refresh, persistence, GUI, hotkeys, and independent display/window reassignment
+- Virtual mapping, explicit spare allocation, focusing, evacuation/release and manual refresh are implemented.
+  Persistence, GUI, hotkeys, and independent display/window reassignment
   remain deferred.
 - A separate `USER` value changes upstream socket/lock names but does not isolate
   two daemons from the same WindowServer session. Never use it as justification
@@ -153,11 +154,7 @@ External changes after native observations and late native completions remain
 platform limits. See [command details](vspace.md) and
 [GUI validation](validation.md#milestone-2-b-approved-gui-validation--2026-11-05).
 
-## Follow-on proposals
-
-These are design directions, not authorization to implement later milestones.
-
-### M2-C — Manual refresh
+## Milestone 2-C — Manual refresh
 
 An explicit `vspace --refresh` releases only mapped Spaces confirmed empty and
 hidden on **all connected displays**. Preserve visible Spaces on unfocused
@@ -166,6 +163,37 @@ Retain at least one virtual workspace. Compact survivor indices globally to
 `1..N`, preserving relative order, internal IDs, and native mappings, including
 interleaved workspaces from different displays. Update only virtual state.
 Broader display reconciliation and explicit reordering may extend this later.
+
+`virtual_workspace_manager_refresh` owns the complete operation. It rejects any
+pending destroy before querying native state, preserving all of that operation's
+identities and indices. Native snapshots include connected display/Space order,
+per-display visibility and global focus. Failed/duplicate/incomplete enumeration,
+missing visibility or focus inconsistent with the visible set aborts before
+publication. Per-workspace desktop/ownership failures instead retain that mapping
+with a diagnostic, so a disconnected or stale mapping cannot cause an empty result.
+
+Classify in the live array's global order without mutating it. Re-read topology
+and visibility and reclassify only releases, retaining newly occupied/visible/
+uncertain candidates. A final complete snapshot checks topology consistency and
+gates final candidate identity/visibility/occupancy checks. Recheck complete topology
+and visibility after that scan, retaining any newly visible/focused candidates.
+Build survivor numbering from the final retained set. The separate
+`publish_refresh` boundary swaps the
+complete candidate array on the existing serial daemon loop; M2-D may persist the
+candidate before this swap. The report is derived from original identities and
+final numbering. No partial mapping generation is exposed to queries.
+
+Neither `next_id` nor native focus/window/layout/history state changes. If no
+mapping is protected by visibility or occupancy, retain the first mapping in
+global order. The command never adopts a new native Space or repairs associations.
+Allocation and lookup keep their existing live checks after refresh; a released
+mapping does not imply the native Space remains empty. Native mutations after the
+last query remain observable races, as in M2-A/B; this is a virtual metadata
+transaction, not a WindowServer transaction.
+
+## Follow-on proposals
+
+These are design directions, not authorization to implement later milestones.
 
 ### M2-D — Persistence
 

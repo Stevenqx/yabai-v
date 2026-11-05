@@ -170,6 +170,7 @@ class Runner:
         help_result = self.run([self.binary, "--help"])
         require("--create" in help_result.stdout, "binary help is missing vspace creation")
         require("--destroy SOURCE [--to TARGET]" in help_result.stdout, "binary help is missing vspace destruction")
+        require("--refresh" in help_result.stdout, "binary help is missing explicit vspace refresh")
         self.report["binary_sha256"] = hashlib.sha256(self.binary.read_bytes()).hexdigest()
         self.record("universal binary, signature, version, and help")
         self.run(["make", "-C", "tests"], timeout=300)
@@ -225,6 +226,7 @@ class Runner:
             (("vspace", "--list", "extra"), "unexpected argument"),
             (("vspace", "--current", "extra"), "unexpected argument"),
             (("vspace", "--create", "extra"), "unexpected argument"),
+            (("vspace", "--refresh", "extra"), "unexpected argument"),
             (("vspace", "--focus", "1", "extra"), "unexpected argument"),
             (("vspace", "--destroy", "1", "extra"), "unexpected argument"),
             (("vspace", "--destroy", "1", "--to"), "not a valid virtual workspace index"),
@@ -279,6 +281,8 @@ class Runner:
               "the captured visible Spaces, focus and layout settings, then audit frames.\n"
               "Created mappings remain unless --destroy-created releases hidden empty ones.\n"
               "That opt-in may evacuate windows arriving during its native preflight.\n"
+              "--refresh-mappings explicitly releases ALL eligible hidden empty mappings\n"
+              "and renumbers survivors, including mappings present before this run.\n"
               "No service/config is changed.\n"
               "Use a disposable test session; leave keyboard/mouse idle during the run.\n"
               "Ctrl-C requests recovery. Keep the report private (window metadata).")
@@ -475,6 +479,38 @@ class Runner:
                     "hidden empty destroy changed the native desktop")
             self.record("destroy hidden empty allocation " + str(source["id"]))
 
+    def refresh_mappings(self, baseline):
+        for attempt in range(2):
+            before = self.listing()
+            snap = self.snapshot("refresh-before-{}".format(attempt))
+            result = json.loads(self.message("vspace", "--refresh").stdout)
+            require(isinstance(result, dict) and set(result) == {"released", "reindexed", "retained"},
+                    "invalid refresh result")
+            after = self.listing()
+            released = {w["id"] for w in result["released"]}
+            survivors = [w for w in before if w["id"] not in released]
+            expected = [dict(w, index=i + 1) for i, w in enumerate(survivors)]
+            require(after and after == expected, "refresh changed survivor identity, mapping, order or focus")
+            require(result["released"] == [{k: w[k] for k in ("index", "id", "space-id", "display-id")}
+                                           for w in before if w["id"] in released], "incorrect released mappings")
+            require(result["reindexed"] == [{"id": w["id"], "old-index": w["index"], "index": i + 1}
+                                            for i, w in enumerate(survivors) if w["index"] != i + 1],
+                    "incorrect refresh index changes")
+            reasons = {"focused", "visible", "occupied", "occupancy-unknown", "display-unavailable",
+                       "mapping-unavailable", "last-workspace"}
+            require([(w["id"], w["index"]) for w in result["retained"]] ==
+                    [(w["id"], w["index"]) for w in after] and
+                    all(w["reason"] in reasons for w in result["retained"]), "invalid retention diagnostics")
+            protected = {s["id"] for s in snap["spaces"] if s["is-visible"] or s["has-focus"] or s["windows"]}
+            require(not any(w["id"] in released and w["space-id"] in protected for w in before),
+                    "refresh released an observed occupied or visible workspace")
+            require(desktop_state(self.snapshot("refresh-after-{}".format(attempt))) == desktop_state(baseline),
+                    "refresh changed the native desktop")
+            if attempt:
+                require(after == before and not released and not result["reindexed"],
+                        "repeat refresh changed mappings; inspect native activity in the saved snapshots")
+            self.record("explicit refresh" if not attempt else "settled refresh idempotence", result=result)
+
     def interactive(self):
         self.interactive_preflight()
         baseline = self.query_checks()
@@ -517,6 +553,10 @@ class Runner:
                 self.destroy_created(created, baseline)
             else:
                 self.record("destroy created mappings", "skipped", reason="requires --destroy-created")
+            if self.args.refresh_mappings:
+                self.refresh_mappings(baseline)
+            else:
+                self.record("explicit refresh", "skipped", reason="requires --refresh-mappings")
         finally:
             try:
                 self.restore(baseline)
@@ -542,10 +582,11 @@ def parser():
     result.add_argument("--user", default=os.environ.get("USER", ""), help="daemon's USER/socket namespace")
     result.add_argument("--output", help="new private result directory (must not already exist)")
     result.add_argument("--skip-build", action="store_true", help="headless: verify existing binary without rebuilding")
-    result.add_argument("--skip-allocation", action="store_true", help="interactive: keep virtual mappings unchanged")
+    result.add_argument("--skip-allocation", action="store_true", help="interactive: skip mapping allocation")
     result.add_argument("--skip-focus", action="store_true", help="interactive: skip focus comparisons")
     result.add_argument("--skip-layout", action="store_true", help="interactive: skip empty-Space layout changes")
     result.add_argument("--destroy-created", action="store_true", help="interactive: release this run's hidden empty allocations after checks")
+    result.add_argument("--refresh-mappings", action="store_true", help="interactive: explicitly refresh all mappings and compact indices (twice for idempotence)")
     result.add_argument("--observe-seconds", type=float, default=8, help="query observation budget per focus (default: 8)")
     result.add_argument("--hold-seconds", type=float, default=3, help="visual pause after each focus control (default: 3)")
     return result

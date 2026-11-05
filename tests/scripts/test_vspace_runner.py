@@ -2,6 +2,7 @@
 
 import copy
 import importlib.util
+import json
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -132,7 +133,7 @@ class RunnerTests(unittest.TestCase):
     @patch.object(runner.time, "sleep")
     def test_full_interactive_sequence_with_fake_daemon(self, sleep, answer):
         fake = FakeRunner()
-        fake.args = SimpleNamespace(skip_allocation=False, skip_focus=False, skip_layout=False, destroy_created=False, hold_seconds=0)
+        fake.args = SimpleNamespace(skip_allocation=False, skip_focus=False, skip_layout=False, destroy_created=False, refresh_mappings=False, hold_seconds=0)
         fake.report = {"snapshots": {}}
         fake.interactive_preflight = lambda: None
         fake.query_checks = lambda: fake.snapshot("baseline")
@@ -153,6 +154,45 @@ class RunnerTests(unittest.TestCase):
                                    **{"is-visible": False, "is-native-fullscreen": True}))
         self.assertEqual([s["id"] for s in runner.candidates(snap, [], 1)], [200])
         self.assertEqual([s["id"] for s in runner.candidates(snap, [mapping(9, 200, 10)], 1)], [])
+
+    def test_refresh_requires_explicit_opt_in(self):
+        self.assertFalse(runner.parser().parse_args(["interactive"]).refresh_mappings)
+        self.assertTrue(runner.parser().parse_args(["interactive", "--refresh-mappings"]).refresh_mappings)
+
+    def refresh_fixture(self, corrupt=None):
+        fake = FakeRunner()
+
+        def refresh(*args, **kwargs):
+            self.assertEqual(args, ("vspace", "--refresh"))
+            before = copy.deepcopy(fake.rows)
+            released = [w for w in before if w["space-id"] in (200, 400)]
+            if corrupt == "visible":
+                released = [w for w in before if w["space-id"] in (100, 200, 400)]
+            fake.rows = [dict(w, index=i + 1) for i, w in enumerate(w for w in before if w not in released)]
+            result = dict(released=[{k: w[k] for k in ("index", "id", "space-id", "display-id")} for w in released],
+                          reindexed=[dict(id=w["id"], index=n["index"], **{"old-index": w["index"]})
+                                     for n in fake.rows for w in before if n["id"] == w["id"] and n["index"] != w["index"]],
+                          retained=[dict(id=w["id"], index=w["index"], reason="visible") for w in fake.rows])
+            if corrupt == "indices":
+                result["reindexed"] = []
+            return SimpleNamespace(returncode=0, stdout=json.dumps(result), stderr="")
+
+        fake.message = refresh
+        return fake
+
+    def test_refresh_checks_compaction_and_idempotence(self):
+        fake = self.refresh_fixture()
+        fake.refresh_mappings(fake.snapshot("baseline"))
+        self.assertEqual([w["id"] for w in fake.rows], [11, 13])
+        self.assertEqual([w["index"] for w in fake.rows], [1, 2])
+        self.assertEqual(len(fake.checks), 2)
+
+    def test_refresh_rejects_visible_release_and_incorrect_result(self):
+        for corrupt, error in (("visible", "occupied or visible"), ("indices", "index changes")):
+            with self.subTest(corrupt=corrupt):
+                fake = self.refresh_fixture(corrupt)
+                with self.assertRaisesRegex(runner.TestFailure, error):
+                    fake.refresh_mappings(fake.snapshot("baseline"))
 
     def test_destroy_created_preserves_survivor_indices(self):
         fake = FakeRunner()

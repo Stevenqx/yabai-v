@@ -27,7 +27,8 @@ M2-A implementation is complete locally: `vspace --create` allocates the first
 revalidated hidden empty native desktop on the focused display; `--focus` returns
 native results without extra polling. Existing IDs/indices/order survive creation.
 Only explicit mapping creation is new; focus, windows, layouts, and native order
-are untouched by allocation. M2-C/D and native MRU remain design proposals; M2-B is described below.
+are untouched by allocation. M2-D and native MRU remain design proposals;
+M2-B and M2-C are described below.
 [Commands](../vspace.md) and [architecture](../architecture.md) describe the contract.
 
 Local validation passed: persistent-signed universal build, 30/30 headless tests,
@@ -78,56 +79,71 @@ evacuation had passed. The corrected complete run and focused follow-up recovere
 every original-session condition against their measured native baseline. No
 production source change was needed during validation.
 
+M2-C implementation and available local checks are complete. Explicit
+`vspace --refresh` releases only revalidated empty hidden valid mappings and
+compacts survivors in the existing global order, including interleaved displays.
+It protects global focus/every display's visible Space, retains uncertain
+mappings with reasons, rejects pending destroy, and publishes one complete
+candidate without native mutation or recency changes. The signed universal build,
+52 production tests, 19 runner tests, zero-finding arm64 analysis, native read-only
+two-display probe and existing-service read-only queries passed. Real M2-C
+daemon/GUI tests need a newly approved service session; publication and macOS 26
+remain gated/deferred. See [M2-C validation](../validation.md#milestone-2-c-refresh-and-local-validation--2026-11-05).
+
 ## Resuming work
 
 Handoff checked on 2026-11-05. Active branch: `feat/vspace-mapping`.
-Production/local implementation checkpoint: `ca48ac8`; source/build artifacts are
-unchanged during GUI validation. The following documentation checkpoint records
-that validation; inspect `git log` for its exact ID. Cached published remote ref
+M2-C starts from clean `e23bd17` (M2-B implementation `ca48ac8` plus GUI records).
+The local feature commit containing this handoff is the M2-C implementation
+checkpoint; verify its exact SHA with `git log`. Cached published remote ref
 `origin/feat/vspace-mapping` is `cf20e36` without network refresh, including M2-A
-and the portable runner. **The M2-B implementation and GUI records remain local
-and unpublished.**
+and the portable runner. **M2-B, its GUI records, and M2-C remain local/unpublished.**
 
-1. Inspect branch/tree and read milestones, D009–D014, latest journal,
-   development/architecture and the M2-B GUI report. Authorized M2-B implementation
-   and available local GUI validation are complete. M2-C refresh, M2-D persistence,
-   native lifecycle/reordering, MRU, GUI product and hotkeys remain proposals.
-2. Source `ca48ac8` passed the persistent-signed universal build on macOS 15.6/SIP
-   enabled, 43/43 production and 16/16 runner tests, strict signature, zero-finding
-   arm64 analysis and static checks. No source changed for this documentation task,
-   so no rebuild/retest is needed. Earlier M2-A/runner checks remain historical.
-3. Full GUI evidence is `/private/tmp/yabai-v-m2b-gui.mhi73ua9`, with valid-focus
-   regressions in `pqaohqqa`. The final independent audit in
-   `mhi73ua9/independent-final-recovery-audit.json` compares against its pre-pause
-   native bounds/owners/Space memberships and passes every condition, including
-   cached frames, layouts/all 10-pixel padding/gaps, original file hashes and SIP.
-   `user-visual-confirmation.json` records the user's positive confirmation.
-4. The original Homebrew service is restored; no development daemon/fixture
-   remains. Historical PID 12255, native IDs and host/session state require fresh
-   checks before reuse. User-prepared native desktops remain present. The earlier
-   `oxsvv6qz` cache-only mismatch and `chyw7zi8` harness assertion failure remain
-   separate records; do not relabel either attempt as a clean pass. Their
-   limitations and the accepted measured-baseline transition are in D014/report.
-5. No further service operation is pending in this finished test session. Preserve
-   the original installation/configuration; future sessions need their applicable
-   explicit authorization. Capture native bounds as well as cached query frames
-   before a pause. Do not try to restore user windows from unverified stale caches.
-   Preserve original per-Space layouts/padding and audit physical frames/recovery.
-6. The maintained runner's query mode has run against the actual M2-B daemon.
-   `interactive --destroy-created` itself remains fixture-tested; the temporary
-   GUI harness exercised the lifecycle commands. Use the standard runner headless
-   by default, inspect skipped/unobserved results, and keep original-service
-   recovery separate from a development-daemon baseline. One-display GUI and
-   unsafe live fault injection remain unrun; safety/race cases have headless tests.
+1. Inspect branch/tree, milestones, D009–D015, latest journal, development/
+   architecture and the M2-C report. Authorized M2-C implementation/local checks
+   are complete. M2-D persistence, native lifecycle/reordering, broader topology
+   reconciliation, MRU, GUI product and hotkeys remain unauthorized proposals.
+2. M2-C source passed `./scripts/test-vspace.py headless` on macOS 15.6/SIP enabled:
+   persistent-signed universal build, strict signature, 52/52 production and 19/19
+   runner tests, help/version/syntax/whitespace. Evidence:
+   `/private/tmp/yabai-v-m2c-validated/report.json`; arm64 analysis has zero findings
+   in `/private/tmp/yabai-v-m2c-analysis-final.plist`. Apple's Python 3.9.6 also
+   passed all 19 runner tests. Markdown links/anchors passed across nine files.
+3. The read-only two-display probe released two hidden empty mappings from
+   isolated hypothetical state, retained uncertain/visible mappings and passed
+   idempotence with native topology/visibility/global focus unchanged. Evidence:
+   `/private/tmp/yabai-v-m2c-native-probe.jsonl` and source/build siblings. It started
+   no daemon, tracked no AX windows and guarded native mutation callbacks. Original
+   native display/Space/window queries also passed. These do not establish M2-C
+   daemon/IPC, real window classifications, frames/layouts or interactive behavior.
+4. The original Homebrew daemon remains the sole daemon (`/opt/homebrew/bin/yabai`,
+   historical PID 12255); no service pause was attempted. Recheck process/console/
+   topology/window state before any new session. A real M2-C GUI test requires
+   explicit approval to pause the original service, run the signed checkout alone,
+   and restore/audit the original session. Prior completed M2-B approval is not a
+   new session's permission. Capture independent native bounds/owners/memberships
+   alongside cached frames per D014, preserve layouts/padding and original files.
+5. Next concrete validation step, after approval: prepare an idle measured baseline,
+   test refresh release/compaction/protection/idempotence on existing desktops,
+   verify fresh-ID create/compact-index focus and native command regressions, then
+   independently audit original-service recovery. The standard runner has explicit
+   `interactive --refresh-mappings`; it can release preexisting eligible mappings.
+   Its refresh stage and `--destroy-created` orchestration remain fixture-tested.
+   Query/default interactive modes do not trigger refresh.
+6. Historical M2-B GUI evidence remains `/private/tmp/yabai-v-m2b-gui.mhi73ua9`
+   and `pqaohqqa`, with positive user confirmation and independent native recovery.
+   Earlier inconclusive cache-only/harness-error attempts remain distinct. Do not
+   apply those results to M2-C source. Physical single-display M2-C GUI and unsafe
+   live fault injection remain unrun; policy/race cases have headless coverage.
 7. Ongoing validation focuses on macOS 15. macOS 26 build/runtime stays deferred
    under D012, with optional manual CI available. New hosted macOS 15 CI requires
    separately authorized publication of the exact reviewed SHA. No push or merge
-   is authorized; historical M1 CI does not cover M2-A/runner/M2-B changes.
+   is authorized; historical M1 CI does not cover M2-A/runner/M2-B/M2-C changes.
 
 Temporary reports/fixture helpers remain outside Git and include private window
 metadata. No installed binary/config/service definition, TCC/trust, scripting
 addition or SIP setting changed. Native MRU remains a separate observed-focus
-feature; allocation/release/index gaps do not manufacture history.
+feature; allocation/release/compaction do not manufacture history.
 
 ## Supporting documents
 

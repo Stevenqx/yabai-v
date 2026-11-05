@@ -1082,3 +1082,83 @@ The user subsequently confirmed: **“Yes, switching and return looked correct.�
 This visual confirmation is separate from native dispatch/query observations and
 is retained in `mhi73ua9/user-visual-confirmation.json`. The completed approved
 GUI session requires no additional service/desktop changes.
+
+## Milestone 2-C refresh and local validation — 2026-11-05
+
+Implemented the user's M2-C prompt from clean `e23bd17` on `feat/vspace-mapping`,
+a descendant of completed M2-A/M2-B. Refresh releases only confirmed empty hidden
+valid mappings, compacts survivors in existing global order, and returns bounded
+JSON with released mappings, changed indices and retention reasons. It rejects a
+pending destroy, retains uncertain mappings, and publishes a separate candidate
+array only after native revalidation. No upstream native handler/layout changed.
+See [CLI contract](vspace.md) and [D015](progress/decisions.md#d015--refresh-virtual-metadata-explicitly-and-conservatively).
+
+Executed on macOS 15.6 arm64 (24G84), SDK 15.5, SIP fully enabled:
+
+- **Passed:** `./scripts/test-vspace.py headless --output
+  /private/tmp/yabai-v-m2c-validated`: `make`, persistent `yabai-fork Development`
+  signing, strict all-architecture signature, universal x86_64/arm64 checks,
+  version/help, **52/52 production tests**, **19/19 runner regressions**, shell
+  syntax and whitespace. Report: `/private/tmp/yabai-v-m2c-validated/report.json`.
+  Production compilation had no warnings; tests retain the five preexisting
+  upstream CoreVideo deprecation warnings and no new warnings. Binary SHA-256:
+  `880b45f22307dda5651c6abe58482b30bc586ea19ab6fdf5508f1589ca6632f0`.
+- **Passed:** all 19 runner regressions with Apple's `/usr/bin/python3` (3.9.6)
+  as well as the standard runner's Python 3.15.
+- **Passed:** arm64 Clang static analysis, **zero diagnostics** in
+  `/private/tmp/yabai-v-m2c-analysis-final.plist`; `.log` is empty.
+- **Passed:** local Markdown links/anchors across nine files and `git diff --check`.
+- **Passed (read-only native adapter probe):**
+  `/private/tmp/yabai-v-m2c-native-probe` used production topology/visibility/identity/
+  occupancy queries with isolated hypothetical in-memory mappings. It started no
+  daemon, registered no window manager, and replaced native focus/move callbacks
+  with guards. With two physical displays and six native Spaces, it released
+  hidden empty native desktops 867/871 from its local mappings, retained the
+  background visible mapping, two unknown-occupancy mappings and a non-desktop
+  mapping, and passed a second unchanged refresh. Native topology/order/visibility/
+  global focus were unchanged, `next_id` was preserved, and no guarded mutation
+  callback ran. Evidence/source/build-log siblings:
+  `/private/tmp/yabai-v-m2c-native-probe.jsonl`, `.m`, `-build.log` and `.log`.
+  These IDs are historical. This is native-query evidence, **not** real daemon,
+  tracked AX window-class, IPC, frame/layout or GUI validation.
+- **Passed (existing service, read-only):** new client native display/Space/window
+  queries returned valid JSON against the original Homebrew daemon. Private
+  snapshots: `/private/tmp/yabai-v-m2c-original-{displays,spaces,windows}.json`.
+  No lifecycle/focus/configuration request was sent to that daemon.
+
+Production fixtures cover interleaved A1/B1/A2/B2/A3/B3 filtering to A1/B2/A3/B3;
+destroy-style index gaps; all-empty visible mappings on both displays; the last
+mapping when visible native desktops are unmapped; ordinary floating/minimized/
+application-hidden/sticky occupants and unknown classifications; unavailable,
+stale/reassociated and disconnected mappings; failed/duplicate/incomplete
+topology/visibility/focus snapshots; occupied/visible/focused/identity changes
+before publication; unavailable/changed topology during final occupancy; coherent
+old mapping generation during native callbacks; pending destroy source/target
+protection with successful subsequent completion; exact CLI result/errors and
+unchanged list contract; idempotence and fresh-ID appended creation with occupancy
+revalidation and focus through compact indices. All M2-A/B/native dispatch/layout
+regressions remain in the suite. These are deterministic policy tests, not physical
+window movement or display-configuration passes.
+
+Runner regressions verify refresh is explicitly enabled, global compaction and
+repeat reporting, and rejection of observed visible release/incorrect index
+reports. The maintained interactive runner's new `--refresh-mappings` stage has
+not run on a real desktop. It may release eligible preexisting mappings and is
+never invoked by ordinary query/default interactive checks.
+
+Initial test compilation found fixture macro/initializer issues; a fixture enum
+also shadowed the harness's result variable and was renamed before the full pass.
+The runner's malformed release-order fixture was corrected before validation.
+Sandbox signing/verification could not access the trusted identity; the final
+build/signature/test run used the existing identity outside the sandbox without
+changing trust/TCC. Earlier incomplete/failed reports remain separately at
+`/private/tmp/yabai-v-m2c-headless*`; they are not counted as full passes.
+
+**Unrun/gated:** real M2-C daemon/IPC/GUI validation, physical single-display
+repeat, new hosted macOS 15 CI, and macOS 26 build/runtime. The original daemon
+was observed as `/opt/homebrew/bin/yabai` (historical PID 12255); no service pause
+or competing daemon was attempted. A new measured GUI/recovery session requires
+explicit service approval under AGENTS.md; completed M2-B sessions are historical
+evidence only. Hosted CI requires authorized publication; macOS 26 stays deferred
+under D012. No service/configuration/installed binary, TCC/Keychain trust, scripting
+addition or SIP setting changed; no push or merge occurred.

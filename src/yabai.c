@@ -201,6 +201,7 @@ static void parse_arguments(int argc, char **argv)
                         "    --create maps an empty hidden desktop on the focused display; no focus change.\n"
                         "    --focus uses native space focus results; visible switching is not confirmed.\n"
                         "    --destroy SOURCE [--to TARGET] evacuates windows, then releases the mapping.\n"
+                        "    --refresh releases confirmed empty hidden mappings and compacts global indices.\n"
                         "      Default: preceding same-display workspace, otherwise following; crossing requires --to.\n"
                         "      A visible source needs a surviving local mapping, including with a cross-display target.\n"
                         "      Failure retains the source and reports observed moves; retry evacuates remaining windows.\n"

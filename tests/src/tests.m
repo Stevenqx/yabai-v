@@ -14,6 +14,7 @@ typedef TEST_SIG(function);
 #include "area.c"
 #include "virtual_workspace_manager.c"
 #include "virtual_workspace_destroy.c"
+#include "virtual_workspace_refresh.c"
 #include "vspace.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
@@ -46,6 +47,15 @@ typedef TEST_SIG(function);
     TEST_ENTRY(virtual_workspace_destroy_focused_cross_display) \
     TEST_ENTRY(virtual_workspace_destroy_late_failures)         \
     TEST_ENTRY(vspace_destroy_parsing)                         \
+    TEST_ENTRY(virtual_workspace_refresh_interleaved_and_idempotent) \
+    TEST_ENTRY(virtual_workspace_refresh_gaps_and_last)         \
+    TEST_ENTRY(virtual_workspace_refresh_uncertain_mappings)    \
+    TEST_ENTRY(virtual_workspace_refresh_unavailable_snapshot)  \
+    TEST_ENTRY(virtual_workspace_refresh_revalidation)         \
+    TEST_ENTRY(virtual_workspace_refresh_late_arrivals)        \
+    TEST_ENTRY(virtual_workspace_refresh_pending_destroy)      \
+    TEST_ENTRY(virtual_workspace_refresh_live_windows_and_publication) \
+    TEST_ENTRY(vspace_refresh_result_and_errors)               \
     TEST_ENTRY(vspace_destroy_deferred_ipc)                    \
     TEST_ENTRY(vspace_create_revalidation_errors)              \
     TEST_ENTRY(vspace_create)                                  \

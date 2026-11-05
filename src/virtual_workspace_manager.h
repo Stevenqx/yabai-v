@@ -68,6 +68,25 @@ struct virtual_workspace_native_space
 
 struct virtual_workspace_destroy;
 
+enum virtual_workspace_retention
+{
+    VIRTUAL_WORKSPACE_RELEASE,
+    VIRTUAL_WORKSPACE_RETAIN_FOCUSED,
+    VIRTUAL_WORKSPACE_RETAIN_VISIBLE,
+    VIRTUAL_WORKSPACE_RETAIN_OCCUPIED,
+    VIRTUAL_WORKSPACE_RETAIN_UNKNOWN,
+    VIRTUAL_WORKSPACE_RETAIN_DISPLAY,
+    VIRTUAL_WORKSPACE_RETAIN_MAPPING,
+    VIRTUAL_WORKSPACE_RETAIN_LAST
+};
+
+struct virtual_workspace_refresh_entry
+{
+    struct virtual_workspace workspace;
+    int new_index;
+    enum virtual_workspace_retention retention;
+};
+
 /* Native queries are separate from mapping policy so it can run headlessly. */
 struct virtual_workspace_source
 {
@@ -127,6 +146,7 @@ struct virtual_workspace *virtual_workspace_manager_find_index(struct virtual_wo
 struct virtual_workspace *virtual_workspace_manager_find_space(struct virtual_workspace_manager *vm, uint64_t sid);
 enum virtual_workspace_error virtual_workspace_manager_focus(struct virtual_workspace_manager *vm, int index);
 enum virtual_workspace_error virtual_workspace_manager_create(struct virtual_workspace_manager *vm);
+enum virtual_workspace_error virtual_workspace_manager_refresh(struct virtual_workspace_manager *vm, struct virtual_workspace_refresh_entry **entries);
 enum virtual_workspace_error virtual_workspace_manager_destroy(struct virtual_workspace_manager *vm, int index, int target_index, void *context, void (*complete)(struct virtual_workspace_destroy *, enum virtual_workspace_error));
 void virtual_workspace_manager_destroy_continue(struct virtual_workspace_manager *vm, uint64_t token);
 

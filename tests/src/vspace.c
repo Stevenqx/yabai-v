@@ -72,6 +72,7 @@ TEST_FUNC(vspace_uninitialized,
     TEST_CHECK(vspace_test_response("vspace\0--list\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--current\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--refresh\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--destroy\0" "1\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", FAILURE_MESSAGE "virtual workspace mapping is not initialized.\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--ping\0", "{\"status\":\"ok\",\"component\":\"vspace\"}\n"), true);
@@ -103,6 +104,7 @@ TEST_FUNC(vspace_reject_extra_arguments,
 {
     TEST_CHECK(vspace_test_begin(), true);
     TEST_CHECK(vspace_test_response("vspace\0--create\0extra\0", FAILURE_MESSAGE "unexpected argument 'extra' for command '--create' for domain 'vspace'\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--refresh\0extra\0", FAILURE_MESSAGE "unexpected argument 'extra' for command '--refresh' for domain 'vspace'\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--list\0extra\0", FAILURE_MESSAGE "unexpected argument 'extra' for command '--list' for domain 'vspace'\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--current\0extra\0", FAILURE_MESSAGE "unexpected argument 'extra' for command '--current' for domain 'vspace'\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0extra\0", FAILURE_MESSAGE "unexpected argument 'extra' for command '--focus' for domain 'vspace'\n"), true);
@@ -244,6 +246,7 @@ TEST_FUNC(vspace_destroy_deferred_ipc,
         TEST_CHECK(poll(&descriptor, 1, 0), 0);
         TEST_CHECK(vspace_test_response("vspace\0--ping\0", "{\"status\":\"ok\",\"component\":\"vspace\"}\n"), true);
         TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "another virtual workspace lifecycle operation is pending; retry after completion.\n"), true);
+        TEST_CHECK(vspace_test_response("vspace\0--refresh\0", FAILURE_MESSAGE "another virtual workspace lifecycle operation is pending; retry after completion.\n"), true);
         TEST_CHECK(vspace_test_response("vspace\0--focus\0" "3\0", FAILURE_MESSAGE "another virtual workspace lifecycle operation is pending; retry after completion.\n"), true);
         virtual_workspace_destroy_test_drain(&g_virtual_workspace_manager);
         char response[1024] = {0};
@@ -261,4 +264,25 @@ TEST_FUNC(vspace_destroy_deferred_ipc,
         memset(&g_temp_storage, 0, sizeof(g_temp_storage));
         vspace_test_end();
     }
+});
+
+TEST_FUNC(vspace_refresh_result_and_errors,
+{
+    virtual_workspace_refresh_test_begin(&g_virtual_workspace_manager);
+    TEST_CHECK(vspace_test_response("vspace\0--refresh\0", "{\"released\":[{\"index\":2,\"id\":202,\"space-id\":400,\"display-id\":12},{\"index\":3,\"id\":303,\"space-id\":80,\"display-id\":90}],\"reindexed\":[{\"id\":404,\"old-index\":4,\"index\":2},{\"id\":505,\"old-index\":5,\"index\":3},{\"id\":606,\"old-index\":6,\"index\":4}],\"retained\":[{\"id\":101,\"index\":1,\"reason\":\"focused\"},{\"id\":404,\"index\":2,\"reason\":\"visible\"},{\"id\":505,\"index\":3,\"reason\":\"occupied\"},{\"id\":606,\"index\":4,\"reason\":\"occupied\"}]}\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":1,\"id\":101,\"space-id\":300,\"display-id\":90,\"has-focus\":true}\n"), true);
+    virtual_workspace_test_state.missing_spaces = true;
+    TEST_CHECK(vspace_test_response("vspace\0--refresh\0", FAILURE_MESSAGE "cannot refresh virtual workspaces because current native topology, visibility, or focus is unavailable; mapping unchanged.\n"), true);
+    virtual_workspace_test_state.missing_spaces = false;
+    virtual_workspace_test_state.space_queries = 0;
+    virtual_workspace_refresh_test_query = 3;
+    virtual_workspace_refresh_test_change = 7;
+    TEST_CHECK(vspace_test_response("vspace\0--refresh\0", FAILURE_MESSAGE "cannot refresh virtual workspaces because native topology or mapping changed; retry after checking current state; mapping unchanged.\n"), true);
+    TEST_CHECK(buf_len(g_virtual_workspace_manager.workspaces), 4);
+    vspace_test_end();
+
+    TEST_CHECK(vspace_test_begin(), true);
+    TEST_CHECK(vspace_test_response("vspace\0--refresh\0", "{\"released\":[],\"reindexed\":[],\"retained\":[{\"id\":1,\"index\":1,\"reason\":\"occupied\"},{\"id\":2,\"index\":2,\"reason\":\"focused\"},{\"id\":3,\"index\":3,\"reason\":\"visible\"},{\"id\":4,\"index\":4,\"reason\":\"occupancy-unknown\"}]}\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--list\0", vspace_test_list), true);
+    vspace_test_end();
 });

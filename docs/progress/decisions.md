@@ -232,3 +232,45 @@ visibility/focus, layouts/padding, file hashes and SIP.
 This decision changes validation evidence, not CLI behavior or native geometry
 code. The production source remains `ca48ac8`; no code change was needed for the
 successful GUI checks. macOS 26 and publication remain outside this session.
+
+## D015 — Refresh virtual metadata explicitly and conservatively
+
+Date: 2026-11-05. Status: accepted for the user's M2-C implementation request in
+`tmp/yabai-v-m2c-codex-prompt.md`. Supersedes D011's proposed refresh policy only;
+persistence, broader topology reconciliation, explicit reordering and native MRU
+remain proposals.
+
+Only `vspace --refresh` triggers release/compaction, including for empty mappings
+created during this session. Reuse the native occupancy classifier without tiling
+assumptions. Protect global focus and visible Spaces on every connected display;
+retain unknown occupancy/classifications, stale/non-desktop/unavailable mappings
+and disconnected-display mappings with explicit reasons. Failed required
+topology/visibility/focus snapshots abort without publication. Keep at least the
+first mapping in global order if no other protection retains a workspace.
+
+Reject the entire refresh as busy while destroy is pending. This protects its
+source, destination and local replacement indices/identities, rather than adding
+another deferred lifecycle policy. Native events and queries continue through
+the existing serialized daemon loop.
+
+Prepare release decisions separately from live mappings, revalidate candidates
+against fresh occupancy/identity/visibility, and recheck topology/visibility after
+the final occupancy scan. Candidates that became occupied/visible/focused/uncertain
+stay mapped; unavailable or changed topology aborts. Build a complete survivor
+array in the authoritative live global order, preserving interleaved displays,
+then publish removals and `1..N` numbering together. Preserve IDs, associations,
+`next_id`, native state and recency. M2-D may persist the candidate at the isolated
+publication boundary; no persistence interface is added now.
+
+Return JSON with released original mappings, changed indices, and all retained
+IDs/resulting indices/reasons; keep `--list` unchanged. Subsequent allocation
+still proves native emptiness and appends a fresh ID. Native changes after the
+final observations remain a platform race, not a guaranteed native transaction.
+Native Space/window MRU must follow observed focus events (including external
+changes) under the existing roadmap; refresh creates no focus events or history.
+
+Extend the standard runner with explicit `--refresh-mappings` opt-in, never
+automatic cleanup. The current original-service session is preserved. A new GUI
+session requires applicable explicit approval under AGENTS.md; earlier completed
+M2-B approval does not authorize a new pause. D012's macOS 15 focus/macOS 26
+deferral and publication gates remain in effect.

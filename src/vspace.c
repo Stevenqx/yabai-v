@@ -9,6 +9,7 @@ extern struct virtual_workspace_manager g_virtual_workspace_manager;
 #define COMMAND_VSPACE_FOCUS    "--focus"
 #define COMMAND_VSPACE_CREATE   "--create"
 #define COMMAND_VSPACE_DESTROY  "--destroy"
+#define COMMAND_VSPACE_REFRESH  "--refresh"
 
 bool vspace_response_is_deferred(FILE *rsp)
 {
@@ -80,6 +81,53 @@ static void vspace_serialize(FILE *rsp, struct virtual_workspace *workspace, uin
             workspace->did, json_bool(workspace->sid == active_sid));
 }
 
+static const char *vspace_retention_reason(enum virtual_workspace_retention retention)
+{
+    switch (retention) {
+    case VIRTUAL_WORKSPACE_RETAIN_FOCUSED: return "focused";
+    case VIRTUAL_WORKSPACE_RETAIN_VISIBLE: return "visible";
+    case VIRTUAL_WORKSPACE_RETAIN_OCCUPIED: return "occupied";
+    case VIRTUAL_WORKSPACE_RETAIN_UNKNOWN: return "occupancy-unknown";
+    case VIRTUAL_WORKSPACE_RETAIN_DISPLAY: return "display-unavailable";
+    case VIRTUAL_WORKSPACE_RETAIN_MAPPING: return "mapping-unavailable";
+    case VIRTUAL_WORKSPACE_RETAIN_LAST: return "last-workspace";
+    default: return "unknown";
+    }
+}
+
+static void vspace_refresh_serialize(FILE *rsp, struct virtual_workspace_refresh_entry *entries)
+{
+    bool separator = false;
+    fprintf(rsp, "{\"released\":[");
+    for (int i = 0; i < buf_len(entries); ++i) {
+        struct virtual_workspace *workspace = &entries[i].workspace;
+        if (entries[i].retention != VIRTUAL_WORKSPACE_RELEASE) continue;
+        fprintf(rsp, "%s{\"index\":%d,\"id\":%llu,\"space-id\":%llu,\"display-id\":%u}",
+                separator ? "," : "", workspace->index, (unsigned long long)workspace->id,
+                (unsigned long long)workspace->sid, workspace->did);
+        separator = true;
+    }
+    fprintf(rsp, "],\"reindexed\":[");
+    separator = false;
+    for (int i = 0; i < buf_len(entries); ++i) {
+        struct virtual_workspace_refresh_entry *entry = &entries[i];
+        if (!entry->new_index || entry->new_index == entry->workspace.index) continue;
+        fprintf(rsp, "%s{\"id\":%llu,\"old-index\":%d,\"index\":%d}", separator ? "," : "",
+                (unsigned long long)entry->workspace.id, entry->workspace.index, entry->new_index);
+        separator = true;
+    }
+    fprintf(rsp, "],\"retained\":[");
+    separator = false;
+    for (int i = 0; i < buf_len(entries); ++i) {
+        struct virtual_workspace_refresh_entry *entry = &entries[i];
+        if (entry->retention == VIRTUAL_WORKSPACE_RELEASE) continue;
+        fprintf(rsp, "%s{\"id\":%llu,\"index\":%d,\"reason\":\"%s\"}", separator ? "," : "",
+                (unsigned long long)entry->workspace.id, entry->new_index, vspace_retention_reason(entry->retention));
+        separator = true;
+    }
+    fprintf(rsp, "]}\n");
+}
+
 static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
 {
     TIME_FUNCTION;
@@ -91,7 +139,8 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
     bool focus = token_equals(command, COMMAND_VSPACE_FOCUS);
     bool create = token_equals(command, COMMAND_VSPACE_CREATE);
     bool destroy = token_equals(command, COMMAND_VSPACE_DESTROY);
-    if (!(ping || list || current || focus || create || destroy)) {
+    bool refresh = token_equals(command, COMMAND_VSPACE_REFRESH);
+    if (!(ping || list || current || focus || create || destroy || refresh)) {
         daemon_fail(rsp, "unknown command '%.*s' for domain '%.*s'\n", command.length, command.text, domain.length, domain.text);
         return;
     }
@@ -155,6 +204,22 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
         if (result != VIRTUAL_WORKSPACE_PENDING) {
             daemon_fail(rsp, "cannot destroy virtual workspace with index '%d': %s.\n", index, vspace_destroy_error(result));
         }
+        return;
+    }
+
+    if (refresh) {
+        struct virtual_workspace_refresh_entry *entries = NULL;
+        enum virtual_workspace_error result = virtual_workspace_manager_refresh(vm, &entries);
+        if (result == VIRTUAL_WORKSPACE_BUSY) {
+            daemon_fail(rsp, "%s.\n", vspace_destroy_error(result));
+        } else if (result == VIRTUAL_WORKSPACE_STATE_UNAVAILABLE) {
+            daemon_fail(rsp, "cannot refresh virtual workspaces because current native topology, visibility, or focus is unavailable; mapping unchanged.\n");
+        } else if (result != VIRTUAL_WORKSPACE_SUCCESS) {
+            daemon_fail(rsp, "cannot refresh virtual workspaces because native topology or mapping changed; retry after checking current state; mapping unchanged.\n");
+        } else {
+            vspace_refresh_serialize(rsp, entries);
+        }
+        buf_free(entries);
         return;
     }
 
