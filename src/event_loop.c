@@ -1633,6 +1633,8 @@ static EVENT_HANDLER(DAEMON_MESSAGE)
             debug_message(__FUNCTION__, message);
             handle_message(rsp, message);
 
+            if (vspace_response_is_deferred(rsp)) return;
+
             fflush(rsp);
             fclose(rsp);
 
@@ -1641,6 +1643,12 @@ static EVENT_HANDLER(DAEMON_MESSAGE)
     }
 
     socket_close(param1);
+}
+
+static EVENT_HANDLER(VSPACE_DESTROY_CONTINUE)
+{
+    extern struct virtual_workspace_manager g_virtual_workspace_manager;
+    virtual_workspace_manager_destroy_continue(&g_virtual_workspace_manager, (uint64_t)(uintptr_t)context);
 }
 #pragma clang diagnostic pop
 

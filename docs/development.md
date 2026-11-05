@@ -115,7 +115,9 @@ The vspace tests exercise the production manager and message dispatcher with a
 deterministic native-query source, without initializing WindowServer managers.
 They cover mapping/order, conservative occupancy, layout independence, duplicates,
 session stability, lookup, JSON, native focus outcomes, strict input, exact ping,
-and one/two-display allocation/exhaustion and revalidation failures. Simulated
+and one/two-display allocation/exhaustion and revalidation failures. M2-B adds
+evacuation/retry, visibility/focus handoff, stable survivor gaps, topology/window
+races, native window-class policy, and deferred socket ownership regressions. Simulated
 displays do not establish behavior on physical displays.
 The existing upstream tests run alongside them. These checks require neither
 Accessibility permissions nor a running daemon. The standard runner below wraps
@@ -153,7 +155,7 @@ From any directory, run the checkout script (examples below assume its root):
 YABAI_FORK_SIGN_IDENTITY=- ./scripts/test-vspace.py headless
 ```
 
-Headless mode includes all 30 current production tests: mapping/order/identity,
+Headless mode includes all 43 current production tests: mapping/order/identity,
 JSON/parsing/native dispatch, one/two-display selection and exhaustion, no
 cross-display fallback, floating and uncertain occupancy, visible/non-desktop
 exclusion, missing state, stale mappings, and allocation revalidation. It also
@@ -205,7 +207,13 @@ recorded separately. A native SIP gesture can return success without observed
 keyboard focus; that is reported as `unobserved`, not changed into a vspace timeout.
 
 Successful `--create` tests leave their mappings allocated for that daemon
-session. There is currently no supported release command. The script does not
+session by default. Opt into M2-B hidden-empty release checks with
+`interactive --destroy-created`: after focus/layout recovery, it destroys only
+this run's unchanged, hidden allocations with no observed windows and a local
+mapped destination, checking exact survivor IDs/indices/order and native desktop
+invariants. The daemon still uses authoritative native occupancy; a window arriving
+after the runner's snapshot can be evacuated. Use disposable Spaces and keep the
+desktop idle. Missing local destinations are recorded as skipped. The script does not
 create/delete/reorder native Spaces or move windows to manufacture cases. Public
 window queries cannot prove native emptiness: apparent spare candidates and
 other-display candidates are recorded as observations. Exact deterministic
@@ -328,6 +336,36 @@ where approved. Restore original visible Spaces, focus, service, frames, layouts
 and installation hashes. Report live results separately from native read-only
 probes, deterministic fixtures, and hosted CI. See the current
 [M2-A validation plan](validation.md#milestone-2-a-allocation-and-local-validation--2026-11-04).
+
+For M2-B, use fresh prepared disposable windows and existing native desktops in
+an approved sole-checkout-daemon session. First capture the original service,
+native topology/visibility, window IDs/PIDs/frames/associations/states, layouts,
+and all virtual IDs/indices. Check strict destroy parsing, missing/same target,
+last-workspace protection, local preceding/following selection with interleaved
+displays, and cross-display missing-replacement rejection without effects.
+Use hidden empty sources for release/reuse checks; the runner's optional
+`--destroy-created` stage automates that limited case.
+
+Separately test mixed ordinary tiled/floating windows, minimized windows and
+hidden applications with float/BSP/stack destinations. Verify all exact native
+memberships, unchanged minimize/hidden/float state where supported, and managed
+layout queries after completion. Check a globally focused source and a source
+visible on the other display: the latter must show its local mapped replacement
+and recover original global Space/window focus. Compare native cross-display
+window placement rather than assuming geometry preservation. Sticky/child/
+fullscreen/unknown source state must retain the mapping. Source and destination
+native desktop restrictions are in [the CLI contract](vspace.md).
+
+Use deterministic fixtures for failed move, incomplete native query, reused ID,
+new arrival and disconnect races; do not manufacture unsafe user-desktop faults.
+Observe nonzero partial results and retained mappings, then retry the remaining
+windows; do not equate dispatch success with evacuation or visibility. Native
+requests may complete after a reported failure. Capture exact results in the
+private report and record skipped scenarios. Restore disposable window
+memberships/frames/states and original visibility/focus/layouts before the
+separate original-service recovery audit. The runner deliberately does not
+automatically populate, minimize/hide, or evacuate existing user workspaces.
+See [M2-B evidence and remaining gates](validation.md#milestone-2-b-evacuation-and-release--2026-11-05).
 
 Stop only the foreground development process with Ctrl-C. An existing Homebrew
 binary, service plist, and user configuration must remain intact. If the original

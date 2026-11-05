@@ -242,11 +242,41 @@ full sequence and interruption recovery; the new runner itself has not had a liv
 desktop run. Earlier M2-A GUI results are separate. Hosted CI remains unrun for
 this unpublished change. See [runner validation](../validation.md#standard-vspace-test-runner--2026-11-04).
 
-## Milestone 2-B/C/D and native MRU
+## Milestone 2-B — Explicit destroy with evacuation
+
+Status: implementation complete locally; interactive validation remains open.
+Authorized by `tmp/yabai-v-m2b-codex-prompt.md` on
+2026-11-05. Task branch: `feat/vspace-mapping`, clean baseline `cf20e36`.
+
+Implement `--destroy SOURCE [--to TARGET]` in the manager, with conservative
+window preflight, observed evacuation and visible-Space handoff, retained mappings
+on partial failure, stable survivor IDs/indices/order, and append-only creation.
+Use the existing native move/layout and focus paths with SIP enabled. Serialize
+deferred lifecycle completion on the daemon loop using stable identities/tokens.
+Refresh, persistence, native lifecycle/reordering, MRU, GUI and hotkeys remain
+outside scope. Existing service changes and publication require separate approval.
+
+- [x] Reconcile prompt with completed M2-A/runner baseline and read project records.
+- [x] Implement manager lifecycle, CLI/help and concrete safety regressions.
+- [x] Run persistent-signed build, headless/static checks and available local probes.
+- [x] Record interactive/OS limitations and update technical/progress records.
+- [x] Review and commit the coherent validated change locally.
+
+Available validation: signed universal build, 43 production tests, 16 runner
+regressions and zero-finding arm64 analysis passed on SIP-enabled macOS 15.6.
+A guarded read-only native probe rejected uncertain occupancy without mutations;
+empty native release/reuse was skipped because no eligible focused-display spare
+existed. Real GUI evacuation, populated float/BSP/stack, minimized/hidden state
+and physical visibility/focus handoff remain open. A new service-pause session
+requires explicit approval and prepared disposable windows/Spaces. Hosted macOS
+15 CI is unpublished; macOS 26 remains deferred. See
+[M2-B validation](../validation.md#milestone-2-b-evacuation-and-release--2026-11-05).
+
+## Milestone 2-C/D and native MRU
 
 Status: design proposals only; implementation is not authorized.
 
-Destroy, manual refresh, persistence, and native Space/window MRU are recorded
+Manual refresh, persistence, and native Space/window MRU are recorded
 with their safety and policy boundaries in
 [architecture proposals](../architecture.md#follow-on-proposals). Native Space lifecycle,
 reordering, GUI, and hotkeys remain deferred.

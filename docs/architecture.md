@@ -10,13 +10,14 @@ The new `vspace` domain is dispatched through the same daemon message interface.
 Command handling belongs in `src/vspace.c`, included after the shared token
 helpers are available. Milestone 0's exact `--ping` response is preserved.
 Milestone 1 adds `--list`, `--current`, and `--focus N`; M2-A adds `--create`
-and native focus result parity. See the
+and native focus result parity; M2-B adds `--destroy SOURCE [--to TARGET]`. See the
 [command and JSON contract](vspace.md). Existing native selectors and domain
 handlers are unchanged.
 
 The daemon owns a separate `virtual_workspace_manager`, initialized after the
 native Space and window managers and before the message loop/configuration.
-It owns only mapping state, never window positions or layout state. Future GUI
+It owns mapping and pending lifecycle state, and delegates window/layout changes
+to existing native managers. Future GUI
 and hotkey clients must use the message interface; they do not exist yet.
 
 ## Compatibility and limitations
@@ -35,8 +36,8 @@ and hotkey clients must use the message interface; they do not exist yet.
   a successful CLI exit does not establish that a synthesized gesture worked.
 - Window focusing and tiling require Accessibility permission and a GUI session.
   Screen Recording is only relevant to optional upstream animation features.
-- Virtual mapping, explicit spare allocation, and focusing are implemented.
-  Destroy, refresh, persistence, GUI, hotkeys, and display/window reassignment
+- Virtual mapping, explicit spare allocation, focusing, and evacuation/release are implemented.
+  Refresh, persistence, GUI, hotkeys, and independent display/window reassignment
   remain deferred.
 - A separate `USER` value changes upstream socket/lock names but does not isolate
   two daemons from the same WindowServer session. Never use it as justification
@@ -105,26 +106,55 @@ overflow is rejected. Append without rewriting survivors, switching focus,
 moving windows, touching layout trees, or reordering native Spaces. Empty
 allocations persist for the session. Startup policy is otherwise unchanged.
 
+## Milestone 2-B — Evacuate and release
+
+Lifecycle policy stays in `virtual_workspace_manager.c`. CLI code parses strict
+indices/optional `--to`, dispatches, and formats results. The manager freezes
+source/target/local-replacement mappings by ID, native association, and index,
+plus native display/Space enumeration and original focus. The nearest valid
+preceding local mapping wins over a following one, even in interleaved order.
+Fullscreen mappings and unavailable records cannot be destinations. A visible
+cross-display source requires a local replacement before moving any windows.
+
+The M2-A native occupancy scanner now also gathers evacuation identities, retaining
+AX references and PIDs; membership uses `window_space_list` without `window_space`'s
+display fallback. Ownership, AX ID, tracked lifetime, parent, sticky/fullscreen
+state, and one-Space membership are checked before dispatch. Root standard,
+floating and dialog windows include minimized/hidden/unmanaged ones. Children,
+all-Spaces/fullscreen and uncertain ordinary occupants block preflight. System
+auxiliary exclusions remain the existing menu/native level/tag classification.
+
+Moves call `window_manager_send_window_to_space` unchanged, using its native
+bridged/compatibility move and existing destination layout handling. Its optimistic
+managed-window bookkeeping is reconciled to observed membership using existing
+untile/retile helpers. Failed membership queries retain the mapping; no native
+move rollback, new geometry algorithm or change to upstream domain handlers is
+introduced. Reused IDs are rejected by retained AX object, PID, native owner and
+AX ID checks before touching windows/bookkeeping.
+
+One pending destroy reserves all vspace mutations, including focus; read-only
+commands/upstream events remain available. A monotonically increasing token
+identifies `VSPACE_DESTROY_CONTINUE` events, scheduled after 50 ms on the existing
+main queue and handled on the serial daemon loop. No worker mutates mapping state
+and no polling loop blocks native event processing. The CLI response stream stays
+open until the completion callback formats/closes it; command/temporary-storage
+pointers never survive an event turn. Each move/visibility/focus wait has at most
+100 observations; stale tokens do nothing.
+
+After evacuation, observe the source display's replacement visibility, then final
+global destination/original focus and a surviving background focused window.
+Two empty observations across event turns, exact topology/mapping validation,
+and final native occupancy/visibility checks gate the isolated `release` step.
+That step preserves survivor order/indices/IDs and is reserved for M2-D candidate
+metadata persistence before publishing removal. Creation still uses highest
+surviving index plus one and a fresh monotonic ID; no recency is manufactured.
+Partial failure retains the source and reports observed moves for a fresh retry.
+External changes after native observations and late native completions remain
+platform limits. See [command details](vspace.md) and [validation](validation.md#milestone-2-b-evacuation-and-release--2026-11-05).
+
 ## Follow-on proposals
 
 These are design directions, not authorization to implement later milestones.
-
-### M2-B — Destroy
-
-Evacuate a source workspace's windows into another active virtual workspace using
-`window_manager_send_window_to_space`, `space_manager_move_window_to_space`, and
-the existing untile/retile/layout paths. Reject destruction of the last virtual
-workspace. Prefer an adjacent workspace on the same display by default; crossing
-displays requires an explicit destination. A focused source uses the destination
-as its focus target; a background source preserves focus where possible.
-
-Release the source mapping only after confirming evacuation using current native
-state, including floating/hidden/minimized windows. If movement fails partway,
-retain the source mapping and report failure plus the windows already moved.
-Define the final adjacency/target-selection and partial-failure policy during
-M2-B implementation. Existing movement paths need postcondition checks; their
-invocation alone does not establish evacuation. Keep SIP enabled and do not
-promise unsupported native privileged operations.
 
 ### M2-C — Manual refresh
 

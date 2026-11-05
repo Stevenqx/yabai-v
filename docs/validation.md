@@ -870,3 +870,90 @@ new hosted CI, or macOS 26. Live orchestration is fixture evidence; the earlier
 M2-A GUI sessions above remain separate runtime evidence. No desktop/service
 change was needed for this task. One-display GUI and populated layout smoke
 remain limitations to exercise later using a prepared session/manual procedure.
+
+## Milestone 2-B evacuation and release — 2026-11-05
+
+Authorized implementation from `tmp/yabai-v-m2b-codex-prompt.md`, starting clean at
+`cf20e36` on `feat/vspace-mapping` (completed M2-A/runner descendant). This request
+supersedes the prior proposed-only status of M2-B; M2-C/D and native MRU remain
+proposals. Neither publication nor another installed-service pause was authorized.
+The current original Homebrew daemon was inspected read-only and left running.
+
+Implemented strict `--destroy SOURCE [--to TARGET]`, nearest preceding-then-following
+valid local selection, explicit cross-display targeting, last-workspace protection,
+and required local visible-Space replacement. Deferred operation tokens hold stable
+mapping/window identities while native events and read queries continue. Existing
+native move/untile/retile paths remain unchanged; observed membership reconciles
+optimistic bookkeeping. Source mappings survive unsupported/uncertain occupancy,
+partial movement, topology changes and unobserved handoff. Successful release
+preserves survivor IDs/indices/order; later creation can reuse the spare with a
+fresh ID. See [command/classification details](vspace.md) and
+[architecture](architecture.md#milestone-2-b--evacuate-and-release).
+
+Executed on macOS 15.6 arm64 (24G84), SDK 15.5, SIP enabled:
+
+- **Passed:** `./scripts/test-vspace.py headless`, including `make`, persistent
+  `yabai-fork Development` signing, strict all-architecture signature verification,
+  x86_64/arm64 binary checks, help/version, **43/43 production tests**, **16/16 runner
+  tests**, shell syntax and whitespace. Full build report:
+  `/var/folders/cf/byjbs_c51nb5gm4vtq8jkpv40000gn/T/yabai-v-tests-yr6hn1ae/report.json`.
+  Production compilation had no warnings; test compilation retains only the
+  five existing upstream CoreVideo deprecations. Four test-format warnings from
+  an earlier iteration were corrected before this final full run. The final
+  production binary SHA-256
+  is `b8649020b8b45d51a8614fa1837dbf91b35bff496ede36d06a3b09664a54a76c`.
+- **Passed:** arm64 Clang static analysis, zero diagnostics, retained in
+  `/private/tmp/yabai-v-m2b-analysis-commit.plist` and its `.log` sibling.
+- **Passed (read-only native adapter probe):** live uncertain occupancy rejected
+  destruction from native Space 3 to 7 before mutation, preserving the mapping
+  snapshot and active Space. The probe used untracked native candidates, with
+  native focus/move callbacks replaced by guards. It is not a second daemon or
+  an AX/window-management session. Report:
+  `/private/tmp/yabai-v-m2b-native-probe-final.jsonl`; source/build/log siblings
+  retain the probe procedure. IDs are historical and must be rechecked.
+- **Skipped:** native adapter release/reuse, because no eligible hidden empty
+  spare existed on the focused display at probe time. No Space/window was
+  created or rearranged to manufacture a candidate.
+
+Production fixtures cover empty hidden release/reuse, distinct IDs and sparse
+indices, interleaved displays, preceding/following local selection, invalid/same/
+unavailable targets, last mapping, visible/background/focused cross-display
+handoff, source-window lifetime and reused IDs, deferred move completion,
+partial failure/retry without duplicate moves, source arrivals, topology changes
+before/during evacuation, unsupported/unknown occupancy, late layout-settlement
+failure before release, stale tokens, busy mutations, strict parsing, and real
+socket response ownership across temporary-storage reset. Native class policy
+fixtures include floating/minimized/application-hidden root windows, dialogs,
+children, sticky/fullscreen and unknown roles. The suite also retains ping/list/
+current/create/native-focus and float/BSP/stack command regressions. These are
+policy/dispatcher fixtures, not proof of populated native tiling or actual moves.
+Initial fixture macro compile errors were corrected before passing validation.
+
+The maintained runner adds negative destroy checks to read-only mode and opt-in
+`interactive --destroy-created` for this run's unchanged hidden empty allocations.
+Its new release orchestration passed two fixture regressions; it has not run on
+an interactive desktop. Populated/minimized/hidden-window movement, native
+float/BSP/stack bookkeeping, source visibility on the other physical display,
+focus preservation and recovery remain **unrun for M2-B**. Earlier M2-A GUI
+results do not validate these new paths. Use the prepared manual procedure in
+[development](development.md#manual-daemon-smoke-test); an original-service pause
+requires explicit approval under `AGENTS.md`. Do not test against user workspaces
+without prepared disposable windows and an audited recovery plan.
+
+New hosted macOS 15 CI is unrun because publication is not authorized. macOS 26
+build/runtime remains deferred under D012. No original binary/configuration/service
+file, TCC/Keychain trust, scripting addition or SIP setting changed. Temporary
+reports are local evidence, not durable cross-version compatibility claims.
+
+Final follow-up checks passed: all 16 runner regressions with Apple's Python
+3.9.6 as well as the default Python 3.15, all local Markdown links/anchors across
+nine files, and `git diff --check`. The full report identifies baseline `cf20e36`
+with its pre-commit diff; the local implementation commit contains that source.
+The source build/signature and complete headless checks were rerun after final
+AX lifetime hardening, rather than relying on the earlier test-only run.
+
+Checkout reconciliation: the older resume record called M2-A/runner unpublished,
+but the observed `origin/feat/vspace-mapping` ref is already `cf20e36`, with a local
+reflog entry `update by push`. That cached publication checkpoint includes M2-A
+and the runner. No fetch/network verification or push was performed in this task,
+and no new hosted CI result is inferred. Only the new M2-B work is unpublished.

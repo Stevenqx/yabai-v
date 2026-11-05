@@ -505,3 +505,55 @@ installed binary, SIP, or scripting-addition state changed. Create the focused
 local checkpoint; no publication/merge is authorized. Next: use this runner for
 future macOS 15 work and prepared interactive sessions; use the same script on
 other OS versions later when supplied, without treating deferred tests as passes.
+
+## 2026-11-05 — Implement explicit M2-B evacuation and release
+
+Scope: implement `tmp/yabai-v-m2b-codex-prompt.md` from clean `cf20e36` on
+`feat/vspace-mapping`. Verified completed M2-A/runner ancestry, existing diff,
+agent/progress/development/architecture/validation records and actual native
+move/focus/event paths. Recorded active M2-B authorization before implementation;
+M2-C/D/MRU, publication and installed-service changes remain outside scope.
+
+Added manager-owned destroy with frozen source/target/replacement identities,
+conservative native window preflight, existing native move/layout dispatch,
+observed membership/layout reconciliation, and deferred event-loop completion.
+Retain the source on partial failure or uncertainty and report stable mappings,
+observed moved windows and remaining failure. Native visible-Space handoff and
+final global focus must be observed before release; background window focus uses
+retained lifetime checks. Survivor IDs/indices/order and fresh-ID append creation
+are preserved. Ordinary `--focus` keeps native result semantics when no destroy
+is pending. CLI/help, classification/limitations and accepted decision D013
+record the lifecycle contract and future persistence release seam.
+
+Extended production regressions to 43 and runner regressions to 16. Tests cover
+partial/retry and late failures, arrival/disconnect/lifetime races, sparse and
+interleaved ordering, visible/focused cross-display policy, supported native
+window classes and real deferred socket ownership. Maintained runner query
+rejections and added opt-in hidden-empty allocation release, with a prepared
+manual populated-window validation procedure. Fixture macro compile errors and
+four test-only format warnings were corrected during development.
+
+Passed persistent-signed universal build, strict signature/architecture/help,
+43/43 production and 16/16 runner tests, shell/whitespace checks on SIP-enabled
+macOS 15.6 arm64/SDK 15.5. Arm64 analysis had zero diagnostics. A guarded read-only
+native probe passed uncertain-occupancy rejection without mutations; native
+empty release/reuse was skipped for lack of an eligible focused-display spare.
+Detailed reports and final verification are in
+[M2-B validation](../validation.md#milestone-2-b-evacuation-and-release--2026-11-05).
+
+The original Homebrew daemon was inspected read-only and remains untouched.
+No second daemon, service operation, existing-user-window movement, TCC/trust/SIP
+change, SA load or publication ran. M2-B live moves/populated layouts/minimized/
+hidden windows and physical visibility/focus handoff remain unrun; M2-A GUI
+results remain separate. New hosted macOS 15 CI and macOS 26 are unrun/deferred.
+The coherent implementation/tests/records form the next local checkpoint.
+Next: prepare disposable Spaces/windows and obtain explicit service-pause approval
+before interactive validation.
+
+Final reconciliation found `origin/feat/vspace-mapping` already at `cf20e36`,
+with local reflog `update by push`; corrected the stale resume claim that the
+M2-A/runner baseline remained unpublished. No network refresh/push was performed,
+and no baseline/new hosted CI status is inferred. Final full rebuild/sign and
+43/16 tests passed after AX identity hardening; test compile has only the five
+existing upstream warnings. Apple Python 3.9.6 runner tests, zero-finding analysis,
+Markdown links/anchors and whitespace also passed. New M2-B work remains local.

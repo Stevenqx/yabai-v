@@ -132,7 +132,7 @@ class RunnerTests(unittest.TestCase):
     @patch.object(runner.time, "sleep")
     def test_full_interactive_sequence_with_fake_daemon(self, sleep, answer):
         fake = FakeRunner()
-        fake.args = SimpleNamespace(skip_allocation=False, skip_focus=False, skip_layout=False, hold_seconds=0)
+        fake.args = SimpleNamespace(skip_allocation=False, skip_focus=False, skip_layout=False, destroy_created=False, hold_seconds=0)
         fake.report = {"snapshots": {}}
         fake.interactive_preflight = lambda: None
         fake.query_checks = lambda: fake.snapshot("baseline")
@@ -153,6 +153,38 @@ class RunnerTests(unittest.TestCase):
                                    **{"is-visible": False, "is-native-fullscreen": True}))
         self.assertEqual([s["id"] for s in runner.candidates(snap, [], 1)], [200])
         self.assertEqual([s["id"] for s in runner.candidates(snap, [mapping(9, 200, 10)], 1)], [])
+
+    def test_destroy_created_preserves_survivor_indices(self):
+        fake = FakeRunner()
+        baseline = fake.snapshot("baseline")
+        source = copy.deepcopy(fake.rows[1])
+        message = fake.message
+        calls = []
+
+        def destroy(*args, **kwargs):
+            if args[:2] == ("vspace", "--destroy"):
+                calls.append(args)
+                fake.rows = [w for w in fake.rows if w["index"] != args[2]]
+                return SimpleNamespace(returncode=0, stdout="", stderr="")
+            return message(*args, **kwargs)
+
+        fake.message = destroy
+        fake.destroy_created([source], baseline)
+        self.assertEqual(calls, [("vspace", "--destroy", 2)])
+        self.assertEqual([w["index"] for w in fake.rows], [1, 3, 4])
+        self.assertEqual(runner.desktop_state(fake.state), runner.desktop_state(baseline))
+
+    def test_destroy_created_refuses_populated_or_changed_mapping(self):
+        for changed in (False, True):
+            fake = FakeRunner()
+            baseline = fake.snapshot("baseline")
+            source = copy.deepcopy(fake.rows[1])
+            if changed:
+                fake.rows[1]["id"] += 1
+            else:
+                fake.state["spaces"][1]["windows"] = [999]
+            with self.subTest(changed=changed), self.assertRaises(runner.TestFailure):
+                fake.destroy_created([source], baseline)
 
     def test_append_preserves_gaps_and_separates_ids(self):
         snap = fixture()

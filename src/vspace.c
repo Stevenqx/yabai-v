@@ -8,6 +8,55 @@ extern struct virtual_workspace_manager g_virtual_workspace_manager;
 #define COMMAND_VSPACE_CURRENT  "--current"
 #define COMMAND_VSPACE_FOCUS    "--focus"
 #define COMMAND_VSPACE_CREATE   "--create"
+#define COMMAND_VSPACE_DESTROY  "--destroy"
+
+bool vspace_response_is_deferred(FILE *rsp)
+{
+    struct virtual_workspace_destroy *operation = &g_virtual_workspace_manager.destroy;
+    return operation->token && operation->context == rsp;
+}
+
+static const char *vspace_destroy_error(enum virtual_workspace_error result)
+{
+    switch (result) {
+    case VIRTUAL_WORKSPACE_INVALID_INDEX: return "could not locate source virtual workspace";
+    case VIRTUAL_WORKSPACE_BUSY: return "another virtual workspace lifecycle operation is pending; retry after completion";
+    case VIRTUAL_WORKSPACE_LAST: return "cannot destroy the last virtual workspace";
+    case VIRTUAL_WORKSPACE_INVALID_TARGET: return "target must be a different surviving workspace with a valid native desktop mapping";
+    case VIRTUAL_WORKSPACE_LOCAL_TARGET_REQUIRED: return "no valid destination on the source display; specify --to TARGET";
+    case VIRTUAL_WORKSPACE_LOCAL_REPLACEMENT_REQUIRED: return "a visible source requires a surviving mapped desktop on its display, even with --to";
+    case VIRTUAL_WORKSPACE_SPACE_UNAVAILABLE: return "source native desktop or display is unavailable";
+    case VIRTUAL_WORKSPACE_STATE_UNAVAILABLE: return "current native topology, visibility, or focus is unavailable";
+    case VIRTUAL_WORKSPACE_STATE_CHANGED: return "native topology or mapping changed; retry after checking current state";
+    case VIRTUAL_WORKSPACE_UNSAFE_WINDOWS: return "source occupancy is unsupported, unknown, or still occupied (including new arrivals)";
+    case VIRTUAL_WORKSPACE_MOVE_FAILED: return "window evacuation or layout reconciliation could not be verified";
+    case VIRTUAL_WORKSPACE_VISIBILITY_FAILED: return "native visibility or focus handoff could not be verified";
+    case VIRTUAL_WORKSPACE_LIMIT: return "operation identities are exhausted";
+    default: return "destroy could not be completed";
+    }
+}
+
+static void vspace_destroy_complete(struct virtual_workspace_destroy *operation, enum virtual_workspace_error result)
+{
+    FILE *rsp = operation->context;
+    if (result != VIRTUAL_WORKSPACE_SUCCESS) {
+        daemon_fail(rsp, "destroy source %d (id %llu, space %llu) to target %d (id %llu, space %llu) failed: %s",
+                    operation->source.index, (unsigned long long)operation->source.id, (unsigned long long)operation->source.sid,
+                    operation->target.index, (unsigned long long)operation->target.id, (unsigned long long)operation->target.sid,
+                    vspace_destroy_error(result));
+        if (operation->cursor < buf_len(operation->windows)) fprintf(rsp, "; pending window: %u", operation->windows[operation->cursor].wid);
+        fprintf(rsp, "; moved windows: [");
+        bool separator = false;
+        for (int i = 0; i < buf_len(operation->windows); ++i) {
+            if (!operation->windows[i].moved) continue;
+            fprintf(rsp, "%s%u", separator ? "," : "", operation->windows[i].wid);
+            separator = true;
+        }
+        fprintf(rsp, "]; source mapping retained.\n");
+    }
+    fflush(rsp);
+    fclose(rsp);
+}
 
 static bool vspace_parse_index(struct token token, int *index)
 {
@@ -41,15 +90,25 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
     bool current = token_equals(command, COMMAND_VSPACE_CURRENT);
     bool focus = token_equals(command, COMMAND_VSPACE_FOCUS);
     bool create = token_equals(command, COMMAND_VSPACE_CREATE);
-    if (!(ping || list || current || focus || create)) {
+    bool destroy = token_equals(command, COMMAND_VSPACE_DESTROY);
+    if (!(ping || list || current || focus || create || destroy)) {
         daemon_fail(rsp, "unknown command '%.*s' for domain '%.*s'\n", command.length, command.text, domain.length, domain.text);
         return;
     }
 
     int index = 0;
+    int target_index = 0;
     struct token argument = get_token(&message);
-    if (focus) {
+    if (focus || destroy) {
         if (!vspace_parse_index(argument, &index)) {
+            daemon_fail(rsp, "value '%.*s' is not a valid virtual workspace index.\n", argument.length, argument.text);
+            return;
+        }
+        argument = get_token(&message);
+    }
+    if (destroy && token_equals(argument, "--to")) {
+        argument = get_token(&message);
+        if (!vspace_parse_index(argument, &target_index)) {
             daemon_fail(rsp, "value '%.*s' is not a valid virtual workspace index.\n", argument.length, argument.text);
             return;
         }
@@ -73,7 +132,9 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
 
     if (create) {
         enum virtual_workspace_error result = virtual_workspace_manager_create(vm);
-        if (result == VIRTUAL_WORKSPACE_DISPLAY_UNAVAILABLE) {
+        if (result == VIRTUAL_WORKSPACE_BUSY) {
+            daemon_fail(rsp, "%s.\n", vspace_destroy_error(result));
+        } else if (result == VIRTUAL_WORKSPACE_DISPLAY_UNAVAILABLE) {
             daemon_fail(rsp, "cannot create virtual workspace because the current display could not be resolved.\n");
         } else if (result == VIRTUAL_WORKSPACE_STATE_UNAVAILABLE) {
             daemon_fail(rsp, "cannot create virtual workspace because current native space state is unavailable.\n");
@@ -89,9 +150,19 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
         return;
     }
 
+    if (destroy) {
+        enum virtual_workspace_error result = virtual_workspace_manager_destroy(vm, index, target_index, rsp, vspace_destroy_complete);
+        if (result != VIRTUAL_WORKSPACE_PENDING) {
+            daemon_fail(rsp, "cannot destroy virtual workspace with index '%d': %s.\n", index, vspace_destroy_error(result));
+        }
+        return;
+    }
+
     if (focus) {
         enum virtual_workspace_error result = virtual_workspace_manager_focus(vm, index);
-        if (result == VIRTUAL_WORKSPACE_INVALID_INDEX) {
+        if (result == VIRTUAL_WORKSPACE_BUSY) {
+            daemon_fail(rsp, "%s.\n", vspace_destroy_error(result));
+        } else if (result == VIRTUAL_WORKSPACE_INVALID_INDEX) {
             daemon_fail(rsp, "could not locate virtual workspace with index '%d'.\n", index);
         } else if (result == VIRTUAL_WORKSPACE_SPACE_UNAVAILABLE) {
             daemon_fail(rsp, "cannot focus virtual workspace because its native space or display is unavailable.\n");

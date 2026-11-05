@@ -169,6 +169,7 @@ class Runner:
         self.run([self.binary, "--version"])
         help_result = self.run([self.binary, "--help"])
         require("--create" in help_result.stdout, "binary help is missing vspace creation")
+        require("--destroy SOURCE [--to TARGET]" in help_result.stdout, "binary help is missing vspace destruction")
         self.report["binary_sha256"] = hashlib.sha256(self.binary.read_bytes()).hexdigest()
         self.record("universal binary, signature, version, and help")
         self.run(["make", "-C", "tests"], timeout=300)
@@ -225,12 +226,16 @@ class Runner:
             (("vspace", "--current", "extra"), "unexpected argument"),
             (("vspace", "--create", "extra"), "unexpected argument"),
             (("vspace", "--focus", "1", "extra"), "unexpected argument"),
+            (("vspace", "--destroy", "1", "extra"), "unexpected argument"),
+            (("vspace", "--destroy", "1", "--to"), "not a valid virtual workspace index"),
         ]:
             self.rejected(args, error)
         for value in ("", "0", "-1", "+1", "1.0", "prev", "1x", "2147483648"):
             self.rejected(("vspace", "--focus", value), "not a valid virtual workspace index")
+            self.rejected(("vspace", "--destroy", value), "not a valid virtual workspace index")
         missing = next(i for i in range(1, len(rows) + 2) if i not in {w["index"] for w in rows})
         self.rejected(("vspace", "--focus", str(missing)), "could not locate")
+        self.rejected(("vspace", "--destroy", str(missing)), "could not locate")
         self.record("CLI rejection and no-mutation regressions")
         self.record("stale/disconnected mapping and uncertain occupancy injection", "skipped",
                     reason="covered by headless fixtures; live runner does not alter topology or AX state")
@@ -272,7 +277,9 @@ class Runner:
               "mappings through exhaustion on reachable displays, switch Spaces/windows,\n"
               "and cycle layouts only on newly allocated empty Spaces. It will restore\n"
               "the captured visible Spaces, focus and layout settings, then audit frames.\n"
-              "Created mappings remain until daemon exit. No service/config is changed.\n"
+              "Created mappings remain unless --destroy-created releases hidden empty ones.\n"
+              "That opt-in may evacuate windows arriving during its native preflight.\n"
+              "No service/config is changed.\n"
               "Use a disposable test session; leave keyboard/mouse idle during the run.\n"
               "Ctrl-C requests recovery. Keep the report private (window metadata).")
         require(input("Type RUN to begin (anything else cancels): ").strip() == "RUN", "cancelled")
@@ -446,6 +453,28 @@ class Runner:
             self.record("empty-Space float/BSP/stack " + str(space["id"]))
         self.record("populated layout smoke", "skipped", reason="requires separately prepared disposable windows")
 
+    def destroy_created(self, created, baseline):
+        self.restore(baseline)
+        for source in reversed(created):
+            before = self.listing()
+            if source not in before:
+                raise TestFailure("created mapping changed before destroy")
+            snap = self.snapshot("destroy-preflight-{}".format(source["id"]))
+            space = next(s for s in snap["spaces"] if s["id"] == source["space-id"])
+            require(not space["is-visible"] and not space["windows"] and
+                    not any(w["space"] == space["index"] for w in snap["windows"]),
+                    "destroy smoke requires a hidden allocation with no observed windows")
+            local = [w for w in before if w["display-id"] == source["display-id"] and w["id"] != source["id"]]
+            if not local:
+                self.record("destroy allocation " + str(source["id"]), "skipped", reason="no local mapped destination")
+                continue
+            self.message("vspace", "--destroy", source["index"])
+            require(self.listing() == [w for w in before if w["id"] != source["id"]],
+                    "destroy changed survivor IDs, indices, order or focus")
+            require(desktop_state(self.snapshot("destroy-after-{}".format(source["id"]))) == desktop_state(baseline),
+                    "hidden empty destroy changed the native desktop")
+            self.record("destroy hidden empty allocation " + str(source["id"]))
+
     def interactive(self):
         self.interactive_preflight()
         baseline = self.query_checks()
@@ -484,6 +513,10 @@ class Runner:
                 self.record("layout smoke", "skipped", reason="--skip-layout")
             else:
                 self.layout_smoke(created, baseline)
+            if self.args.destroy_created:
+                self.destroy_created(created, baseline)
+            else:
+                self.record("destroy created mappings", "skipped", reason="requires --destroy-created")
         finally:
             try:
                 self.restore(baseline)
@@ -512,6 +545,7 @@ def parser():
     result.add_argument("--skip-allocation", action="store_true", help="interactive: keep virtual mappings unchanged")
     result.add_argument("--skip-focus", action="store_true", help="interactive: skip focus comparisons")
     result.add_argument("--skip-layout", action="store_true", help="interactive: skip empty-Space layout changes")
+    result.add_argument("--destroy-created", action="store_true", help="interactive: release this run's hidden empty allocations after checks")
     result.add_argument("--observe-seconds", type=float, default=8, help="query observation budget per focus (default: 8)")
     result.add_argument("--hold-seconds", type=float, default=3, help="visual pause after each focus control (default: 3)")
     return result

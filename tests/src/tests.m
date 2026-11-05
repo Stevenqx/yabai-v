@@ -13,6 +13,7 @@ typedef TEST_SIG(function);
 
 #include "area.c"
 #include "virtual_workspace_manager.c"
+#include "virtual_workspace_destroy.c"
 #include "vspace.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
@@ -33,6 +34,19 @@ typedef TEST_SIG(function);
     TEST_ENTRY(virtual_workspace_create_unavailable_state)    \
     TEST_ENTRY(virtual_workspace_create_revalidation)         \
     TEST_ENTRY(virtual_workspace_create_limits)               \
+    TEST_ENTRY(virtual_workspace_destroy_hidden_and_create)    \
+    TEST_ENTRY(virtual_workspace_destroy_adjacent_and_visible) \
+    TEST_ENTRY(virtual_workspace_destroy_preflight)            \
+    TEST_ENTRY(virtual_workspace_destroy_cross_display)        \
+    TEST_ENTRY(virtual_workspace_destroy_partial_retry)        \
+    TEST_ENTRY(virtual_workspace_destroy_races_and_tokens)     \
+    TEST_ENTRY(virtual_workspace_destroy_arrivals_and_handoff_failure) \
+    TEST_ENTRY(virtual_workspace_destroy_settle_failure)       \
+    TEST_ENTRY(virtual_workspace_destroy_window_classes)       \
+    TEST_ENTRY(virtual_workspace_destroy_focused_cross_display) \
+    TEST_ENTRY(virtual_workspace_destroy_late_failures)         \
+    TEST_ENTRY(vspace_destroy_parsing)                         \
+    TEST_ENTRY(vspace_destroy_deferred_ipc)                    \
     TEST_ENTRY(vspace_create_revalidation_errors)              \
     TEST_ENTRY(vspace_create)                                  \
     TEST_ENTRY(vspace_ping)                                    \

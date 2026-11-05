@@ -169,3 +169,40 @@ will use the same script when suitable hosts are available. No publication,
 service operation, or later milestone implementation is authorized by this task.
 
 Reference: [standard runner and validation policy](../development.md#standard-vspace-test-script).
+
+## D013 — Explicit evacuation with observed release
+
+Date: 2026-11-05. Status: accepted for the user's M2-B implementation request in
+`tmp/yabai-v-m2b-codex-prompt.md`. Supersedes D011's proposed destroy policy only;
+refresh, persistence and MRU remain proposals.
+
+Resolve source, destination and local visibility replacement to stable virtual
+identities/native mappings at entry. Default to the nearest valid preceding
+same-display workspace in global order, otherwise following; cross-display
+evacuation requires `--to`. A visible source needs a surviving local mapped
+desktop, even with a cross-display target. Always require a usable surviving
+destination and retain at least one mapping. Preserve all survivor indices/IDs/
+order; only future explicit M2-C refresh may compact gaps.
+
+Reuse authoritative native occupancy and the existing window move/layout path.
+Root ordinary/floating/dialog windows include minimized and application-hidden
+ones. Child, sticky/all-Spaces, fullscreen and unknown occupancy block evacuation.
+Retain AX/PID identities, revalidate native ownership/membership before moving,
+and reconcile optimistic layout bookkeeping to observed membership. A partial
+failure retains the source, reports observed moves, and allows a fresh retry.
+Native move/geometry/state restrictions remain observable platform limits.
+
+Use one pending operation on the daemon event loop with a monotonic token and
+50 ms deferred continuation events. Hold the response stream until completion,
+reject other vspace mutations while pending, and keep native events/read queries
+processing. Wait for observed evacuation and required visibility/global focus,
+then require two empty observations and a final fresh native-state check. Keep
+ordinary `--focus` on D009's unchanged native path. Reserve the isolated mapping
+release step for M2-D candidate persistence before publication. macOS state can
+change after observation; do not claim a native transaction or guaranteed rollback.
+
+The existing service is outside implementation authorization. The earlier M2-A
+GUI approval covered finished sessions; another service pause needs explicit
+approval under `AGENTS.md`. macOS 26 and hosted CI remain deferred/unpublished.
+Native MRU stays separate and must follow observed focus, including external
+changes; allocation/release/index gaps do not create history.

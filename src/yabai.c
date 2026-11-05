@@ -200,6 +200,11 @@ static void parse_arguments(int argc, char **argv)
                         "Fork messages: yabai -m vspace --ping | --list | --current | --create | --focus N\n"
                         "    --create maps an empty hidden desktop on the focused display; no focus change.\n"
                         "    --focus uses native space focus results; visible switching is not confirmed.\n"
+                        "    --destroy SOURCE [--to TARGET] evacuates windows, then releases the mapping.\n"
+                        "      Default: preceding same-display workspace, otherwise following; crossing requires --to.\n"
+                        "      A visible source needs a surviving local mapping, including with a cross-display target.\n"
+                        "      Failure retains the source and reports observed moves; retry evacuates remaining windows.\n"
+                        "      Survivor IDs/indices stay fixed, leaving gaps until a future explicit refresh.\n"
                         "Type `man yabai` for more information, or visit: "
                         "https://github.com/asmvik/yabai/blob/v%d.%d.%d/doc/yabai.asciidoc\n", MAJOR, MINOR, PATCH);
         exit(EXIT_SUCCESS);

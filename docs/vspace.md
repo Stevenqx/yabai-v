@@ -1,7 +1,8 @@
 # Virtual workspace mapping and focusing
 
 Milestone 1 adds a daemon-owned VirtualWorkspaceManager; M2-A adds explicit
-spare allocation and native focus results. Each allocated virtual
+spare allocation and native focus results; M2-B adds explicit evacuation/release.
+Each allocated virtual
 workspace maps to exactly one native macOS Space, identified by its native ID,
 and records its native display ID. It does not position windows or choose a
 layout. Existing `space`, `window`, and `query` commands keep their native meaning.
@@ -14,6 +15,8 @@ yabai -m vspace --list
 yabai -m vspace --current
 yabai -m vspace --create
 yabai -m vspace --focus 2
+yabai -m vspace --destroy 3
+yabai -m vspace --destroy 3 --to 2
 ```
 
 Use `./bin/yabai` for the checkout client. During an approved development daemon
@@ -73,7 +76,68 @@ its `index` with `--focus`. The appended workspace receives a fresh session-loca
 ID and the index after the highest existing index. All existing IDs, indices,
 and relative order remain unchanged. Allocation changes no focus, window,
 layout, or native Space order. Even while empty, it stays mapped for this session
-until a future explicit lifecycle operation releases it.
+until explicit destruction releases it.
+
+`--destroy SOURCE [--to TARGET]` evacuates the source's ordinary windows, then
+releases only its virtual mapping. Applications/windows and the native Space stay
+open. Indices use the same strict positive-decimal format as `--focus`.
+An explicit target must be a different surviving mapping to a connected native
+desktop. Without `--to`, select the nearest valid preceding workspace on the
+source display in global virtual order, otherwise the nearest valid following
+one on that display. Interleaved other-display workspaces are skipped. Without
+a usable local destination, specify `--to`; cross-display evacuation is explicit.
+The last virtual workspace cannot be destroyed, even when empty.
+
+A source visible on any display needs a surviving mapped desktop on that same
+display before it can be released. For a local target, show that target. For a
+cross-display target, show the preceding-then-following local replacement. If no
+local replacement exists, a visible source cannot be destroyed even with `--to`;
+preflight rejects it before any move. A hidden source may use a cross-display
+target without a local replacement, but becoming visible during evacuation then
+blocks release. Fullscreen/non-desktop sources and destinations are unsupported.
+
+Preflight enumerates native windows with minimized/application-hidden windows
+included, using the same conservative occupancy classification as allocation.
+Root standard, floating, and dialog windows are eligible independently of tiling,
+float/minimize flags, or application visibility. Child/attached windows,
+sticky/all-Spaces windows, native fullscreen windows, unfamiliar roles, untracked
+ordinary candidates, incomplete membership/enumeration, and unavailable AX state
+block evacuation. Known menu roles and native desktop/nonordinary auxiliary
+windows remain excluded by the established classifier. No BSP tree proves emptiness.
+
+The existing `window_manager_send_window_to_space` path handles movement and
+float/BSP/stack bookkeeping, including cross-display native placement. No custom
+geometry, minimization, unhide, or fullscreen transition is introduced. macOS may
+restrict native moves or alter placement; a sent request is never proof of a move.
+The daemon revalidates retained AX/window/PID identities and exact native Space
+membership before each move and observes asynchronous completion on later event
+turns. Closed or independently departed windows need no repeated move. New
+arrivals or unknown occupancy retain the mapping. Observed membership reconciles
+the native move path's optimistic untile/retile bookkeeping, including failures.
+
+The globally focused source finishes focused on the destination. A background
+source restores the original global Space and surviving focused window where
+native APIs allow; closed/reused window identities are never focused. Visibility
+and focus must be observed, with up to 100 deferred 50 ms observations per pending
+move/handoff (daemon load/native queries may lengthen this). Two empty observations
+on separate event turns and a final topology/occupancy/visibility check precede
+release. `--focus` itself retains M2-A's native result semantics without this wait.
+While destroy is pending, other vspace destroy/create/focus requests fail busy;
+list/current/ping, upstream commands, and native events continue processing.
+
+Success has no output and exits zero after release. Preflight failure leaves
+windows/mappings untouched. A later failure retains the source mapping and exits
+nonzero, reporting stable source/target IDs and indices, native IDs, any pending
+window, windows observed at the destination, and the remaining failure. Moved
+windows stay where observed; focus/visibility or frames may already have changed.
+Uncertain layout membership is not asserted as repaired. Inspect native queries
+and retry; the retry gathers only remaining live source windows. This is not an
+atomic transaction with macOS: external changes after the last observation remain
+possible, and native requests can complete after a reported failure.
+
+Every survivor keeps its ID, index, and relative order. Index gaps remain; refresh
+is deferred to M2-C. Later `--create` can reuse a released, still-hidden empty
+desktop with a fresh ID and the index after the highest surviving index.
 
 `--focus N` accepts a positive decimal integer up to `2147483647`; leading zeros
 are accepted. It resolves the virtual index to a native Space ID and calls the
@@ -91,7 +155,7 @@ All errors use yabai's existing daemon failure marker: the CLI prints the messag
 to stderr and exits unsuccessfully. If startup enumeration failed, mapping
 commands report `virtual workspace mapping is not initialized.` and ping and
 upstream domains remain available. Each vspace request accepts exactly one
-command and its documented arguments; extra arguments fail before any focus or allocation.
+command and its documented arguments; extra arguments fail before any mutation.
 
 ## Startup policy and session stability
 
@@ -118,7 +182,7 @@ workspace, and conflicting display ownership or incomplete Space enumeration
 leaves mapping commands unavailable instead of exposing a partial map.
 
 Existing IDs, indices, and associations stay fixed for the current daemon session.
-Closing all windows does not remove a mapping; opening windows on a spare does
+Closing all windows does not automatically remove a mapping; opening windows on a spare does
 not allocate it. Native reordering does not renumber virtual indices. New native
 Spaces and displays are not mapped automatically; `--create` can allocate an
 eligible spare on the currently focused connected display. Stale or reassociated
@@ -127,7 +191,7 @@ changing an installed service still requires approval.
 
 ## Limits and validation
 
-No destroy, refresh, move-window, reordering, window positioning, new layouts,
+No refresh, independent vspace move-window command, reordering, window positioning, new layouts,
 persistence across restarts, GUI, or hotkeys are implemented. Follow-on designs
 are recorded in [architecture](architecture.md#follow-on-proposals).
 Fork focus works through upstream's existing gesture fallback with SIP
