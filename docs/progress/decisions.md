@@ -206,3 +206,29 @@ GUI approval covered finished sessions; another service pause needs explicit
 approval under `AGENTS.md`. macOS 26 and hosted CI remain deferred/unpublished.
 Native MRU stays separate and must follow observed focus, including external
 changes; allocation/release/index gaps do not create history.
+
+## D014 — Audit physical GUI frames independently of daemon caches
+
+Date: 2026-11-05. Status: accepted for the approved M2-B GUI session and measured
+baseline repeat; explicitly confirmed by the user after investigating padding.
+
+Tracked-window JSON serializes the daemon's frame cache. An initial GUI attempt
+stopped when a fresh daemon disagreed with that cache, but lacked independent
+pre-pause WindowServer bounds; it cannot establish a physical resize. Padding
+remained 10 pixels. The current Zotero frame exactly matches display 1's menu-bar/
+padding calculation, while the older cached dimensions match display 2's padded
+area despite a display-1 mapping. Record that evidence without declaring a proven
+historical cause or rewriting the failed/inconclusive attempt as a pass.
+
+Capture independent native bounds, ownership and exact Space membership before
+service pause and during/after tests. Treat those measurements as physical-frame
+evidence and keep cached-query comparisons separate. Preserve the original
+configuration and validate its padding/layout after recovery. Do not resize user
+windows merely to reproduce potentially stale cache values. The user approved
+using the measured native baseline; the final independent audit matched both
+native and cached frames, all original window identities/associations, topology,
+visibility/focus, layouts/padding, file hashes and SIP.
+
+This decision changes validation evidence, not CLI behavior or native geometry
+code. The production source remains `ca48ac8`; no code change was needed for the
+successful GUI checks. macOS 26 and publication remain outside this session.

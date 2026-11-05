@@ -150,7 +150,8 @@ metadata persistence before publishing removal. Creation still uses highest
 surviving index plus one and a fresh monotonic ID; no recency is manufactured.
 Partial failure retains the source and reports observed moves for a fresh retry.
 External changes after native observations and late native completions remain
-platform limits. See [command details](vspace.md) and [validation](validation.md#milestone-2-b-evacuation-and-release--2026-11-05).
+platform limits. See [command details](vspace.md) and
+[GUI validation](validation.md#milestone-2-b-approved-gui-validation--2026-11-05).
 
 ## Follow-on proposals
 

@@ -957,3 +957,128 @@ but the observed `origin/feat/vspace-mapping` ref is already `cf20e36`, with a l
 reflog entry `update by push`. That cached publication checkpoint includes M2-A
 and the runner. No fetch/network verification or push was performed in this task,
 and no new hosted CI result is inferred. Only the new M2-B work is unpublished.
+
+## Milestone 2-B approved GUI validation — 2026-11-05
+
+The user approved pausing the original service, running the persistently signed
+checkout as the sole daemon, testing disposable windows on existing native
+Spaces, and restoring/auditing the original session. They manually prepared
+additional empty desktop Spaces on display 2 and confirmed an idle desktop. The
+interruption occurred before any service pause; process/service state was checked
+again on continuation. Native fullscreen/desktop state had changed externally,
+so historical Space/window state was not reused as the new baseline.
+
+Production source stayed at **`ca48ac8c964900264da4d6e4b0928a9c0c16c6c7`** throughout.
+macOS 15.6 arm64/SDK 15.5, two physical displays, SIP enabled, no scripting addition.
+Sessions used the same persistently signed checkout binary and verified its
+signature before startup. No production
+source, configuration, service definition or installed binary was modified.
+Temporary AppKit fixture windows and native-query helpers were built under
+`/private/tmp`, not added as a GUI product or installed service. Only disposable
+fixture windows were targeted by evacuation/minimize/hide/cleanup requests; no original
+application/window was closed or used as a destroy source.
+
+### Initial cache mismatch and padding diagnosis
+
+Attempt `/private/tmp/yabai-v-m2b-gui.oxsvv6qz` stopped before any lifecycle command
+or fixture launch. The original cached Zotero frame `(0,0,1580,855)` differed from
+the newly initialized daemon's `(10,45,1332,823)`. Original-service recovery also
+reported Chrome height 875 versus the prior cached 855. Absolute resize through
+the original CLI was rejected because Chrome was managed; no resize succeeded.
+The original daemon, focus/visibility, native order, window lifetimes/associations,
+layouts, file hashes and SIP recovered; cached frames did not match that attempt.
+Its independent audit is `oxsvv6qz/independent-recovery-audit.json`.
+
+The user asked whether padding caused this. Read-only global/per-Space queries
+confirmed **10 pixels on all sides** and no external bar. The native work-area
+probe using the existing calculation showed:
+
+| Display | Native display bounds | Menu bar | Intended area with 10-pixel padding |
+| --- | --- | --- | --- |
+| 1 | `(0,0,1352,878)` | 35 pixels | `(10,45,1332,823)` |
+| 2 | `(-248,-900,1600,900)` | 25 pixels | `(-238,-865,1580,855)` |
+
+Zotero's current frame exactly matches display 1's padded area. Its older cached
+size matches display 2's padded dimensions despite a display-1 mapping. Native
+Chrome bounds were height 875, while the padded target was 855; unchanged padding
+alone does not establish why the observed/requested sizes differed. Tracked-window
+JSON uses `window->frame`, an event-updated cache. **No independent pre-pause native
+bounds were captured for the first attempt**, so its comparison cannot prove
+physical movement or establish an exact historical cause. It remains inconclusive.
+Evidence: `/private/tmp/yabai-v-m2b-padding-investigation.json`,
+`/private/tmp/yabai-v-m2b-padding-probe.json` and their temporary source/build logs.
+
+The user explicitly chose to continue with a measured native-frame baseline,
+keeping original configuration unchanged. The revised temporary harness captures
+WindowServer bounds, native owner PIDs and exact Space memberships before the
+pause and during tests/recovery; cached frames are recorded separately. See D014.
+
+### Measured repeat and complete session
+
+Repeat `/private/tmp/yabai-v-m2b-gui.chyw7zi8` passed real query/negative CLI checks,
+empty hidden release/reuse and four-window BSP evacuation, including minimized
+and floating states. It then stopped at an incorrect **harness assertion** that
+BSP leaves should have stack index 1. Production queries use zero for a singleton
+BSP leaf; the saved nodes, split fields, frames and native memberships were correct.
+The assertion was corrected and checked against the retained snapshot. This was
+not a daemon change. Every recovery condition, including native frames, passed.
+
+Complete evidence: **`/private/tmp/yabai-v-m2b-gui.mhi73ua9`**.
+Fresh baseline: one original daemon, native order `3/7` on display 1 and
+`848/867/871` on display 2, visible Spaces `3/848`, global Space 848 and Chrome
+window 1052 focused. The two prepared empty desktops were 867 and 871. Startup
+preserved independent native frames/membership and cached frames. All IDs/PIDs
+here are historical and must be rechecked before reuse.
+
+| Live check | Observed result |
+| --- | --- |
+| Maintained `test-vspace.py query` | Passed exact ping, list/current, native display/Space/window queries and negative CLI/no-mutation checks |
+| Empty hidden source, explicit cross-display destination | Released virtual ID/index 4 at native 867; survivors kept indices `1,2,3,5`, IDs and order |
+| Create after release | Reused native 867, appended index 6 with fresh ID 6; later releases/reallocations used fresh IDs through 11 without compacting gap 4 |
+| Same source/target | Clear preflight rejection without mapping mutation |
+| Focused mixed source → BSP, stack, float | Four live windows evacuated; native source empty and mapping released; destination globally focused |
+| Populated destination bookkeeping | BSP split nodes/first-last members, stack indices `1/2`, and no managed nodes for float all matched their layouts |
+| Minimized/floating windows | Independent native membership confirmed all four at the destination; minimize and explicit float flags preserved |
+| Application-hidden windows | All four evacuated while the fixture application stayed hidden; unhide subsequently restored BSP management of ordinary tiled windows |
+| Source visible on unfocused display 2 | Local destination 871 became visible; global Space 3 and Orca window 6369 focus were restored |
+| Explicit populated cross-display evacuation | Native membership/display association changed to native 3/display 1; display 2 retained mapped visible 871; destination received global focus |
+| Original user windows throughout | Every original native owner, membership and physical frame preserved; no original minimize/hidden state changed |
+
+The four fixture windows were two ordinary tiled roots, one explicitly floating
+root, and one minimized root. The minimized window was observed as an AX dialog
+subrole after minimization and was still accounted for and evacuated. These tests
+used the production `window_manager_send_window_to_space` path under SIP. No
+custom positioning workaround or stronger native gesture guarantee was added.
+The full harness had no test/recovery errors and empty development stderr. Fixture
+windows closed only after completion checks, as test teardown; the application
+and all windows stayed open through each destroy operation.
+
+A final focused regression session, **`/private/tmp/yabai-v-m2b-gui.pqaohqqa`**, passed
+valid `vspace --focus` same-display and visible cross-display round trips, observed
+`--current`, matching already-focused errors, unchanged mappings and independent
+native window geometry. It restored the original session again. This closes the
+remaining live focus regression check without rerunning populated evacuation.
+
+After that session, a separate read-only audit against the complete session's
+**pre-pause native baseline** passed every condition:
+`mhi73ua9/independent-final-recovery-audit.json`. It confirmed one original Homebrew
+service (historical PID 12255), original executable, native topology/order,
+visibility/global Space/window focus, all original window lifetimes and native
+frames/memberships, matching cached frames, original stack layouts and all
+10-pixel padding/gap values, all three installation hashes, SIP enabled, and no
+remaining development fixture. The user-prepared native desktops remain present;
+no native Space creation/deletion/reordering was performed by the test harness.
+
+**Still headless-only or unrun:** last-total-mapping protection; missing local
+replacement/default target with unavailable records; interleaved global indices;
+unsupported/sticky/child/fullscreen source injection; forced partial-move failure,
+arrival/disconnect and reused-ID races; physical single-display M2-B repeat;
+macOS 26; and new hosted CI. Unsafe user-desktop fault injection was deliberately
+not manufactured. `interactive --destroy-created` orchestration remains fixture-
+tested; the maintained runner's real query mode ran, while the temporary GUI
+harness exercised actual lifecycle commands. No push/merge was authorized or run.
+
+The user subsequently confirmed: **“Yes, switching and return looked correct.”**
+This visual confirmation is separate from native dispatch/query observations and
+is retained in `mhi73ua9/user-visual-confirmation.json`. The completed approved
+GUI session requires no additional service/desktop changes.

@@ -244,7 +244,8 @@ this unpublished change. See [runner validation](../validation.md#standard-vspac
 
 ## Milestone 2-B — Explicit destroy with evacuation
 
-Status: implementation complete locally; interactive validation remains open.
+Status: implementation and available macOS 15.6 two-display GUI validation complete
+locally; additional configurations remain open.
 Authorized by `tmp/yabai-v-m2b-codex-prompt.md` on
 2026-11-05. Task branch: `feat/vspace-mapping`, clean baseline `cf20e36`.
 
@@ -264,13 +265,51 @@ outside scope. Existing service changes and publication require separate approva
 
 Available validation: signed universal build, 43 production tests, 16 runner
 regressions and zero-finding arm64 analysis passed on SIP-enabled macOS 15.6.
-A guarded read-only native probe rejected uncertain occupancy without mutations;
-empty native release/reuse was skipped because no eligible focused-display spare
-existed. Real GUI evacuation, populated float/BSP/stack, minimized/hidden state
-and physical visibility/focus handoff remain open. A new service-pause session
-requires explicit approval and prepared disposable windows/Spaces. Hosted macOS
-15 CI is unpublished; macOS 26 remains deferred. See
-[M2-B validation](../validation.md#milestone-2-b-evacuation-and-release--2026-11-05).
+The approved two-display GUI session passed empty release/reuse, survivor ID/index
+stability, mixed tiled/floating/minimized windows, populated BSP/stack/float,
+application-hidden windows, source visibility on the other display/global focus,
+and explicit cross-display evacuation. Virtual focus round trips, native setup/
+recovery focus and already-focused regressions passed. Original-session conditions recovered
+against a measured native baseline; the user confirmed visible switching/return.
+Physical single-display and unsafe live fault injection remain unrun/headless-only;
+macOS 26 stays deferred and new hosted macOS 15 CI requires authorized publication.
+See [M2-B GUI validation](../validation.md#milestone-2-b-approved-gui-validation--2026-11-05).
+
+Active follow-up, 2026-11-05: the user explicitly approved a prepared GUI test
+session for local source `ca48ac8`: pause the original service, run the signed
+checkout as the sole daemon, test disposable-window evacuation using existing
+native Spaces, then restore/audit the original session. Publication remains
+unauthorized. Recheck host state and preserve all original applications/windows;
+prepare an additional empty ordinary desktop manually for isolated populated
+layout checks. Build a temporary fixture/recovery harness outside Git, record
+actual outcomes, and retain skipped conditions rather than using user workspaces
+as disposable sources.
+
+First approved attempt stopped before any lifecycle command: original and newly
+initialized daemon queries disagreed on cached user-window frames. Original
+service, native order/visibility/focus, window lifetimes/associations, layouts,
+installation hashes and SIP were independently recovered; cached frames differ.
+The first attempt did not capture independent pre-pause WindowServer bounds, so
+the comparison cannot establish physical geometry changes. Read-only diagnosis
+confirmed 10-pixel padding everywhere; display 1's 35-pixel menu bar plus padding
+exactly yields Zotero's current `(10,45,1332,823)` frame. The old cached Zotero size
+matches display 2's padded dimensions despite a display-1 mapping. This attempt
+remains inconclusive. Native bounds were added to the temporary recovery harness,
+and the user resolved the baseline preference for the measured repeat.
+
+The user accepted a measured native-frame baseline for the repeat, keeping the
+original configuration unchanged. The temporary harness now records independent
+WindowServer bounds, native memberships and owner PIDs before service pause and
+through recovery; cached frame comparisons remain separate observations.
+
+GUI follow-up complete: source `ca48ac8` stayed unchanged. A harness BSP assertion
+was corrected after a successful native evacuation, then the complete `mhi73ua9`
+run and focused `pqaohqqa` session passed. Independent final recovery confirmed
+one original service, exact native frames/membership/owners, topology/visibility/
+focus, matching cached frames, original layouts/padding/gaps/file hashes and SIP.
+The disposable fixture was closed only during teardown; original applications/
+windows remained open. The user confirmed switching and return looked correct.
+No further service work or publication is pending/authorized by this handoff.
 
 ## Milestone 2-C/D and native MRU
 

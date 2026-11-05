@@ -557,3 +557,67 @@ and no baseline/new hosted CI status is inferred. Final full rebuild/sign and
 43/16 tests passed after AX identity hardening; test compile has only the five
 existing upstream warnings. Apple Python 3.9.6 runner tests, zero-finding analysis,
 Markdown links/anchors and whitespace also passed. New M2-B work remains local.
+
+## 2026-11-05 — Complete approved M2-B GUI validation
+
+Scope: the user approved pausing Homebrew yabai, running the persistently signed
+checkout as the sole daemon, testing prepared disposable windows/existing Spaces,
+and restoring/auditing the original session. Started at clean production
+`ca48ac8`; only milestone/progress documentation changed. Read progress,
+architecture/development, decisions and current validation, then checked fresh
+service/topology/console/signature state. The interruption occurred before the
+first pause; rechecked processes and native state after the user's continuation.
+The user manually supplied empty desktop Spaces and an idle unlocked session.
+
+Prepared temporary AppKit fixture windows, a raw WindowServer membership/owner/
+bounds probe and a recovery harness outside Git. The first `oxsvv6qz` attempt
+stopped before lifecycle commands because cached window frames disagreed after
+initialization. Original service/focus/visibility/order/associations/layouts/
+hashes/SIP recovered; cached frames did not match. A managed-window absolute
+resize request was rejected, with no resize performed. No fixture was launched.
+
+At the user's request, investigated padding without changing it. Global/per-Space
+values stayed 10 pixels. Native work-area calculation exactly yields Zotero's
+current `(10,45,1332,823)` frame from the 1352×878 display and 35-pixel menu bar;
+its older cached size matches the other display's padded dimensions. Chrome's
+native height differed from the intended padded target, with no proven cause.
+Tracked-window JSON uses an event-updated frame cache. The first attempt had no
+pre-pause native bounds, so it cannot prove physical changes. The user explicitly
+accepted an independently measured baseline for the repeat; recorded D014 and
+updated validation guidance instead of forcing potentially stale cached frames.
+
+Measured repeat `chyw7zi8` passed empty release/reuse and mixed BSP evacuation,
+then stopped at the harness's incorrect expected BSP stack indices. The retained
+snapshot showed correct BSP split nodes/geometry/native membership; fixed only
+the harness assertion (BSP singleton stack indices are zero). Every recovery
+condition, including independent native frames, passed. Production source stayed
+unchanged. Both initial attempts remain separate from the complete pass.
+
+Complete `mhi73ua9` run passed maintained-runner query/negative CLI mode; empty
+hidden release/reuse with survivor gap 4/fresh IDs; same-target rejection; mixed
+tiled/floating/minimized window evacuation into BSP, stack and float; populated
+layout bookkeeping; application-hidden windows; other-display visibility handoff
+with original global Space/window focus; and explicit populated cross-display
+movement with a surviving mapped source-display replacement. Four disposable
+windows stayed open through each operation, then closed only at teardown. All
+original native window frames/owners/memberships were invariant throughout.
+
+Focused `pqaohqqa` follow-up passed same-display and visible cross-display
+`vspace --focus` round trips, current/already-focused outcomes and unchanged
+mappings/native geometry. A separate final audit against `mhi73ua9`'s pre-pause
+native baseline passed every condition: one original service (historical PID
+12255), executable, topology/native order, visibility/focus, all original window
+lifetimes/native frames/memberships, matching cached frames, original stack
+layouts/all 10-pixel padding/gaps, original binary/config/plist hashes, SIP and
+no development fixture. The user confirmed switching and return looked correct.
+
+No production code changed, so the existing signed universal build and 43/43
+production/16/16 runner tests still apply; no rebuild or test rerun was necessary
+for this documentation unit. Markdown links/anchors and whitespace checked
+before the local documentation commit. Full temporary evidence and explicit
+limits are in [M2-B GUI validation](../validation.md#milestone-2-b-approved-gui-validation--2026-11-05).
+No TCC/Keychain trust, installed binary/config/service definition, SA or SIP change,
+push or merge occurred. User-created native desktops remain. Physical single-
+display checks, unsafe fault injection and macOS 26 remain unrun/headless-only;
+new hosted macOS 15 CI requires separate publication approval. Next: hand off the
+validated local M2-B work; later milestone implementation remains unauthorized.

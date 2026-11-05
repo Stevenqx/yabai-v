@@ -346,6 +346,18 @@ displays, and cross-display missing-replacement rejection without effects.
 Use hidden empty sources for release/reuse checks; the runner's optional
 `--destroy-created` stage automates that limited case.
 
+Frame queries need particular care across daemon restarts: tracked
+`query --windows` frames come from yabai's event-updated cache. Capture independent
+WindowServer bounds, owner PIDs and exact native Space memberships before pausing
+the service and again during recovery. Preserve cached and native observations
+separately; a fresh daemon reporting a different cached frame does not establish
+that the physical window moved. Do not force a window to an old cached frame
+without independent evidence. Record per-Space padding and the display's menu-bar/
+Dock work area when diagnosing geometry. On the tested host, 10-pixel padding
+and a 35-pixel menu bar on a 1352×878 display yield `(10,45,1332,823)` exactly.
+The [M2-B GUI report](validation.md#milestone-2-b-approved-gui-validation--2026-11-05)
+records the initial inconclusive cache comparison and the measured repeat.
+
 Separately test mixed ordinary tiled/floating windows, minimized windows and
 hidden applications with float/BSP/stack destinations. Verify all exact native
 memberships, unchanged minimize/hidden/float state where supported, and managed

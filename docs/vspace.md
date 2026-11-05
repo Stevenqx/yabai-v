@@ -199,7 +199,7 @@ fully enabled and does not require the scripting addition or root. Upstream's
 privileged operations retain their existing restrictions.
 
 Build/headless tests do not establish interactive compatibility. See the
-[latest M2-A validation](validation.md#milestone-2-a-allocation-and-local-validation--2026-11-04)
+[M2-B GUI validation](validation.md#milestone-2-b-approved-gui-validation--2026-11-05)
 for checks actually performed and remaining approval/runtime gates. Run the
 [standard test script](development.md#standard-vspace-test-script) for automatic
 and interactive checks on your own Mac. Ongoing validation focuses on macOS 15;
