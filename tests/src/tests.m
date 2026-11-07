@@ -8,7 +8,7 @@ unsigned int __src_osax_loader_len;
 #define TEST_SIG(name) bool test_##name(void)
 typedef TEST_SIG(function);
 
-#define TEST_FUNC(name, code) static TEST_SIG(name) { char *test_name = #name; bool result = true; {code} return result; }
+#define TEST_FUNC(name, ...) static TEST_SIG(name) { char *test_name = #name; bool result = true; {__VA_ARGS__} return result; }
 #define TEST_CHECK(r, e) if ((r) != (e)) { printf("                   \e[1;33m%s\e[m\e[1;31m#%d %s == %s\e[m \e[1;31m(%d == %d)\e[m\n", test_name, __LINE__, #r, #e, r, e); result = false; }
 
 #include "area.c"
@@ -16,9 +16,26 @@ typedef TEST_SIG(function);
 #include "virtual_workspace_destroy.c"
 #include "virtual_workspace_refresh.c"
 #include "vspace.c"
+#include "virtual_workspace_state.c"
 
 #define TEST_ENTRY(name) { #name, test_##name },
 #define TEST_LIST                                              \
+    TEST_ENTRY(virtual_workspace_state_lossless_and_limits) \
+    TEST_ENTRY(virtual_workspace_state_restart_lifecycle) \
+    TEST_ENTRY(virtual_workspace_state_stable_identity_and_order) \
+    TEST_ENTRY(virtual_workspace_state_disconnect_and_reconnect) \
+    TEST_ENTRY(virtual_workspace_state_reused_and_ambiguous_native_identity) \
+    TEST_ENTRY(virtual_workspace_state_invalid_records) \
+    TEST_ENTRY(virtual_workspace_state_recovery_and_future_schema) \
+    TEST_ENTRY(virtual_workspace_state_commit_boundaries) \
+    TEST_ENTRY(virtual_workspace_state_writer_ownership) \
+    TEST_ENTRY(virtual_workspace_state_destroy_failure_and_restart) \
+    TEST_ENTRY(virtual_workspace_state_crash_boundaries) \
+    TEST_ENTRY(virtual_workspace_state_crash_during_destroy) \
+    TEST_ENTRY(virtual_workspace_state_allocation_and_permission_failures) \
+    TEST_ENTRY(virtual_workspace_state_unresolved_last_and_compaction) \
+    TEST_ENTRY(vspace_persistence_status_and_unresolved) \
+    TEST_ENTRY(vspace_persistence_commit_errors) \
     TEST_ENTRY(display_area_is_in_direction)                   \
     TEST_ENTRY(closest_display_in_direction)                    \
     TEST_ENTRY(virtual_workspace_only_empty_active)             \

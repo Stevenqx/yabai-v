@@ -33,6 +33,30 @@ def mapping(index, sid, did):
             "has-focus": sid == 100}
 
 
+class PersistenceListingTests(unittest.TestCase):
+    def test_unresolved_hints_do_not_claim_native_ownership(self):
+        rows = [mapping(1, 100, 10), dict(mapping(2, 100, 10),
+                **{"has-focus": False, "availability": "unresolved", "persistence": "durable"})]
+        runner.check_listing(rows, fixture())
+        self.assertEqual(runner.available_mappings(rows), rows[:1])
+        self.assertEqual([s["id"] for s in runner.candidates(fixture(), rows, 1)], [200])
+
+    def test_unavailable_record_cannot_claim_focus_or_duplicate_active_mapping(self):
+        for availability, focused in (("unresolved", True), ("unavailable", True), ("available", True)):
+            rows = [mapping(1, 100, 10), dict(mapping(2, 100, 10),
+                    **{"availability": availability, "has-focus": focused})]
+            with self.subTest(availability=availability), self.assertRaises(runner.TestFailure):
+                runner.check_listing(rows, fixture())
+
+    def test_disconnected_and_uncertain_status_are_reportable(self):
+        row = dict(mapping(7, 999, 99), **{"availability": "unresolved", "has-focus": False,
+                   "persistence": "durability-uncertain"})
+        runner.check_listing([mapping(1, 100, 10), row], fixture())
+        row["availability"] = "available"
+        with self.assertRaises(runner.TestFailure):
+            runner.check_listing([row], fixture())
+
+
 class FakeRunner(runner.Runner):
     def __init__(self):
         self.state = fixture()
@@ -52,7 +76,8 @@ class FakeRunner(runner.Runner):
     def listing(self):
         rows = copy.deepcopy(self.rows)
         for row in rows:
-            row["has-focus"] = row["space-id"] == runner.active(self.state)
+            row["has-focus"] = (row.get("availability", "available") == "available" and
+                                row["space-id"] == runner.active(self.state))
         return rows
 
     def setup_focus(self, sid):
@@ -89,6 +114,10 @@ class FakeRunner(runner.Runner):
             self.rows.append(mapping(max(w["index"] for w in self.rows) + 1, possible[0]["id"], display["id"]))
             return SimpleNamespace(returncode=0, stdout="", stderr="")
         if args[1] == "--focus":
+            if args[0] == "vspace":
+                row = next(w for w in self.rows if w["index"] == args[2])
+                if row.get("availability", "available") != "available":
+                    return SimpleNamespace(returncode=1, stdout="", stderr="unavailable")
             sid = (next(s["id"] for s in self.state["spaces"] if s["index"] == args[2])
                    if args[0] == "space" else
                    next(w["space-id"] for w in self.rows if w["index"] == args[2]))
@@ -308,6 +337,10 @@ class RunnerTests(unittest.TestCase):
         fake = FakeRunner()
         baseline = fake.snapshot("baseline")
         fake.native_hidden_observed = False
+        # An unresolved old record can share a current numeric native hint.
+        for row in fake.rows:
+            row["index"] += 1
+        fake.rows.insert(0, dict(mapping(1, 400, 20), id=99, availability="unresolved"))
         fake.compare_focus("cross-hidden", baseline, baseline["spaces"][3])
         calls = [call for call in fake.focus_starts if call[1] == 400]
         self.assertEqual(len(calls), 2)

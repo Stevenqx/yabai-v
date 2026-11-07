@@ -274,3 +274,53 @@ automatic cleanup. The current original-service session is preserved. A new GUI
 session requires applicable explicit approval under AGENTS.md; earlier completed
 M2-B approval does not authorize a new pause. D012's macOS 15 focus/macOS 26
 deferral and publication gates remain in effect.
+
+## D016 — Persist logical identity with validated native UUIDs
+
+Date: 2026-11-07. Status: accepted for the user's M2-D implementation prompt.
+Supersedes the persistence proposal in D011; native MRU, native lifecycle/reordering,
+GUI and hotkeys remain proposals. Existing service/publication gates and D012's
+macOS 15 focus/macOS 26 deferral remain unchanged.
+
+Use a bounded version-1 JSON snapshot under XDG state home (fallback
+`~/.local/state/yabai-v`), separate from configuration. Persist global array order,
+index gaps, virtual IDs, allocator next-ID/exhaustion and Space/display UUID plus
+numeric hints. File integers are decimal strings to preserve uint64 values.
+No additional logical metadata exists yet. Do not persist spares, occupancy,
+window handles, pending operations or focus history.
+
+Restore only unique native Space UUID plus expected display UUID, desktop type
+and current ownership. Upstream's `SLSSpaceCopyName` view-reconnection path and
+`display_uuid` adapter supply the evidence; the macOS 15 read-only probe confirmed
+actual UUID-shaped values. Neither numeric IDs nor a boot token establishes
+lifetime identity. Private APIs do not promise continuity across reboot/Dock/
+recreation/reconnection. Changed/missing/ambiguous evidence remains unresolved,
+with old logical IDs/indices reserved and no native ownership. Unique verified saved
+records take precedence; required unclaimed occupied/uncertain/visible desktops
+append fresh IDs. Include empty visible desktops on every connected display,
+superseding M1's globally-active-only empty exception. Reject duplicate native
+enumeration; do not select a conflicting record by position. Reconcile only at
+startup, not automatically in event handlers or during refresh.
+
+Retain unresolved records in refresh's global numbering. Check availability for
+all native lookups, focus and lifecycle roles. The last **usable** native desktop
+mapping remains protected even when unresolved records exist. Add availability
+and persistence fields to existing list/current reports rather than a new command.
+
+Keep writes synchronous on the serial daemon loop with a private lifetime `flock`
+shared across socket namespaces. Prepare complete checked-allocation candidates,
+flush a private exclusive temp file and atomically replace the snapshot before
+publishing create/refresh/final destroy release. Replacement commits the generation;
+a later directory-sync failure publishes that generation and reports uncertainty,
+never rollback. File sync/full sync and supported directory sync are attempted.
+Focus never writes. Native evacuation remains outside the metadata transaction;
+a preceding save failure retains the source and reports observed moves for retry.
+
+Invalid supported state is preserved without editing its bytes before fallback.
+Preservation/read/lock/allocation/startup-save failure or a future schema uses
+explicit session-only operation and never overwrites protected saved state.
+An invalid snapshot is recovered as a whole; no conflicting logical winner is
+selected. Exclusive ownership permits cleanup of only our private regular abandoned
+temp names. Manual recovery must stop the owner under the applicable approval.
+See [state contract/recovery](../development.md#virtual-workspace-state-and-recovery)
+and [M2-D evidence](../validation.md#milestone-2-d-persistence-and-local-validation--2026-11-07).

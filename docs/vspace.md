@@ -2,11 +2,11 @@
 
 Milestone 1 adds a daemon-owned VirtualWorkspaceManager; M2-A adds explicit
 spare allocation and native focus results; M2-B adds explicit evacuation/release;
-M2-C adds manual refresh and global index compaction.
-Each allocated virtual
-workspace maps to exactly one native macOS Space, identified by its native ID,
-and records its native display ID. It does not position windows or choose a
-layout. Existing `space`, `window`, and `query` commands keep their native meaning.
+M2-C adds manual refresh and global index compaction; M2-D persists logical identity
+and restores native mappings only after UUID validation.
+Each available virtual workspace maps to one native macOS desktop Space.
+Unresolved logical records retain their identity/order and saved native hints.
+The manager does not position windows or choose a layout. Existing `space`, `window`, and `query` commands keep their native meaning.
 
 ## Commands
 
@@ -36,18 +36,20 @@ add these commands to an older running daemon.
 
 ```json
 [
-  {"index":1,"id":1,"space-id":3,"display-id":1,"has-focus":true},
-  {"index":2,"id":2,"space-id":395,"display-id":2,"has-focus":false}
+  {"index":1,"id":1,"space-id":3,"display-id":1,"has-focus":true,"availability":"available","persistence":"durable"},
+  {"index":2,"id":2,"space-id":395,"display-id":2,"has-focus":false,"availability":"available","persistence":"durable"}
 ]
 ```
 
 | Field | Meaning |
 | --- | --- |
 | `index` | Positive, one-based user-visible index, unique across all displays; the argument to `--focus` |
-| `id` | Opaque internal virtual ID, separate from index and native ID; stable only within this daemon session |
-| `space-id` | Native 64-bit Space ID, never a Mission Control index |
-| `display-id` | Native display ID associated with this mapping at allocation, matching `query --displays` IDs |
-| `has-focus` | Whether this is the globally focused native Space at query time; distinct from merely visible on a display |
+| `id` | Opaque internal virtual ID, separate from index and native ID; durable across restarts when state saving succeeds |
+| `space-id` | Current native 64-bit Space ID when available, otherwise an unverified saved hint; never a Mission Control index |
+| `display-id` | Current native display ID when available, otherwise an unverified saved hint; runtime numbers can change |
+| `has-focus` | True only for a verified available mapping of the globally focused native Space |
+| `availability` | `available`, `unresolved` after failed startup identity matching, or `unavailable` after a live association/identity/type check fails |
+| `persistence` | `durable`, `durability-uncertain` after replacement but failed directory synchronization, or `session-only` |
 
 IDs are JSON integers. Clients must preserve 64-bit integer precision. Internal
 IDs and visible indices initially both count from one; their equality is not an
@@ -74,11 +76,11 @@ Commands/events use the existing serial daemon loop; macOS can still change
 external state after the last native observation.
 
 Success has no output and exits zero. Find the new mapping in `--list`, then use
-its `index` with `--focus`. The appended workspace receives a fresh session-local
+its `index` with `--focus`. The appended workspace receives a fresh durable logical
 ID and the index after the highest existing index. All existing IDs, indices,
 and relative order remain unchanged. Allocation changes no focus, window,
-layout, or native Space order. Even while empty, it stays mapped for this session
-until explicit destruction or refresh releases it.
+layout, or native Space order. With durable state and a verified UUID pair, even
+an empty mapping survives restart until explicit destruction or refresh releases it.
 
 `--destroy SOURCE [--to TARGET]` evacuates the source's ordinary windows, then
 releases only its virtual mapping. Applications/windows and the native Space stay
@@ -88,7 +90,9 @@ desktop. Without `--to`, select the nearest valid preceding workspace on the
 source display in global virtual order, otherwise the nearest valid following
 one on that display. Interleaved other-display workspaces are skipped. Without
 a usable local destination, specify `--to`; cross-display evacuation is explicit.
-The last virtual workspace cannot be destroyed, even when empty.
+The last usable native desktop mapping cannot be destroyed, even when empty.
+Unavailable/unresolved records cannot be sources, destinations, replacements or
+substitutes for that last usable mapping.
 
 A source visible on any display needs a surviving mapped desktop on that same
 display before it can be released. For a local target, show that target. For a
@@ -128,8 +132,8 @@ While destroy is pending, other vspace destroy/create/focus/refresh requests fai
 list/current/ping, upstream commands, and native events continue processing.
 
 Success has no output and exits zero after release. Preflight failure leaves
-windows/mappings untouched. A later failure retains the source mapping and exits
-nonzero, reporting stable source/target IDs and indices, native IDs, any pending
+windows/mappings untouched. A failure before state-file replacement retains the
+source mapping and exits nonzero, reporting stable source/target IDs and indices, native IDs, any pending
 window, windows observed at the destination, and the remaining failure. Moved
 windows stay where observed; focus/visibility or frames may already have changed.
 Uncertain layout membership is not asserted as repaired. Inspect native queries
@@ -147,8 +151,9 @@ each display's visible Space, including displays without keyboard focus. Floatin
 minimized and application-hidden windows count through the same authoritative
 occupancy scanner as allocation/destroy; layout trees never establish emptiness.
 Unknown occupancy, unsupported classifications, stale/unavailable native mappings,
-non-desktop Spaces and disconnected-display mappings are retained. The last mapping
-is retained even if every native visible desktop is unmapped.
+non-desktop Spaces and disconnected-display mappings are retained. The last
+usable mapping is retained even if every native visible desktop is unmapped; unresolved records
+do not satisfy that protection and are always retained themselves.
 
 Refresh filters the existing global order and numbers survivors `1..N`, preserving
 each survivor's ID, native mapping, display association and relative order. For
@@ -184,7 +189,8 @@ only changed indices; `retained` lists every survivor with its resulting index
 and retention reason. Reasons are `focused`, `visible`, `occupied`,
 `occupancy-unknown`, `display-unavailable`, `mapping-unavailable`, or
 `last-workspace`. Uncertain mappings remain identifiable even when compaction
-changes their indices. `--list` fields and meanings are unchanged. Repeating
+changes their indices. Unresolved records report `mapping-unavailable` and
+participate in the same global `1..N` numbering. Repeating
 refresh after native state settles leaves IDs/mappings/indices unchanged and
 returns empty `released`/`reindexed` arrays.
 
@@ -212,15 +218,38 @@ commands report `virtual workspace mapping is not initialized.` and ping and
 upstream domains remain available. Each vspace request accepts exactly one
 command and its documented arguments; extra arguments fail before any mutation.
 
-## Startup policy and session stability
+## Startup restoration and identity
 
-After native Space and window managers initialize, the manager traverses yabai's
-native active-display list and each display's native Space list in their existing
-order. It registers Spaces with ordinary windows and always registers the
-**globally active Space**, even when empty. Other confirmed-empty Spaces,
-including empty Spaces visible on unfocused displays, remain unallocated spares.
-The snapshot includes enumerated fullscreen Spaces when occupied or active;
-virtual workspaces do not change native fullscreen behavior.
+State is `$XDG_STATE_HOME/yabai-v/state.json`, or
+`~/.local/state/yabai-v/state.json` when XDG state home is unset/empty. See the
+[schema, durability and recovery procedure](development.md#virtual-workspace-state-and-recovery).
+A private state lock covers every socket namespace targeting that directory.
+
+After native managers initialize, the manager validates the saved logical records
+in a temporary candidate. It preserves IDs, global order, index gaps and allocator
+high-water mark. A native match requires a unique current Space UUID from
+`SLSSpaceCopyName`, its expected display UUID from `CGDisplayCreateUUIDFromDisplayID`,
+current native ownership and desktop type. Numeric native IDs, display arrangement,
+Mission Control indices, window contents and boot identity cannot restore a mapping.
+Verified runtime numbers are updated without changing the logical ID/index.
+
+Unmatched records remain unresolved with their saved hints and positions. They
+cannot focus, own a spare or serve as destroy targets; refresh retains and numbers
+them alongside all survivors. Already verified saved records have precedence.
+Occupied/uncertain or visible native desktops without a verified mapping append
+fresh IDs in native display/Space enumeration order, including an empty visible
+one on **each** display. Hidden empty desktops remain spares unless an explicit
+saved mapping was verified. Fullscreen/native non-desktop Spaces are not adopted.
+Missing/ambiguous UUID evidence yields unresolved records, never positional guesses.
+Repeated startup does not multiply identical unresolved native hints.
+
+Native UUIDs are private API observations, not a macOS guarantee of cross-reboot
+identity. A changed/absent UUID after Dock restart, native recreation, reboot or
+reconnection leaves the old logical record unresolved; unchanged unique pairs can
+restore it even after numeric renumbering. Reconciliation runs at startup only.
+A later restart can resolve a reconnected display; no automatic native-event
+adoption or new reconciliation command is introduced. Actual reboot/Dock/display
+hardware behavior requires separate runtime validation.
 
 Occupancy comes from native window enumeration with minimized/hidden windows
 included, then tracked window roles. Standard, floating, and dialog windows
@@ -232,29 +261,37 @@ empty Space containing unidentified system UI; it avoids treating uncertain
 occupied Spaces as spare. Confirmed desktop/background windows alone do not
 allocate an inactive Space.
 
-The startup snapshot is atomic. Duplicate native IDs produce no duplicate
-workspace, and conflicting display ownership or incomplete Space enumeration
-leaves mapping commands unavailable instead of exposing a partial map.
+The startup snapshot publishes once after complete topology/identity validation.
+Incomplete or conflicting native enumeration and allocation/limit failures leave
+mapping commands unavailable, with original domains and ping still usable.
+Malformed supported state is preserved before fresh initialization; a future schema,
+read/lock/preservation failure or inability to save startup state uses an explicitly
+diagnosed session-only fallback and leaves the saved file untouched.
 
-Existing IDs and associations stay fixed for the current daemon session;
-indices change only through explicit refresh, and lifecycle operations can release IDs.
-Closing all windows does not automatically remove a mapping; opening windows on a spare does
-not allocate it. Native reordering does not renumber virtual indices. New native
-Spaces and displays are not mapped automatically; `--create` can allocate an
-eligible spare on the currently focused connected display. Stale or reassociated
-focus targets fail. Rebuilding at daemon startup is the current recovery path;
-changing an installed service still requires approval.
+Closing windows does not automatically release a mapping, and opening windows on
+a spare does not allocate it. Explicit create/destroy/refresh save complete
+candidates before publishing. A failure before atomic file replacement rejects
+metadata changes. Destroy may already have moved windows and reports those moves
+while retaining its source. If a later directory-sync step fails **after** replacement,
+the candidate is committed in memory and on disk and the command exits nonzero
+with a durability-uncertain diagnostic; destroy does not claim source retention.
+Inspect `--list` before retrying. Focus alone never rewrites the file. Session-only
+mutations work for that daemon but carry no restart guarantee; check the status.
+No restoration/compaction operation manufactures focus history.
 
 ## Limits and validation
 
 No independent vspace move-window command, reordering, window positioning, new layouts,
-persistence across restarts, GUI, or hotkeys are implemented. Follow-on designs
+GUI, or hotkeys are implemented. Logical persistence is implemented with the
+identity and recovery limits above. Follow-on designs
 are recorded in [architecture](architecture.md#follow-on-proposals).
 Fork focus works through upstream's existing gesture fallback with SIP
 fully enabled and does not require the scripting addition or root. Upstream's
 privileged operations retain their existing restrictions.
 
 Build/headless tests do not establish interactive compatibility. See the
+[M2-D report](validation.md#milestone-2-d-persistence-and-local-validation--2026-11-07)
+for current persistence evidence and unrun restart/reboot/hardware checks. See the
 [M2-C GUI validation](validation.md#milestone-2-c-approved-gui-validation--2026-11-05)
 for available two-display runtime checks, native-focus limits and remaining
 platform/scenario coverage; [local validation](validation.md#milestone-2-c-refresh-and-local-validation--2026-11-05)

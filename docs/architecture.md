@@ -38,8 +38,8 @@ and hotkey clients must use the message interface; they do not exist yet.
 - Window focusing and tiling require Accessibility permission and a GUI session.
   Screen Recording is only relevant to optional upstream animation features.
 - Virtual mapping, explicit spare allocation, focusing, evacuation/release and manual refresh are implemented.
-  Persistence, GUI, hotkeys, and independent display/window reassignment
-  remain deferred.
+  Logical persistence and validated startup restoration are implemented.
+  GUI, hotkeys, and independent display/window reassignment remain deferred.
 - A separate `USER` value changes upstream socket/lock names but does not isolate
   two daemons from the same WindowServer session. Never use it as justification
   to run competing window managers.
@@ -59,8 +59,8 @@ daemon commands and ping continue to work.
 
 Initialization traverses native display order, then each display's native Space
 order. It assigns separate sequential internal IDs and global one-based visible
-indices to occupied, uncertain, and globally active Spaces. Confirmed-empty
-inactive Spaces are spare. Duplicate native IDs cannot produce two mappings;
+indices to occupied, uncertain, and visible desktop Spaces on each display
+(M2-D). Confirmed-empty inactive Spaces are spare. Duplicate native IDs cannot produce two mappings;
 conflicting display ownership or incomplete enumeration fails atomically.
 Repeated initialization preserves the original session snapshot.
 
@@ -77,7 +77,7 @@ calls `space_manager_focus_space` unchanged. M2-A translates its results directl
 including already-focused and scripting-addition errors, without M1's extra
 polling or timeout. Native gesture dispatch success does not establish observed
 activation under SIP. External Space/display changes do not reassign IDs; stale
-targets fail and startup rebuilding remains the recovery mechanism.
+targets fail, and startup UUID reconciliation preserves verified identities (M2-D).
 
 ## Milestone 2-A allocation
 
@@ -105,7 +105,7 @@ A daemon-owned monotonic `next_id` advances only on successful allocation.
 The visible index is separately computed as the highest existing index plus one;
 overflow is rejected. Append without rewriting survivors, switching focus,
 moving windows, touching layout trees, or reordering native Spaces. Empty
-allocations persist for the session. Startup policy is otherwise unchanged.
+allocations survive restart after UUID verification under M2-D.
 
 ## Milestone 2-B — Evacuate and release
 
@@ -146,9 +146,8 @@ After evacuation, observe the source display's replacement visibility, then fina
 global destination/original focus and a surviving background focused window.
 Two empty observations across event turns, exact topology/mapping validation,
 and final native occupancy/visibility checks gate the isolated `release` step.
-That step preserves survivor order/indices/IDs and is reserved for M2-D candidate
-metadata persistence before publishing removal. Creation still uses highest
-surviving index plus one and a fresh monotonic ID; no recency is manufactured.
+That step preserves survivor order/indices/IDs and persists the M2-D candidate
+before publishing removal. Creation still uses highest surviving index plus one and a fresh monotonic ID; no recency is manufactured.
 Partial failure retains the source and reports observed moves for a fresh retry.
 External changes after native observations and late native completions remain
 platform limits. See [command details](vspace.md) and
@@ -179,27 +178,63 @@ gates final candidate identity/visibility/occupancy checks. Recheck complete top
 and visibility after that scan, retaining any newly visible/focused candidates.
 Build survivor numbering from the final retained set. The separate
 `publish_refresh` boundary swaps the
-complete candidate array on the existing serial daemon loop; M2-D may persist the
-candidate before this swap. The report is derived from original identities and
+complete candidate array on the existing serial daemon loop after M2-D persists
+the candidate before this swap. The report is derived from original identities and
 final numbering. No partial mapping generation is exposed to queries.
 
 Neither `next_id` nor native focus/window/layout/history state changes. If no
-mapping is protected by visibility or occupancy, retain the first mapping in
-global order. The command never adopts a new native Space or repairs associations.
+usable mapping is protected by visibility or occupancy, retain the first usable
+mapping in global order; unresolved records cannot substitute for it. The command never adopts a new native Space or repairs associations.
 Allocation and lookup keep their existing live checks after refresh; a released
 mapping does not imply the native Space remains empty. Native mutations after the
 last query remain observable races, as in M2-A/B; this is a virtual metadata
 transaction, not a WindowServer transaction.
 
+## Milestone 2-D — State and validated startup reconciliation
+
+`virtual_workspace_state.c` is textually included before the manager. It owns the
+bounded version-1 JSON codec, private state directory, lifetime `flock`, recovery
+and synchronous snapshot commits. There is no additional translation unit, worker,
+configuration script, native mutation or dependency. Existing Cocoa/Foundation
+JSON facilities are reused; all integer fields in the file are decimal strings.
+
+The manager loads saved records separately, validates the complete schema and
+constructs a native snapshot before publishing. Unique Space UUID plus expected
+display UUID and current native ownership/type are required for restoration.
+`SLSSpaceCopyName` is already used by upstream display-add view recovery; display
+UUID comes from the existing `display_uuid` adapter. Neither raw numeric IDs nor
+an OS boot token proves Space identity. UUID continuity across physical events
+is a conditional observation; no cross-reboot guarantee is inferred from the API.
+
+Unresolved logical records retain IDs/indices/global positions and evidence, but
+are excluded from native lookups and ownership. All operational paths validate
+availability. New required native desktops append fresh IDs; old verified records
+have precedence. Duplicate saved identity/ID/index claims invalidate the entire
+snapshot and preserve its bytes, instead of selecting a logical winner. Duplicate
+live Space/display UUIDs bind no affected records. Startup alone reconciles;
+disconnect/reconnect events do not automatically mutate logical state.
+
+Create, refresh and final destroy release prepare separate checked-allocation
+candidates. The writer lock is shared across socket namespaces and remains held
+for the daemon lifetime; a nonowner uses session-only initialization and cannot
+write. Each complete snapshot advances a generation, syncs a private temporary
+file (`fsync` plus `F_FULLFSYNC` where supported), then atomically renames it over
+`state.json`. Rename is the commit point. A subsequent directory-sync failure
+publishes the candidate and reports uncertainty; a preceding failure retains the
+old array. Directory sync is attempted and unsupported-operation errors are
+accepted. No old queued writer exists. Abandoned private regular temp files are
+removed only after acquiring exclusive ownership; symlinks are never followed.
+
+Native evacuation is not atomic with JSON. Destroy retains the source until its
+final observed empty/visibility/focus boundary; save failure reports observed moves
+and permits retry. A crash restores the last complete metadata generation and
+revalidates native identities/actual window state rather than replaying a pending
+operation. Full schema, limits and manual recovery are in
+[development notes](development.md#virtual-workspace-state-and-recovery).
+
 ## Follow-on proposals
 
-These are design directions, not authorization to implement later milestones.
-
-### M2-D — Persistence
-
-M2-A remains session-local. Persist logical identity and order later, and
-revalidate native mappings at startup before restoring them. Neither native
-Space IDs nor display IDs alone are persistent logical workspace identities.
+These remain proposals, separate from the authorized M2-D persistence work.
 
 ### Separate feature — Native Space and window MRU
 

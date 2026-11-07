@@ -157,7 +157,7 @@ From any directory, run the checkout script (examples below assume its root):
 YABAI_FORK_SIGN_IDENTITY=- ./scripts/test-vspace.py headless
 ```
 
-Headless mode includes all 52 current production tests: mapping/order/identity,
+Headless mode includes all 68 current production tests: mapping/order/identity,
 JSON/parsing/native dispatch, one/two-display selection and exhaustion, no
 cross-display fallback, floating and uncertain occupancy, visible/non-desktop
 exclusion, missing state, stale mappings, and allocation revalidation. It also
@@ -211,8 +211,10 @@ Native return status, observed activation, and user visual confirmation are
 recorded separately. A native SIP gesture can return success without observed
 keyboard focus; that is reported as `unobserved`, not changed into a vspace timeout.
 
-Successful `--create` tests leave their mappings allocated for that daemon
-session by default. Opt into M2-B hidden-empty release checks with
+Successful `--create` tests leave their mappings allocated and durably saved
+when persistence is available. Use an isolated state directory for development
+restarts; socket names alone do not isolate state files. Opt into M2-B hidden-empty
+release checks with
 `interactive --destroy-created`: after focus/layout recovery, it destroys only
 this run's unchanged, hidden allocations with no observed windows and a local
 mapped destination, checking exact survivor IDs/indices/order and native desktop
@@ -283,10 +285,12 @@ test because the development config disables animations.
 Once no competing daemon is running, launch in a terminal from the checkout:
 
 ```sh
-USER=yabai-fork-dev ./bin/yabai --verbose --config "$PWD/examples/yabairc.dev"
+XDG_STATE_HOME=/private/tmp/yabai-v-dev-state USER=yabai-fork-dev ./bin/yabai --verbose --config "$PWD/examples/yabairc.dev"
 ```
 
-This selects dedicated socket/lock names and an explicit development config.
+This selects dedicated socket/lock names, a separate persistent state directory,
+and an explicit development config. Reuse that directory for approved restart
+checks and protect it as private data.
 It does not install a service. In another terminal in the same checkout:
 
 ```sh
@@ -421,6 +425,114 @@ service starts: startup can change focus even if it was restored before stopping
 the development daemon. Keep visual confirmation distinct from command exits
 and queried state, and leave disposable test windows open when a repeat check
 has been requested until its result is confirmed.
+
+## Virtual workspace state and recovery
+
+M2-D stores state in `$XDG_STATE_HOME/yabai-v/state.json`, falling back to
+`~/.local/state/yabai-v/state.json` when `XDG_STATE_HOME` is unset/empty. XDG paths
+must be absolute. HOME falls back to the current UID's account home if absent.
+State is independent of `yabairc` and socket `USER`; different socket names can
+still target the **same** state directory. Set a separate XDG state home for an
+approved development session; this does not authorize a second daemon.
+
+The final `yabai-v` directory must be owned by the current UID and private
+(mode 0700; owner-only variants are allowed). Missing ancestors are created with
+0700, and symlink traversal is refused. Existing nonprivate/unusable directories,
+nonprivate/nonregular/unreadable state and lock files use session-only fallback.
+Files created here use 0600. This deliberately does not repair permissions or
+follow a symlink into an unknown location. Logs diagnose the reason; `--list` and
+`--current` expose `persistence` and per-record `availability` without a new
+management interface. Only `available` native IDs may be used as mappings.
+
+Version 1 is a UTF-8 JSON dictionary with exactly `version`, `generation`,
+`next-id`, `workspaces`. **All integer fields are canonical unsigned decimal
+strings**, preserving the entire uint64 range. `version` is `"1"`, `generation`
+is nonzero and increases per snapshot, and `next-id` is the allocator's next unused
+ID; `"0"` means uint64 allocation is exhausted, including if the final ID was
+deleted. It is never recomputed from surviving IDs. Each record contains exactly
+`id`, `index`, `space-id`, `display-id`, `space-uuid`, `display-uuid`. The array is
+global order, with strictly increasing positive indices (up to INT_MAX), preserving
+destroy gaps. IDs are nonzero uint64, display hints nonzero uint32. Identity fields
+are uppercase nonnil UUIDs or both empty when evidence is unavailable. There is
+no additional logical label/metadata in the current manager. No spare lists,
+occupancy assertions, pending destroys, window handles or focus history are saved.
+
+Input is limited to 1 MiB and 4096 records; numeric overflow, invalid types,
+duplicate IDs/native UUID claims, duplicate blank-identity native hints, duplicate
+or out-of-order indices and inconsistent allocator marks are rejected. Candidate
+allocation failures cannot publish a partial manager. If limits prevent complete
+startup initialization, fork mapping commands remain unavailable and existing
+native domains/ping remain usable. CLI response IDs remain JSON integers; clients
+must preserve 64-bit precision independently of the on-disk string encoding.
+
+The identity evidence is Space UUID from `SLSSpaceCopyName` and display UUID from
+`CGDisplayCreateUUIDFromDisplayID` through existing `display_uuid`. Current native
+Space enumeration, desktop type and display ownership must agree, and ambiguous
+live UUIDs bind no affected record. Upstream already uses Space UUIDs to recover
+views on display add; see its [native recovery code](https://github.com/asmvik/yabai/blob/master/src/space_manager.c).
+Numeric Space/display IDs are saved only as hints and are updated on a verified
+UUID match. No boot/session token or display index can substitute for UUID evidence.
+UUID generation/continuity is private macOS behavior. Reboot, Dock restart or
+Space recreation that changes/omits a UUID leaves the old logical record unresolved;
+only actually unchanged unique UUID pairs can restore it. Physical cross-reboot,
+Dock and reconnection stability is **unverified** on this implementation. macOS 26
+remains deferred. Reconciliation runs at startup, with verified saved identities
+first; fresh required desktops append after all saved logical records. An unresolved
+record never adopts a native Space merely because its numeric index matches.
+
+A lifetime exclusive nonblocking `flock` on `state.lock` serializes every daemon
+addressing the directory, including alternate IPC namespaces. The lock inode is
+never replaced/deleted by the daemon. A competing writer uses session-only state
+and never overwrites the owner's file. Each metadata mutation writes a complete
+candidate to an exclusive `.state-tmp-XXXXXXXX`, syncs it with `fsync` and
+`F_FULLFSYNC` where supported, closes it and atomically renames it over `state.json`.
+That replacement is the commit point. Directory `fsync` follows; EINVAL/ENOTSUP
+mean unsupported synchronization and are accepted. A different error after
+replacement reports `durability-uncertain` and a nonzero command result while
+publishing the committed candidate. Inspect `--list` before retrying. A failure
+before replacement rejects the metadata mutation and retains the prior generation.
+A later successful snapshot restores `durable` status. These operations keep
+readable complete snapshots; they do not make native window movement atomic.
+
+Create/refresh persist before publication; destroy persists removal only after
+observed evacuation and visibility/focus verification. Pre-replacement failure
+retains its source and reports already moved windows. A crash during evacuation
+keeps the prior source record, with actual current native state revalidated at
+restart. Focus alone does not write. Startup saves the complete initialized state;
+if saving fails, that session is explicitly nondurable. In session-only fallback,
+lifecycle commands can succeed for the current daemon but changes do not survive
+restart and the original saved file is never overwritten.
+
+Malformed/truncated/oversized supported state is preserved as a hard-linked
+`state.recovery-XXXXXXXX.json` **before** replacing anything; atomic replacement
+leaves its original bytes intact. Failure to preserve or sync recovery uses
+session-only fallback and leaves `state.json` untouched. Future schema versions
+are left untouched with session-only fallback. Allocation failure during decoding
+also leaves original bytes untouched. The daemon removes only exact-name, private,
+owned regular abandoned temp files after acquiring the lock; it never follows
+symlinks or deletes recovery files.
+
+For recovery, first arrange an approved sole-daemon stop; do not edit a live state
+file or remove `state.lock` while any owner runs. Back up `state.json` and recovery
+files privately. Correct the diagnosed path/permissions/full disk condition.
+To restore known-good state, put its complete original file at `state.json` with
+0600 ownership/permissions, then restart in the approved session; native UUIDs
+are always revalidated. For an intentional fresh logical identity set, move
+`state.json` aside rather than deleting recovery evidence, then restart. This
+retires the old identity set deliberately; never manually rewrite IDs/indices to
+match current Mission Control order. Retain future-schema files for a compatible
+binary rather than downgrading them. TCC/trust/SIP and installed binaries/config
+are outside this recovery procedure.
+
+For restart acceptance, use isolated XDG state, retain the sole-daemon service/
+native-frame recovery baseline, create a hidden empty mapping, destroy a middle
+record and check gaps, refresh and check compaction, and restart between stages.
+Compare exact logical IDs/order/high-water behavior and verified native UUIDs,
+including all displays' visible empty desktops. Use headless faults for partial
+writes, ENOSPC, permission, ambiguity, writer contention and mid-evacuation crashes;
+do not manufacture unsafe native faults on user windows. Actual service sessions,
+physical reconnect/Dock/reboot checks need their applicable authorization and
+independent evidence. No maintained runner mode restarts a daemon automatically.
 
 ## Debugging
 

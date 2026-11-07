@@ -148,7 +148,8 @@ TEST_FUNC(virtual_workspace_only_empty_active,
     source.occupancy = virtual_workspace_test_empty;
     struct virtual_workspace_manager vm = {0};
     TEST_CHECK(virtual_workspace_manager_begin(&vm, &source), true);
-    TEST_CHECK(buf_len(vm.workspaces), 1);
+    TEST_CHECK(buf_len(vm.workspaces), 2);
+    TEST_CHECK(vm.workspaces[1].sid == 500, true);
     TEST_CHECK(vm.workspaces[0].sid == 300, true);
     TEST_CHECK(vm.workspaces[0].did, 90);
     TEST_CHECK(vm.workspaces[0].index, 1);
@@ -201,8 +202,8 @@ TEST_FUNC(virtual_workspace_duplicate_prevention,
     virtual_workspace_test_state.spaces[0][3] = 700;
     virtual_workspace_test_state.space_count[0] = 4;
     struct virtual_workspace_manager vm = {0};
-    TEST_CHECK(virtual_workspace_manager_begin(&vm, &virtual_workspace_test_source), true);
-    TEST_CHECK(buf_len(vm.workspaces), 4);
+    TEST_CHECK(virtual_workspace_manager_begin(&vm, &virtual_workspace_test_source), false);
+    TEST_CHECK(buf_len(vm.workspaces), 0);
     buf_free(vm.workspaces);
     vm = (struct virtual_workspace_manager) {0};
     virtual_workspace_test_state.spaces[1][1] = 700;
@@ -361,20 +362,20 @@ TEST_FUNC(virtual_workspace_create_two_displays,
     TEST_CHECK(virtual_workspace_manager_create(&vm), VIRTUAL_WORKSPACE_SUCCESS);
     TEST_CHECK(virtual_workspace_manager_create(&vm), VIRTUAL_WORKSPACE_SUCCESS);
     TEST_CHECK(virtual_workspace_manager_create(&vm), VIRTUAL_WORKSPACE_NO_SPARE);
-    TEST_CHECK(buf_len(vm.workspaces), 3);
+    TEST_CHECK(buf_len(vm.workspaces), 4);
     TEST_CHECK(virtual_workspace_manager_find_space(&vm, 400) == NULL, true);
     virtual_workspace_test_state.active_did = 12;
     TEST_CHECK(virtual_workspace_manager_create(&vm), VIRTUAL_WORKSPACE_SUCCESS);
-    /* The visible, unmapped 500 is skipped on the second display. */
-    TEST_CHECK(vm.workspaces[3].sid == 400, true);
-    TEST_CHECK(vm.workspaces[3].did, 12);
-    TEST_CHECK(vm.workspaces[3].index, 4);
-    TEST_CHECK(vm.workspaces[3].id == 4, true);
+    /* Both visible desktops were mapped at startup, including empty 500. */
+    TEST_CHECK(vm.workspaces[4].sid == 400, true);
+    TEST_CHECK(vm.workspaces[4].did, 12);
+    TEST_CHECK(vm.workspaces[4].index, 5);
+    TEST_CHECK(vm.workspaces[4].id == 5, true);
     TEST_CHECK(virtual_workspace_manager_create(&vm), VIRTUAL_WORKSPACE_NO_SPARE);
     TEST_CHECK(virtual_workspace_manager_begin(&vm, &source), true);
-    TEST_CHECK(buf_len(vm.workspaces), 4);
+    TEST_CHECK(buf_len(vm.workspaces), 5);
     /* An empty allocation stays mapped and is addressable across displays. */
-    TEST_CHECK(virtual_workspace_manager_focus(&vm, 4), VIRTUAL_WORKSPACE_SUCCESS);
+    TEST_CHECK(virtual_workspace_manager_focus(&vm, 5), VIRTUAL_WORKSPACE_SUCCESS);
     TEST_CHECK(virtual_workspace_test_state.focused_sid == 400, true);
     buf_free(vm.workspaces);
 });
@@ -405,12 +406,12 @@ TEST_FUNC(virtual_workspace_create_unsafe_candidates,
     virtual_workspace_test_state.non_user_sid = 80;
     source.occupancy = virtual_workspace_test_create_occupancy;
     TEST_CHECK(virtual_workspace_manager_create(&vm), VIRTUAL_WORKSPACE_SUCCESS);
-    TEST_CHECK(vm.workspaces[1].sid == 84, true);
+    TEST_CHECK(vm.workspaces[2].sid == 84, true);
     TEST_CHECK(virtual_workspace_manager_create(&vm), VIRTUAL_WORKSPACE_SUCCESS);
-    TEST_CHECK(vm.workspaces[2].sid == 83, true);
+    TEST_CHECK(vm.workspaces[3].sid == 83, true);
     TEST_CHECK(virtual_workspace_manager_create(&vm), VIRTUAL_WORKSPACE_NO_SPARE);
-    TEST_CHECK(buf_len(vm.workspaces), 3);
-    TEST_CHECK(virtual_workspace_manager_find_space(&vm, 300) == NULL, true);
+    TEST_CHECK(buf_len(vm.workspaces), 4);
+    TEST_CHECK(virtual_workspace_manager_find_space(&vm, 300) != NULL, true);
     TEST_CHECK(virtual_workspace_manager_find_space(&vm, 80) == NULL, true);
     TEST_CHECK(virtual_workspace_manager_find_space(&vm, 81) == NULL, true);
     TEST_CHECK(virtual_workspace_manager_find_space(&vm, 82) == NULL, true);

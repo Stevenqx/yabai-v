@@ -50,16 +50,16 @@ static void vspace_test_end(void)
 }
 
 static char *vspace_test_list =
-    "[{\"index\":1,\"id\":1,\"space-id\":700,\"display-id\":90,\"has-focus\":false},"
-    "{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true},"
-    "{\"index\":3,\"id\":3,\"space-id\":500,\"display-id\":12,\"has-focus\":false},"
-    "{\"index\":4,\"id\":4,\"space-id\":400,\"display-id\":12,\"has-focus\":false}]\n";
+    "[{\"index\":1,\"id\":1,\"space-id\":700,\"display-id\":90,\"has-focus\":false,\"availability\":\"available\",\"persistence\":\"session-only\"},"
+    "{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true,\"availability\":\"available\",\"persistence\":\"session-only\"},"
+    "{\"index\":3,\"id\":3,\"space-id\":500,\"display-id\":12,\"has-focus\":false,\"availability\":\"available\",\"persistence\":\"session-only\"},"
+    "{\"index\":4,\"id\":4,\"space-id\":400,\"display-id\":12,\"has-focus\":false,\"availability\":\"available\",\"persistence\":\"session-only\"}]\n";
 
 TEST_FUNC(vspace_list_and_current,
 {
     TEST_CHECK(vspace_test_begin(), true);
     TEST_CHECK(vspace_test_response("vspace\0--list\0", vspace_test_list), true);
-    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true}\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true,\"availability\":\"available\",\"persistence\":\"session-only\"}\n"), true);
     virtual_workspace_test_state.active_sid = 80;
     TEST_CHECK(vspace_test_response("vspace\0--current\0", FAILURE_MESSAGE "current native space is not mapped to a virtual workspace.\n"), true);
     virtual_workspace_test_state.active_sid = 0;
@@ -118,7 +118,7 @@ TEST_FUNC(vspace_focus_and_current,
     TEST_CHECK(vspace_test_begin(), true);
     TEST_CHECK(vspace_test_response("vspace\0--focus\0" "0003\0", ""), true);
     TEST_CHECK(virtual_workspace_test_state.focused_sid == 500, true);
-    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":3,\"id\":3,\"space-id\":500,\"display-id\":12,\"has-focus\":true}\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":3,\"id\":3,\"space-id\":500,\"display-id\":12,\"has-focus\":true,\"availability\":\"available\",\"persistence\":\"session-only\"}\n"), true);
     TEST_CHECK(buf_len(g_virtual_workspace_manager.workspaces), 4);
     vspace_test_end();
 });
@@ -139,7 +139,7 @@ TEST_FUNC(vspace_focus_errors,
     TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", ""), true);
     TEST_CHECK(virtual_workspace_test_state.active_sid == 300, true);
     virtual_workspace_test_state.spaces[0][0] = 999;
-    TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", FAILURE_MESSAGE "cannot focus virtual workspace because its native space or display is unavailable.\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--focus\0" "1\0", FAILURE_MESSAGE "cannot focus virtual workspace because its native space or display is unavailable or unresolved.\n"), true);
     vspace_test_end();
 });
 
@@ -148,8 +148,9 @@ TEST_FUNC(vspace_64_bit_ids,
     TEST_CHECK(vspace_test_begin(), true);
     g_virtual_workspace_manager.workspaces[0].id = UINT64_MAX;
     g_virtual_workspace_manager.workspaces[0].sid = UINT64_MAX - 1;
+    virtual_workspace_test_state.spaces[0][0] = UINT64_MAX - 1;
     virtual_workspace_test_state.active_sid = UINT64_MAX - 1;
-    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":1,\"id\":18446744073709551615,\"space-id\":18446744073709551614,\"display-id\":90,\"has-focus\":true}\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":1,\"id\":18446744073709551615,\"space-id\":18446744073709551614,\"display-id\":90,\"has-focus\":true,\"availability\":\"available\",\"persistence\":\"session-only\"}\n"), true);
     vspace_test_end();
 });
 
@@ -172,12 +173,12 @@ TEST_FUNC(vspace_create,
     TEST_CHECK(vspace_test_begin(), true);
     TEST_CHECK(vspace_test_response("vspace\0--create\0", ""), true);
     TEST_CHECK(buf_len(g_virtual_workspace_manager.workspaces), 5);
-    TEST_CHECK(vspace_test_response("vspace\0--list\0", "[{\"index\":1,\"id\":1,\"space-id\":700,\"display-id\":90,\"has-focus\":false},{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true},{\"index\":3,\"id\":3,\"space-id\":500,\"display-id\":12,\"has-focus\":false},{\"index\":4,\"id\":4,\"space-id\":400,\"display-id\":12,\"has-focus\":false},{\"index\":5,\"id\":5,\"space-id\":80,\"display-id\":90,\"has-focus\":false}]\n"), true);
-    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true}\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--list\0", "[{\"index\":1,\"id\":1,\"space-id\":700,\"display-id\":90,\"has-focus\":false,\"availability\":\"available\",\"persistence\":\"session-only\"},{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true,\"availability\":\"available\",\"persistence\":\"session-only\"},{\"index\":3,\"id\":3,\"space-id\":500,\"display-id\":12,\"has-focus\":false,\"availability\":\"available\",\"persistence\":\"session-only\"},{\"index\":4,\"id\":4,\"space-id\":400,\"display-id\":12,\"has-focus\":false,\"availability\":\"available\",\"persistence\":\"session-only\"},{\"index\":5,\"id\":5,\"space-id\":80,\"display-id\":90,\"has-focus\":false,\"availability\":\"available\",\"persistence\":\"session-only\"}]\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":2,\"id\":2,\"space-id\":300,\"display-id\":90,\"has-focus\":true,\"availability\":\"available\",\"persistence\":\"session-only\"}\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "no eligible spare native desktop space on the current display.\n"), true);
     TEST_CHECK(vspace_test_response("vspace\0--focus\0" "5\0", ""), true);
     TEST_CHECK(virtual_workspace_test_state.focused_sid == 80, true);
-    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":5,\"id\":5,\"space-id\":80,\"display-id\":90,\"has-focus\":true}\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":5,\"id\":5,\"space-id\":80,\"display-id\":90,\"has-focus\":true,\"availability\":\"available\",\"persistence\":\"session-only\"}\n"), true);
     virtual_workspace_test_state.active_did = 0;
     TEST_CHECK(vspace_test_response("vspace\0--create\0", FAILURE_MESSAGE "cannot create virtual workspace because the current display could not be resolved.\n"), true);
     virtual_workspace_test_state.active_did = 90;
@@ -270,7 +271,7 @@ TEST_FUNC(vspace_refresh_result_and_errors,
 {
     virtual_workspace_refresh_test_begin(&g_virtual_workspace_manager);
     TEST_CHECK(vspace_test_response("vspace\0--refresh\0", "{\"released\":[{\"index\":2,\"id\":202,\"space-id\":400,\"display-id\":12},{\"index\":3,\"id\":303,\"space-id\":80,\"display-id\":90}],\"reindexed\":[{\"id\":404,\"old-index\":4,\"index\":2},{\"id\":505,\"old-index\":5,\"index\":3},{\"id\":606,\"old-index\":6,\"index\":4}],\"retained\":[{\"id\":101,\"index\":1,\"reason\":\"focused\"},{\"id\":404,\"index\":2,\"reason\":\"visible\"},{\"id\":505,\"index\":3,\"reason\":\"occupied\"},{\"id\":606,\"index\":4,\"reason\":\"occupied\"}]}\n"), true);
-    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":1,\"id\":101,\"space-id\":300,\"display-id\":90,\"has-focus\":true}\n"), true);
+    TEST_CHECK(vspace_test_response("vspace\0--current\0", "{\"index\":1,\"id\":101,\"space-id\":300,\"display-id\":90,\"has-focus\":true,\"availability\":\"available\",\"persistence\":\"session-only\"}\n"), true);
     virtual_workspace_test_state.missing_spaces = true;
     TEST_CHECK(vspace_test_response("vspace\0--refresh\0", FAILURE_MESSAGE "cannot refresh virtual workspaces because current native topology, visibility, or focus is unavailable; mapping unchanged.\n"), true);
     virtual_workspace_test_state.missing_spaces = false;

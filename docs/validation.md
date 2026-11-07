@@ -337,7 +337,7 @@ Review strengthened conservative occupancy: explicit AXUnknown data and untracke
 ordinary-window candidates remain unknown, regardless of floating level. The
 existing native ordinary-window tag predicate excludes nonordinary system UI. False-positive allocation
 of visually empty Spaces with unidentified system UI is intentional and
-[documented](vspace.md#startup-policy-and-session-stability). Startup snapshot
+[documented](vspace.md#startup-restoration-and-identity). Startup snapshot
 freezing and focus timeout behavior are limitations, not lifecycle support.
 
 The signed read-only native probe compiled the production manifest with the
@@ -1291,3 +1291,89 @@ identity/topology/arrival races, physical single-display M2-C GUI, new hosted CI
 and macOS 26. Real uncertain occupancy retention was observed for native 848;
 unsafe fault injection and user-window relocation were not manufactured. Hosted
 macOS 15 checks need authorized publication; macOS 26 stays deferred under D012.
+
+## Milestone 2-D persistence and local validation — 2026-11-07
+
+Implemented the user's M2-D prompt from clean `dbe2cde` on
+`feat/vspace-mapping`, the completed M2-C descendant. Added bounded versioned
+private state, lossless IDs/high-water mark, UUID-validated startup restoration,
+unresolved records and additive availability/durability reporting. Create/refresh/
+final destroy removal persist complete candidates before publication. Atomic
+replacement is the commit point; subsequent durability errors publish the committed
+generation and are reported separately from rejected pre-replacement writes.
+See [D016](progress/decisions.md#d016--persist-logical-identity-with-validated-native-uuids)
+and [schema/recovery](development.md#virtual-workspace-state-and-recovery).
+
+Executed on macOS 15.6 arm64 (24G84), SDK 15.5, SIP fully enabled:
+
+- **Passed:** final standard headless runner, persistent `yabai-fork Development`
+  signing and strict all-architecture verification, universal x86_64/arm64 build,
+  version/help, **68/68 production tests**, **24/24 runner tests**, shell syntax
+  and Git whitespace. Final report: `/private/tmp/yabai-v-m2d-final/report.json`.
+  No production build warnings; tests retain the five upstream CoreVideo
+  deprecation warnings. Earlier signed pass (67 tests before the final added CLI
+  regression) is `/private/tmp/yabai-v-m2d-validated/report.json`. Post-review
+  availability filtering in the runner was checked with the unchanged signed
+  binary using `--skip-build`:
+  `/private/tmp/yabai-v-m2d-final-checked/report.json`. No daemon source changed
+  after the full final build.
+- **Passed:** arm64 Clang analysis, zero diagnostics:
+  `/private/tmp/yabai-v-m2d-analysis-final.plist`. Compiler driver framework flags
+  were omitted for analysis to avoid irrelevant unused-linker warnings.
+- **Passed:** runner regressions with Apple's Python 3.9.6 as well as the standard
+  runner's Python 3.15; local Markdown links/anchors and whitespace checked.
+- **Passed (read-only native identity probe):** the production identity adapter
+  returned unique nonnil Space UUIDs and one common expected display UUID for
+  both ordinary desktops on the currently connected physical display.
+  `/private/tmp/yabai-v-m2d-identity-probe-native.json`; source/build-log siblings
+  are retained outside Git. The probe used only native queries, initialized no
+  window manager/daemon, wrote no state file and made no focus/window/layout call.
+  This establishes availability of the identity fields on this host, not their
+  persistence across a native lifecycle event or macOS reboot.
+- **Passed (existing service, read-only):** native CLI queries returned JSON for
+  one display, two Spaces and four windows, and exactly one yabai process was
+  observed. Private results: `/private/tmp/yabai-v-m2d-original-{displays,spaces,windows}.json`.
+  No vspace mutation/configuration/focus request was sent to that service.
+
+New production regressions use real private temporary files and the production
+codec/publication paths. They cover hidden-empty create/restart, middle/tail
+removal and retired allocator IDs, index gaps, explicit refresh/restart, fresh
+creation, interleaved two-display order, synthetic runtime display/Space renumbering
+with unchanged UUIDs, disconnect/reconnect, reused numeric IDs with changed UUIDs,
+missing/duplicate native Space/display identity, repeated unresolved startup,
+uint64 extrema, invalid types/overflow/duplicate IDs/UUIDs/indices/order/high-water,
+truncated/oversized recovery with byte preservation, preservation failure and
+future schema fallback. Lock contention prevents an independent store owner from
+writing. Checked-allocation and real directory-permission failures leave the old
+generation; injected partial ENOSPC and pre-rename failures reject create/refresh/
+destroy metadata. Post-replacement sync faults publish and diagnose uncertainty.
+Forked process exits before and after rename test crash recovery and abandoned-temp
+cleanup. Mid-evacuation restart observes actual fixture membership, retains the
+source and moves only remaining windows on retry. Unresolved records cannot focus,
+serve as destinations or satisfy last-usable protection; refresh retains them.
+CLI tests distinguish moved-window/source-retained errors from committed uncertainty.
+These are deterministic native-policy fixtures, **not** actual display/Space
+recreation, window evacuation, daemon restart, reboot or GUI passes.
+
+Runner checks accept unresolved numeric hints without treating them as active
+native ownership/focus, validate durability states and use only available mappings
+for candidate/focus/destination comparisons. Query/default interactive checks do
+not invoke refresh or restart a daemon. Focus/layout/native CLI regressions remain
+in the production suite; no native domain handler or layout algorithm changed.
+
+Initial sandbox signing could not access the persistent identity; its failed report
+is `/private/tmp/yabai-v-m2d-headless/report.json`. The native probe also saw no
+WindowServer displays in the sandbox. Authorized build/signing and read-only probe
+execution outside it completed without changing Keychain trust/TCC. Early test
+attempts corrected fixture macro syntax/visibility assumptions before the final
+passes; they are not relabeled as full passes. Final review also fixed repeated
+blank unresolved-hint appends after ambiguous native evidence.
+
+**Unrun/gated:** real M2-D daemon/IPC/restart/GUI validation, physical two-display
+reconnection/renumbering, Dock/native recreation, macOS reboot, actual full-volume
+ENOSPC/power-loss, new hosted macOS 15 CI and macOS 26. Only simulated/isolated
+versions of these failure/topology conditions ran. A new service pause/sole-daemon/
+recovery session requires explicit approval under AGENTS.md and D014's independent
+native-frame baseline. Existing service, installed binaries/configuration/plist,
+TCC/trust, scripting addition and SIP were not changed. No second daemon, push or
+merge was attempted. Future publication needs authorization for the reviewed SHA.

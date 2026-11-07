@@ -739,3 +739,69 @@ new hosted CI and macOS 26 remain headless-only/unrun/deferred as specified in t
 No more service action is pending; next work needs its applicable scope/publication
 or service authorization. Persistence, native MRU and broader topology work remain
 proposals, not newly authorized implementation.
+
+## 2026-11-07 — Implement M2-D persistence and validated restoration
+
+Scope: the user's `tmp/yabai-v-m2d-codex-prompt.md`, from clean `dbe2cde` on
+`feat/vspace-mapping`. Read M2-C handoff, development/architecture/validation,
+D009–D015, lifecycle release seams and actual UUID/configuration/startup/lock code.
+Recorded the active milestone before implementation; accepted D016 for this scope.
+
+Added an isolated bounded version-1 JSON state module, textually included in the
+existing manifest, reusing Cocoa JSON facilities. Decimal strings preserve uint64
+IDs/generation/allocator state; global array order and strict positive indices
+preserve destroy gaps. State lives under XDG state home or `~/.local/state/yabai-v`,
+separate from configuration/socket names. Private lifetime `flock` ownership
+serializes writers; malformed supported state is preserved with original bytes,
+while future/read/lock/preservation/allocation/startup-save failures use diagnosed
+session-only fallback without replacing protected state. Checked candidate
+allocation prevents partial publication; abandoned private temp files are removed
+only after exclusive ownership.
+
+Restore temporary manager state using unique native Space/display UUIDs plus
+current desktop ownership/type. Runtime numbers are hints, not lifetime proof.
+Unmatched/ambiguous records remain unresolved and reserve logical positions/IDs
+without owning native mappings. Every display's visible empty desktop is included;
+new required native desktops append fresh IDs after all verified saved records.
+Focus/current/spare/destroy/refresh paths respect availability, and unresolved
+records cannot substitute for the last usable native mapping. No native/layout
+handler or MRU observation path changed.
+
+Create, refresh and final observed destroy release persist complete candidates
+before publishing. Synced temp plus atomic replacement defines the commit point;
+a later directory-sync failure publishes that generation and diagnoses uncertainty.
+Pre-replacement destroy save failures retain source metadata and report already
+moved windows for retry. Focus alone never writes. Added availability/persistence
+fields to existing queries/help and updated CLI, architecture, development, state
+schema/recovery, milestone and resume records.
+
+Passed: persistent-signed universal build and strict all-architecture verification,
+68 production tests, 24 runner tests on Python 3.15 and Apple's 3.9.6, zero-finding
+arm64 analysis, shell syntax, Markdown links/anchors and whitespace. Full final
+report `/private/tmp/yabai-v-m2d-final/report.json`; post-review runner filtering
+was rechecked with the unchanged binary/explicit skipped rebuild in
+`/private/tmp/yabai-v-m2d-final-checked/report.json`. Initial sandbox signing and
+native-query restrictions were resolved through approved execution outside the
+sandbox with the existing identity; trust/TCC stayed unchanged. Early fixture
+syntax/visibility assumptions were corrected before the full passes. Final review
+fixed repeated unresolved-hint appends under native ambiguity and runner focus
+selection when unresolved/available records share a numeric native hint.
+
+Fixtures cover real temporary files, restart/order/gaps/high-water behavior,
+synthetic display/Space identity changes, malformed/oversized/future recovery,
+writer contention, allocation/permission/partial ENOSPC/pre/post replacement
+failures, forked crash boundaries, stale-temp cleanup and mid-evacuation restart/
+retry. Native read-only production UUID probes passed on one physical display;
+original-service native display/Space/window CLI queries passed and one yabai
+process was observed. These are separate from actual M2-D daemon/restart/GUI or
+hardware/reboot validation; see [full evidence](../validation.md#milestone-2-d-persistence-and-local-validation--2026-11-07).
+
+No service/installed file/configuration, TCC/trust, scripting addition or SIP
+change, competing daemon, push or merge occurred. Real M2-D restart/GUI needs a
+new explicitly approved sole-daemon session with D014's independent recovery
+baseline. Physical reconnect/Dock/recreation/reboot, actual full-volume/power-loss,
+hosted macOS 15 CI and deferred macOS 26 remain unrun. Local implementation/tests/
+records are committed together in the feature commit containing this entry;
+publication remains unauthorized. Next: prepare the isolated-state measured GUI
+restart checks for review/approval, then test and audit original-session recovery.
+Native MRU and later product/native lifecycle work remain proposals.

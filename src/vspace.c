@@ -32,6 +32,8 @@ static const char *vspace_destroy_error(enum virtual_workspace_error result)
     case VIRTUAL_WORKSPACE_UNSAFE_WINDOWS: return "source occupancy is unsupported, unknown, or still occupied (including new arrivals)";
     case VIRTUAL_WORKSPACE_MOVE_FAILED: return "window evacuation or layout reconciliation could not be verified";
     case VIRTUAL_WORKSPACE_VISIBILITY_FAILED: return "native visibility or focus handoff could not be verified";
+    case VIRTUAL_WORKSPACE_PERSISTENCE_FAILED: return "state snapshot could not be replaced; metadata commit rejected";
+    case VIRTUAL_WORKSPACE_DURABILITY_UNCERTAIN: return "state snapshot replaced and metadata committed; durability is uncertain; inspect --list before retrying";
     case VIRTUAL_WORKSPACE_LIMIT: return "operation identities are exhausted";
     default: return "destroy could not be completed";
     }
@@ -40,7 +42,9 @@ static const char *vspace_destroy_error(enum virtual_workspace_error result)
 static void vspace_destroy_complete(struct virtual_workspace_destroy *operation, enum virtual_workspace_error result)
 {
     FILE *rsp = operation->context;
-    if (result != VIRTUAL_WORKSPACE_SUCCESS) {
+    if (result == VIRTUAL_WORKSPACE_DURABILITY_UNCERTAIN) {
+        daemon_fail(rsp, "destroy metadata removal committed; state durability is uncertain; inspect --list before retrying.\n");
+    } else if (result != VIRTUAL_WORKSPACE_SUCCESS) {
         daemon_fail(rsp, "destroy source %d (id %llu, space %llu) to target %d (id %llu, space %llu) failed: %s",
                     operation->source.index, (unsigned long long)operation->source.id, (unsigned long long)operation->source.sid,
                     operation->target.index, (unsigned long long)operation->target.id, (unsigned long long)operation->target.sid,
@@ -74,11 +78,14 @@ static bool vspace_parse_index(struct token token, int *index)
     return *index > 0;
 }
 
-static void vspace_serialize(FILE *rsp, struct virtual_workspace *workspace, uint64_t active_sid)
+static void vspace_serialize(FILE *rsp, struct virtual_workspace_manager *vm, struct virtual_workspace *workspace, uint64_t active_sid)
 {
-    fprintf(rsp, "{\"index\":%d,\"id\":%llu,\"space-id\":%llu,\"display-id\":%u,\"has-focus\":%s}",
+    bool available = virtual_workspace_manager_available(vm, workspace);
+    fprintf(rsp, "{\"index\":%d,\"id\":%llu,\"space-id\":%llu,\"display-id\":%u,\"has-focus\":%s,\"availability\":\"%s\",\"persistence\":\"%s\"}",
             workspace->index, (unsigned long long)workspace->id, (unsigned long long)workspace->sid,
-            workspace->did, json_bool(workspace->sid == active_sid));
+            workspace->did, json_bool(available && workspace->sid == active_sid),
+            available ? "available" : workspace->unresolved ? "unresolved" : "unavailable",
+            virtual_workspace_manager_persistence(vm));
 }
 
 static const char *vspace_retention_reason(enum virtual_workspace_retention retention)
@@ -183,6 +190,8 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
         enum virtual_workspace_error result = virtual_workspace_manager_create(vm);
         if (result == VIRTUAL_WORKSPACE_BUSY) {
             daemon_fail(rsp, "%s.\n", vspace_destroy_error(result));
+        } else if (result == VIRTUAL_WORKSPACE_PERSISTENCE_FAILED || result == VIRTUAL_WORKSPACE_DURABILITY_UNCERTAIN) {
+            daemon_fail(rsp, "%s.\n", vspace_destroy_error(result));
         } else if (result == VIRTUAL_WORKSPACE_DISPLAY_UNAVAILABLE) {
             daemon_fail(rsp, "cannot create virtual workspace because the current display could not be resolved.\n");
         } else if (result == VIRTUAL_WORKSPACE_STATE_UNAVAILABLE) {
@@ -212,6 +221,8 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
         enum virtual_workspace_error result = virtual_workspace_manager_refresh(vm, &entries);
         if (result == VIRTUAL_WORKSPACE_BUSY) {
             daemon_fail(rsp, "%s.\n", vspace_destroy_error(result));
+        } else if (result == VIRTUAL_WORKSPACE_PERSISTENCE_FAILED || result == VIRTUAL_WORKSPACE_DURABILITY_UNCERTAIN) {
+            daemon_fail(rsp, "%s.\n", vspace_destroy_error(result));
         } else if (result == VIRTUAL_WORKSPACE_STATE_UNAVAILABLE) {
             daemon_fail(rsp, "cannot refresh virtual workspaces because current native topology, visibility, or focus is unavailable; mapping unchanged.\n");
         } else if (result != VIRTUAL_WORKSPACE_SUCCESS) {
@@ -230,7 +241,7 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
         } else if (result == VIRTUAL_WORKSPACE_INVALID_INDEX) {
             daemon_fail(rsp, "could not locate virtual workspace with index '%d'.\n", index);
         } else if (result == VIRTUAL_WORKSPACE_SPACE_UNAVAILABLE) {
-            daemon_fail(rsp, "cannot focus virtual workspace because its native space or display is unavailable.\n");
+            daemon_fail(rsp, "cannot focus virtual workspace because its native space or display is unavailable or unresolved.\n");
         } else if (result == VIRTUAL_WORKSPACE_SAME_SPACE) {
             daemon_fail(rsp, "cannot focus an already focused virtual workspace.\n");
         } else if (result == VIRTUAL_WORKSPACE_DISPLAY_IS_ANIMATING) {
@@ -250,7 +261,7 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
         fprintf(rsp, "[");
         for (int i = 0; i < buf_len(vm->workspaces); ++i) {
             if (i) fprintf(rsp, ",");
-            vspace_serialize(rsp, &vm->workspaces[i], active_sid);
+            vspace_serialize(rsp, vm, &vm->workspaces[i], active_sid);
         }
         fprintf(rsp, "]\n");
     } else {
@@ -259,7 +270,7 @@ static void handle_domain_vspace(FILE *rsp, struct token domain, char *message)
             daemon_fail(rsp, "current native space is not mapped to a virtual workspace.\n");
             return;
         }
-        vspace_serialize(rsp, workspace, active_sid);
+        vspace_serialize(rsp, vm, workspace, active_sid);
         fprintf(rsp, "\n");
     }
 }

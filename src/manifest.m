@@ -94,6 +94,7 @@
 #include "display_manager.c"
 #include "space_manager.c"
 #include "window_manager.c"
+#include "virtual_workspace_state.c"
 #include "virtual_workspace_manager.c"
 #include "mouse_handler.c"
 #include "yabai.c"

@@ -27,8 +27,8 @@ M2-A implementation is complete locally: `vspace --create` allocates the first
 revalidated hidden empty native desktop on the focused display; `--focus` returns
 native results without extra polling. Existing IDs/indices/order survive creation.
 Only explicit mapping creation is new; focus, windows, layouts, and native order
-are untouched by allocation. M2-D and native MRU remain design proposals;
-M2-B and M2-C are described below.
+are untouched by allocation. M2-D is implemented locally as described below; native MRU remains a separate
+proposal. M2-B and M2-C are described below.
 [Commands](../vspace.md) and [architecture](../architecture.md) describe the contract.
 
 Local validation passed: persistent-signed universal build, 30/30 headless tests,
@@ -99,67 +99,75 @@ An independent audit against the first pre-pause native baseline passed every
 original service/desktop/window/layout/hash/SIP condition. No development daemon
 or fixture remains. See [M2-C GUI evidence](../validation.md#milestone-2-c-approved-gui-validation--2026-11-05).
 
+M2-D persistence is implemented locally from `dbe2cde`. Logical IDs/global order,
+destroy gaps and the allocator high-water mark survive durable restarts. Startup
+uses unique current Space/display UUIDs with native ownership/type checks; uncertain
+records remain unresolved and own no native mapping. Empty visible desktops on
+every display are represented. Create/refresh/final destroy release atomically save
+complete candidates; post-replacement sync failure publishes committed metadata
+with an uncertainty diagnostic. Invalid state is preserved, and future-schema/
+read/lock/preservation/startup-save failures use explicit session-only fallback.
+See [state and recovery](../development.md#virtual-workspace-state-and-recovery).
+
+Available checks passed: persistent-signed universal build, 68 production and
+24 runner tests, zero-finding arm64 analysis, Python 3.15/Apple 3.9.6 runner checks,
+read-only native UUID availability and original-service native CLI queries on
+SIP-enabled macOS 15.6. Real M2-D daemon/restart/GUI, hardware reconnect/Dock/reboot,
+new hosted CI and macOS 26 remain unrun. No service or publication action occurred.
+
 ## Resuming work
 
-Handoff checked on 2026-11-05. Active branch: `feat/vspace-mapping`.
-Daemon implementation/source checkpoint: `31b3035` (unchanged during GUI work).
-The local follow-up commit containing this handoff records the runner preflight
-correction and GUI results; inspect `git log` for its exact ID. Cached published
-remote ref `origin/feat/vspace-mapping` remains `cf20e36`, without network refresh.
-**M2-B, its GUI records, M2-C and this follow-up remain local/unpublished.**
+Handoff checked on 2026-11-07. Active branch: `feat/vspace-mapping`.
+Starting local checkpoint: `dbe2cde` (completed M2-C GUI/runner follow-up).
+The local M2-D feature commit containing this handoff is the new implementation
+checkpoint; obtain its exact ID with `git log -1`. Cached published remote ref
+`origin/feat/vspace-mapping` remains `cf20e36`, without network refresh.
+**M2-B/C/D and their follow-up records remain local/unpublished.**
 
-1. Inspect branch/tree, milestones, D009–D015, latest journal, development/
-   architecture and the M2-C GUI report. Authorized M2-C implementation and available
-   local GUI validation are complete. M2-D persistence, native lifecycle/reordering,
-   broader topology reconciliation, MRU, GUI product and hotkeys remain proposals.
-2. Source `31b3035` passed the full persistently signed universal build, strict
-   signature and zero-finding arm64 analysis on macOS 15.6/SIP enabled. Original
-   build report: `/private/tmp/yabai-v-m2c-validated/report.json`. No daemon source
-   changed in the GUI follow-up. With the corrected Python preflight, all 21 runner
-   tests passed on Python 3.15 and Apple's 3.9.6; `--skip-build` passed the existing
-   signature/binary, 52 production and 21 runner tests, syntax and whitespace:
-   `/private/tmp/yabai-v-m2c-gui-runner-fix-headless/report.json`. Markdown links/
-   anchors and whitespace were checked before the follow-up commit.
-3. Core real daemon/IPC evidence is `/private/tmp/yabai-v-m2c-gui.jungx6qq`, repeated
-   in `9otq8z8c`; both later stopped at fixture setup assertions, so do not relabel
-   their entire runs as passes. The focused occupancy completion `5tf4x6i3` passed
-   all isolated window cases and final empty release/idempotence without errors.
-   `xxa84kya` found the runner preflight defect before refresh. Every attempt's
-   original-service recovery passed. The detailed report distinguishes defects
-   in runner/setup assertions from correct conservative daemon behavior.
-4. The user asked to watch a repeat. `bga1388z` passed the primary-display round
-   trip, then stopped on unobserved global secondary activation. `r63fdz3z` completed
-   the secondary round trip after logging one visibility-only native dispatch and
-   a separate retry. The user confirmed switching and return looked correct;
-   `r63fdz3z/user-visual-confirmation.json` records that feedback. The maintained
-   runner's earlier automated visual response remains `unobserved`.
-5. The final independent audit is
-   `/private/tmp/yabai-v-m2c-gui.r63fdz3z/independent-final-recovery-audit.json`,
-   against the very first `xxa84kya` pre-pause native bounds/owners/memberships.
-   Every condition passed: sole original executable/service, exact topology/
-   visibility/global Space/window focus, all original window lifetimes/states/
-   associations/native and cached frames, original stack layouts/all 10-pixel
-   padding/gaps, original installed binary/config/plist hashes, unchanged checkout
-   binary, no fixture and SIP enabled. The original Homebrew service is running;
-   historical PID 48377 and all host/session IDs require fresh checks before reuse.
-6. No further service operation is pending in this completed approved session.
-   Preserve the original installation/configuration. Future service sessions need
-   their applicable explicit authorization and independent native-frame baselines
-   per D014. The maintained runner's refresh stage has now run live; its
-   `--destroy-created` orchestration remains fixture-tested. Ordinary query/default
-   interactive modes never refresh mappings. Use current indices after refresh.
-7. Remaining coverage: simultaneously empty visible mappings on both physical
-   displays, interleaved occupied survivors, last mapping and unsafe pending/
-   query/topology/identity/arrival injections remain headless-only; physical
-   single-display M2-C GUI remains unrun. Ongoing validation focuses on macOS 15.
-   macOS 26 stays deferred under D012. New hosted macOS 15 CI needs separately
-   authorized publication of the exact reviewed SHA; no push or merge is authorized.
+1. Inspect branch/tree, milestones, D009–D016 and the latest journal. M2-D's
+   authorized implementation and available local checks are complete. MRU,
+   native lifecycle/reordering, automatic event-driven reconciliation, GUI and
+   hotkeys remain proposals. No push, merge or new service pause is authorized.
+2. Full signed build/headless report: `/private/tmp/yabai-v-m2d-final/report.json`,
+   68 production/24 runner tests. The post-review runner-only correction uses
+   the same signed binary with `--skip-build` in
+   `/private/tmp/yabai-v-m2d-final-checked/report.json`. That report explicitly
+   skips rebuilding; no daemon source changed after the full signed build.
+   Strict signature/universal checks, both Python versions, shell syntax,
+   Markdown links/anchors, staged whitespace and zero-finding arm64 analysis
+   passed. Analysis: `/private/tmp/yabai-v-m2d-analysis-final.plist`.
+3. Native identity probe evidence is
+   `/private/tmp/yabai-v-m2d-identity-probe-native.json`: one physical display,
+   two ordinary desktops, valid unique Space UUIDs and their display UUID.
+   No daemon/window manager/persistence/focus/move path ran. Original-service
+   native queries also passed (`/private/tmp/yabai-v-m2d-original-*.json`), with
+   one observed yabai process. These are read-only field/CLI checks, not a
+   M2-D runtime/restart/reboot pass. Host IDs/topology require fresh checks.
+4. Persistence fixtures cover private real files, snapshot/restart order/gaps/IDs,
+   synthetic identity/disconnect/reconnect/renumbering, malformed/oversized/future
+   recovery, competing writer ownership, allocation/permission/ENOSPC faults,
+   pre/post replacement failures, forked crash boundaries/abandoned temps and
+   partial native-fixture evacuation/retry. They neither manipulate physical
+   displays nor establish native UUID continuity across reboot/Dock/recreation.
+5. Next concrete validation: prepare an isolated XDG state directory and a measured
+   sole-daemon M2-D restart session. Under a new explicit service approval, capture
+   independent native bounds/owners/memberships before pausing the original,
+   test hidden-empty persistence, destroy gaps, refresh/restart and fresh IDs,
+   then restore/audit the original service/session per D014. Keep development
+   state separate from the default state file. Never run two window managers.
+6. Physical display reconnect/renumbering, Dock/native recreation, reboot,
+   actual full-volume/power-loss and M2-D GUI remain unrun. macOS 26 stays
+   deferred under D012. Hosted macOS 15 CI requires separately authorized
+   publication of the exact reviewed SHA. The earlier M2-C GUI/recovery evidence
+   at source `31b3035` remains historical; see the validation report, not old
+   PIDs/window IDs, for that session's results. No recovery action remains pending.
 
-Temporary reports/fixture helpers stay outside Git and include private window
-metadata. No original binary/config/service definition, TCC/trust, scripting
-addition or SIP setting changed. Native focus dispatch is not guaranteed observed
-activation; the GUI repeat retains that limitation. Native MRU remains a separate
-observed-focus feature; allocation/release/compaction do not manufacture history.
+Private reports/fixture helpers remain outside Git. No installed binary/config/
+service definition, TCC/Keychain trust, scripting addition or SIP setting changed.
+State recovery requires an approved owner stop; do not delete a live `state.lock`.
+Native UUIDs are conditional evidence, never a positional or cross-reboot promise.
+Restoration/compaction do not manufacture MRU history; window-handle persistence
+remains deferred until the independent MRU feature defines lifetime policy.
 
 ## Supporting documents
 

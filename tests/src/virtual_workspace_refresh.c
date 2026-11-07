@@ -148,7 +148,7 @@ TEST_FUNC(virtual_workspace_refresh_uncertain_mappings,
         struct virtual_workspace_refresh_entry *entries = NULL;
         TEST_CHECK(virtual_workspace_manager_refresh(&vm, &entries), VIRTUAL_WORKSPACE_SUCCESS);
         if (change < 4) {
-            TEST_CHECK(virtual_workspace_manager_find_space(&vm, 80) != NULL, true);
+            TEST_CHECK(virtual_workspace_manager_find_index(&vm, entries[2].new_index) != NULL, true);
             TEST_CHECK(entries[2].retention, change ? VIRTUAL_WORKSPACE_RETAIN_MAPPING : VIRTUAL_WORKSPACE_RETAIN_UNKNOWN);
         } else {
             TEST_CHECK(entries[1].retention, VIRTUAL_WORKSPACE_RETAIN_DISPLAY);
@@ -206,7 +206,7 @@ TEST_FUNC(virtual_workspace_refresh_revalidation,
             } else {
                 TEST_CHECK(status, VIRTUAL_WORKSPACE_SUCCESS);
                 uint64_t protected_sid = change == 3 ? 400 : 80;
-                TEST_CHECK(virtual_workspace_manager_find_space(&vm, protected_sid) != NULL, true);
+                TEST_CHECK(virtual_workspace_manager_find_index(&vm, entries[protected_sid == 400 ? 1 : 2].new_index) != NULL, true);
                 for (int i = 0; i < buf_len(vm.workspaces); ++i) TEST_CHECK(vm.workspaces[i].index, i + 1);
             }
             buf_free(entries);
@@ -231,7 +231,7 @@ TEST_FUNC(virtual_workspace_refresh_late_arrivals,
         } else {
             TEST_CHECK(status, VIRTUAL_WORKSPACE_SUCCESS);
             uint64_t protected_sid = change == 12 ? 400 : 80;
-            TEST_CHECK(virtual_workspace_manager_find_space(&vm, protected_sid) != NULL, true);
+            TEST_CHECK(virtual_workspace_manager_find_index(&vm, entries[protected_sid == 400 ? 1 : 2].new_index) != NULL, true);
             TEST_CHECK(entries[change == 12 ? 1 : 2].retention != VIRTUAL_WORKSPACE_RELEASE, true);
         }
         buf_free(entries);

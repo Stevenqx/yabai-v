@@ -122,7 +122,7 @@ static enum virtual_workspace_occupancy virtual_workspace_native_scan(uint64_t s
                     result = VIRTUAL_WORKSPACE_UNKNOWN;
                 } else {
                     CFRetain(identity.ref);
-                    buf_push(*identities, identity);
+                    if (!virtual_workspace_push(*identities, identity)) { CFRelease(identity.ref); result = VIRTUAL_WORKSPACE_UNKNOWN; goto out; }
                 }
             }
         }
@@ -237,6 +237,32 @@ static uint32_t virtual_workspace_native_active_display(void)
     return did;
 }
 
+static bool virtual_workspace_native_identity(uint64_t sid, uint32_t did, char *space_uuid, char *display_uuid_string)
+{
+    CFStringRef space = SLSSpaceCopyName(g_connection, sid);
+    CFStringRef display = display_uuid(did);
+    bool valid = space && display && CFGetTypeID(space) == CFStringGetTypeID() &&
+                 CFGetTypeID(display) == CFStringGetTypeID() &&
+                 CFStringGetCString(space, space_uuid, 37, kCFStringEncodingUTF8) &&
+                 CFStringGetCString(display, display_uuid_string, 37, kCFStringEncodingUTF8) &&
+                 virtual_workspace_uuid(space_uuid) && virtual_workspace_uuid(display_uuid_string);
+    if (space) CFRelease(space);
+    if (display) CFRelease(display);
+    return valid;
+}
+
+bool virtual_workspace_manager_available(struct virtual_workspace_manager *vm, struct virtual_workspace *workspace)
+{
+    if (workspace->unresolved || !workspace->sid || !workspace->did ||
+        vm->source->space_display(workspace->sid) != workspace->did || !vm->source->is_user_space(workspace->sid)) return false;
+    if (vm->source->identity) {
+        char space[37] = {0}, display[37] = {0};
+        if (!*workspace->space_uuid || !vm->source->identity(workspace->sid, workspace->did, space, display) ||
+            strcmp(space, workspace->space_uuid) || strcmp(display, workspace->display_uuid)) return false;
+    }
+    return true;
+}
+
 static const struct virtual_workspace_source virtual_workspace_native_source = {
     .display_list = display_manager_active_display_list,
     .space_list = display_space_list,
@@ -254,6 +280,7 @@ static const struct virtual_workspace_source virtual_workspace_native_source = {
     .settle_window = virtual_workspace_native_settle_window,
     .capture_focus = virtual_workspace_native_capture_focus,
     .restore_focus = virtual_workspace_native_restore_focus,
+    .identity = virtual_workspace_native_identity,
     .schedule_destroy = virtual_workspace_native_schedule_destroy
 };
 
@@ -269,56 +296,135 @@ struct virtual_workspace *virtual_workspace_manager_find_index(struct virtual_wo
 struct virtual_workspace *virtual_workspace_manager_find_space(struct virtual_workspace_manager *vm, uint64_t sid)
 {
     for (int i = 0; i < buf_len(vm->workspaces); ++i) {
-        if (vm->workspaces[i].sid == sid) return &vm->workspaces[i];
+        if (vm->workspaces[i].sid == sid && virtual_workspace_manager_available(vm, &vm->workspaces[i])) return &vm->workspaces[i];
     }
     return NULL;
 }
 
-bool virtual_workspace_manager_begin(struct virtual_workspace_manager *vm, const struct virtual_workspace_source *source)
+static bool virtual_workspace_manager_read_topology(struct virtual_workspace_manager *vm, struct virtual_workspace_native_space **topology);
+
+static bool virtual_workspace_manager_begin_state(struct virtual_workspace_manager *vm, const struct virtual_workspace_source *source, const char *path)
 {
     if (vm->did_begin) return true;
-    if (!source) source = &virtual_workspace_native_source;
-
-    struct virtual_workspace_manager pending = { .source = source };
+    struct virtual_workspace_manager pending = { .source = source, .next_id = 1 };
+    struct virtual_workspace *native = NULL;
+    struct virtual_workspace_native_space *confirmed = NULL;
+    if (path) {
+        pending.store = virtual_workspace_state_open(path, &pending.workspaces, &pending.next_id);
+        if (!pending.store) goto err;
+    }
     uint64_t active_sid = source->active_space();
     int display_count = 0;
     uint32_t *displays = source->display_list(&display_count);
-    if (!active_sid || !displays || display_count <= 0) goto err;
-
-    uint64_t next_id = 1;
+    if (!active_sid || !displays || display_count <= 0 || display_count > VIRTUAL_WORKSPACE_RECORD_LIMIT) goto err;
+    bool found_active = false;
     for (int i = 0; i < display_count; ++i) {
+        for (int j = 0; j < i; ++j) if (displays[i] == displays[j]) goto err;
         int space_count = 0;
         uint64_t *spaces = source->space_list(displays[i], &space_count);
-        if (!displays[i] || !spaces || space_count <= 0) goto err;
-
+        uint64_t visible = source->visible_space(displays[i]);
+        bool found_visible = false;
+        if (!displays[i] || !spaces || space_count <= 0 || space_count > VIRTUAL_WORKSPACE_RECORD_LIMIT) goto err;
         for (int j = 0; j < space_count; ++j) {
-            if (!spaces[j]) goto err;
-            struct virtual_workspace *existing = virtual_workspace_manager_find_space(&pending, spaces[j]);
-            if (existing) {
-                if (existing->did != displays[i]) goto err;
-                continue;
+            if (!spaces[j] || source->space_display(spaces[j]) != displays[i]) goto err;
+            for (int k = 0; k < buf_len(native); ++k) if (native[k].sid == spaces[j]) goto err;
+            if (spaces[j] == visible) found_visible = true;
+            if (spaces[j] == active_sid && spaces[j] == visible) found_active = true;
+            struct virtual_workspace record = { .sid = spaces[j], .did = displays[i] };
+            if (source->identity && !source->identity(record.sid, record.did, record.space_uuid, record.display_uuid)) {
+                record.space_uuid[0] = record.display_uuid[0] = 0;
+                record.unresolved = true;
             }
-            if (spaces[j] != active_sid && source->occupancy(spaces[j]) == VIRTUAL_WORKSPACE_EMPTY) continue;
-
-            buf_push(pending.workspaces, ((struct virtual_workspace) {
-                .id = next_id++,
-                .sid = spaces[j],
-                .did = displays[i],
-                .index = buf_len(pending.workspaces) + 1
-            }));
+            if (!virtual_workspace_push(native, record)) goto err;
+        }
+        if (!found_visible) goto err;
+    }
+    if (!found_active) goto err;
+    /* Ambiguous native UUIDs bind neither old record. Never choose by position. */
+    for (int i = 0; i < buf_len(native); ++i) {
+        for (int j = 0; j < i; ++j) {
+            if ((*native[i].space_uuid && !strcmp(native[i].space_uuid, native[j].space_uuid)) ||
+                (native[i].did != native[j].did && *native[i].display_uuid && !strcmp(native[i].display_uuid, native[j].display_uuid))) {
+                native[i].unresolved = native[j].unresolved = true;
+                warn("yabai: vspace restoration: ambiguous native Space/display UUID; retaining unresolved identities.\n");
+            }
         }
     }
-
-    /* Do not expose a partial snapshot if native enumeration lost the current Space. */
-    if (!virtual_workspace_manager_find_space(&pending, active_sid)) goto err;
+    int max_index = 0;
+    for (int i = 0; i < buf_len(pending.workspaces); ++i) {
+        struct virtual_workspace *record = &pending.workspaces[i];
+        max_index = record->index;
+        record->unresolved = true;
+        for (int j = 0; j < buf_len(native); ++j) {
+            if (native[j].unresolved || !*record->space_uuid || !*native[j].space_uuid ||
+                strcmp(record->space_uuid, native[j].space_uuid) || strcmp(record->display_uuid, native[j].display_uuid) ||
+                !source->is_user_space(native[j].sid)) continue;
+            record->sid = native[j].sid;
+            record->did = native[j].did;
+            record->unresolved = false;
+        }
+        if (record->unresolved) warn("yabai: vspace restoration: logical id %llu remains unresolved.\n", (unsigned long long)record->id);
+    }
+    /* Old verified identities have precedence; fresh observations only append. */
+    for (int i = 0; i < buf_len(native); ++i) {
+        struct virtual_workspace record = native[i];
+        if (virtual_workspace_manager_find_space(&pending, record.sid) || !source->is_user_space(record.sid)) continue;
+        if (record.sid != source->visible_space(record.did) && source->occupancy(record.sid) == VIRTUAL_WORKSPACE_EMPTY) continue;
+        if (record.unresolved) record.space_uuid[0] = record.display_uuid[0] = 0;
+        /* Without UUID evidence, retain the existing unresolved hint, never bind it. */
+        bool retained_hint = false;
+        for (int j = 0; j < buf_len(pending.workspaces); ++j) {
+            struct virtual_workspace *old = &pending.workspaces[j];
+            if (record.unresolved && old->unresolved && old->sid == record.sid && old->did == record.did &&
+                !strcmp(old->space_uuid, record.space_uuid) && !strcmp(old->display_uuid, record.display_uuid)) retained_hint = true;
+        }
+        if (retained_hint) continue;
+        if (!pending.next_id || max_index == INT_MAX) goto err;
+        record.id = pending.next_id++;
+        record.index = ++max_index;
+        if (!virtual_workspace_push(pending.workspaces, record)) goto err;
+    }
+    if (!buf_len(pending.workspaces) || !virtual_workspace_manager_read_topology(&pending, &confirmed) || buf_len(confirmed) != buf_len(native)) goto err;
+    for (int i = 0; i < buf_len(native); ++i) {
+        if (native[i].sid != confirmed[i].sid || native[i].did != confirmed[i].did) goto err;
+    }
+    for (int i = 0; i < buf_len(pending.workspaces); ++i) {
+        if (!pending.workspaces[i].unresolved && !virtual_workspace_manager_available(&pending, &pending.workspaces[i])) goto err;
+    }
+    if (!virtual_workspace_state_commit(pending.store, pending.workspaces, pending.next_id)) {
+        virtual_workspace_state_session(pending.store, "initial snapshot could not be committed");
+    }
     pending.did_begin = true;
-    pending.next_id = next_id;
     *vm = pending;
+    buf_free(native);
+    buf_free(confirmed);
     return true;
-
 err:
+    buf_free(native);
+    buf_free(confirmed);
     buf_free(pending.workspaces);
+    virtual_workspace_state_close(pending.store);
     return false;
+}
+
+bool virtual_workspace_manager_begin(struct virtual_workspace_manager *vm, const struct virtual_workspace_source *source)
+{
+    @autoreleasepool {
+        if (source) return virtual_workspace_manager_begin_state(vm, source, NULL);
+        char path[PATH_MAX];
+        const char *base = getenv("XDG_STATE_HOME");
+        if (base && *base) {
+            if (snprintf(path, sizeof(path), "%s/yabai-v", base) >= (int)sizeof(path)) path[0] = 0;
+        } else {
+            const char *home = getenv("HOME");
+            if (!home || !*home) {
+                struct passwd *account = getpwuid(getuid());
+                home = account ? account->pw_dir : NULL;
+            }
+            if (!home || snprintf(path, sizeof(path), "%s/.local/state/yabai-v", home) >= (int)sizeof(path)) path[0] = 0;
+        }
+        return virtual_workspace_manager_begin_state(vm, &virtual_workspace_native_source, path);
+    }
 }
 
 static enum virtual_workspace_error virtual_workspace_manager_find_spare(struct virtual_workspace_manager *vm, uint32_t did, uint64_t *sid)
@@ -378,13 +484,19 @@ enum virtual_workspace_error virtual_workspace_manager_create(struct virtual_wor
         return VIRTUAL_WORKSPACE_STATE_CHANGED;
     }
 
-    buf_push(vm->workspaces, ((struct virtual_workspace) {
-        .id = vm->next_id++,
-        .sid = sid,
-        .did = did,
-        .index = max_index + 1
-    }));
-    return VIRTUAL_WORKSPACE_SUCCESS;
+    struct virtual_workspace record = { .id = vm->next_id, .sid = sid, .did = did, .index = max_index + 1 };
+    if (vm->source->identity && !vm->source->identity(sid, did, record.space_uuid, record.display_uuid)) return VIRTUAL_WORKSPACE_STATE_UNAVAILABLE;
+    struct virtual_workspace *candidate = NULL;
+    for (int i = 0; i < buf_len(vm->workspaces); ++i) {
+        if (!virtual_workspace_push(candidate, vm->workspaces[i])) { buf_free(candidate); return VIRTUAL_WORKSPACE_LIMIT; }
+    }
+    if (!virtual_workspace_push(candidate, record)) { buf_free(candidate); return VIRTUAL_WORKSPACE_LIMIT; }
+    int committed = virtual_workspace_state_commit(vm->store, candidate, vm->next_id + 1);
+    if (!committed) { buf_free(candidate); return VIRTUAL_WORKSPACE_PERSISTENCE_FAILED; }
+    buf_free(vm->workspaces);
+    vm->workspaces = candidate;
+    ++vm->next_id;
+    return committed == 2 ? VIRTUAL_WORKSPACE_DURABILITY_UNCERTAIN : VIRTUAL_WORKSPACE_SUCCESS;
 }
 
 enum virtual_workspace_error virtual_workspace_manager_focus(struct virtual_workspace_manager *vm, int index)
@@ -393,7 +505,7 @@ enum virtual_workspace_error virtual_workspace_manager_focus(struct virtual_work
     if (vm->destroy.token) return VIRTUAL_WORKSPACE_BUSY;
     struct virtual_workspace *workspace = virtual_workspace_manager_find_index(vm, index);
     if (!workspace) return VIRTUAL_WORKSPACE_INVALID_INDEX;
-    if (vm->source->space_display(workspace->sid) != workspace->did) return VIRTUAL_WORKSPACE_SPACE_UNAVAILABLE;
+    if (!virtual_workspace_manager_available(vm, workspace)) return VIRTUAL_WORKSPACE_SPACE_UNAVAILABLE;
 
     enum space_op_error result = vm->source->focus_space(workspace->sid);
     if (result == SPACE_OP_ERROR_SAME_SPACE) return VIRTUAL_WORKSPACE_SAME_SPACE;
@@ -432,7 +544,7 @@ static bool virtual_workspace_manager_read_topology(struct virtual_workspace_man
         for (int j = 0; j < space_count; ++j) {
             if (!spaces[j] || source->space_display(spaces[j]) != displays[i]) return false;
             for (int k = 0; k < buf_len(*topology); ++k) if ((*topology)[k].sid == spaces[j]) return false;
-            buf_push(*topology, ((struct virtual_workspace_native_space) { .sid = spaces[j], .did = displays[i] }));
+            if (!virtual_workspace_push(*topology, ((struct virtual_workspace_native_space) { .sid = spaces[j], .did = displays[i] }))) return false;
             if (visible == spaces[j]) found_visible = true;
         }
         if (!found_visible) return false;
@@ -443,7 +555,7 @@ static bool virtual_workspace_manager_read_topology(struct virtual_workspace_man
 static bool virtual_workspace_manager_valid_mapping(struct virtual_workspace_manager *vm, struct virtual_workspace *workspace, struct virtual_workspace_native_space *topology)
 {
     struct virtual_workspace *live = virtual_workspace_manager_find_space(vm, workspace->sid);
-    if (!live || live->id != workspace->id || live->did != workspace->did || live->index != workspace->index ||
+    if (!virtual_workspace_manager_available(vm, workspace) || !live || live->id != workspace->id || live->did != workspace->did || live->index != workspace->index ||
         !vm->source->is_user_space(workspace->sid)) return false;
     for (int i = 0; i < buf_len(topology); ++i) {
         if (topology[i].sid == workspace->sid && topology[i].did == workspace->did) return true;
@@ -481,11 +593,11 @@ static bool virtual_workspace_refresh_read_snapshot(struct virtual_workspace_man
         for (int j = 0; j < space_count; ++j) {
             if (!spaces[j]) return false;
             for (int k = 0; k < buf_len(snapshot->topology); ++k) if (snapshot->topology[k].sid == spaces[j]) return false;
-            buf_push(snapshot->topology, ((struct virtual_workspace_native_space) { .sid = spaces[j], .did = displays[i] }));
+            if (!virtual_workspace_push(snapshot->topology, ((struct virtual_workspace_native_space) { .sid = spaces[j], .did = displays[i] }))) return false;
             if (spaces[j] == visible) found_visible = true;
         }
         if (!found_visible) return false;
-        buf_push(snapshot->visible, ((struct virtual_workspace_native_space) { .sid = visible, .did = displays[i] }));
+        if (!virtual_workspace_push(snapshot->visible, ((struct virtual_workspace_native_space) { .sid = visible, .did = displays[i] }))) return false;
     }
     snapshot->focused_sid = source->active_space();
     for (int i = 0; i < buf_len(snapshot->visible); ++i) {
@@ -505,6 +617,7 @@ static bool virtual_workspace_refresh_same_topology(struct virtual_workspace_ref
 
 static enum virtual_workspace_retention virtual_workspace_refresh_protection(struct virtual_workspace_manager *vm, struct virtual_workspace *workspace, struct virtual_workspace_refresh_snapshot *snapshot)
 {
+    if (workspace->unresolved) return VIRTUAL_WORKSPACE_RETAIN_MAPPING;
     bool connected = false;
     for (int i = 0; i < buf_len(snapshot->visible); ++i) {
         if (snapshot->visible[i].did == workspace->did) connected = true;
@@ -529,7 +642,7 @@ static enum virtual_workspace_retention virtual_workspace_refresh_classify(struc
     return occupancy == VIRTUAL_WORKSPACE_OCCUPIED ? VIRTUAL_WORKSPACE_RETAIN_OCCUPIED : VIRTUAL_WORKSPACE_RETAIN_UNKNOWN;
 }
 
-/* One daemon-loop publication. M2-D can persist this candidate before the swap. */
+/* One daemon-loop publication, after the durable candidate commit point. */
 static void virtual_workspace_manager_publish_refresh(struct virtual_workspace_manager *vm, struct virtual_workspace *candidate)
 {
     struct virtual_workspace *previous = vm->workspaces;
@@ -552,10 +665,10 @@ enum virtual_workspace_error virtual_workspace_manager_refresh(struct virtual_wo
     /* The live array is the authoritative global order, including interleaving. */
     for (int i = 0; i < buf_len(vm->workspaces); ++i) {
         struct virtual_workspace workspace = vm->workspaces[i];
-        buf_push(pending, ((struct virtual_workspace_refresh_entry) {
+        if (!virtual_workspace_push(pending, ((struct virtual_workspace_refresh_entry) {
             .workspace = workspace,
             .retention = virtual_workspace_refresh_classify(vm, &workspace, &before)
-        }));
+        }))) goto out;
     }
     if (!virtual_workspace_refresh_read_snapshot(vm, &confirmed)) goto out;
     result = VIRTUAL_WORKSPACE_STATE_CHANGED;
@@ -585,19 +698,30 @@ enum virtual_workspace_error virtual_workspace_manager_refresh(struct virtual_wo
         }
         if (pending[i].retention != VIRTUAL_WORKSPACE_RELEASE) ++retained;
     }
-    if (!retained && buf_len(pending)) pending[0].retention = VIRTUAL_WORKSPACE_RETAIN_LAST;
+    int usable_retained = 0;
+    int first_usable = -1;
+    for (int i = 0; i < buf_len(pending); ++i) {
+        if (!virtual_workspace_manager_available(vm, &pending[i].workspace) || !vm->source->is_user_space(pending[i].workspace.sid)) continue;
+        if (first_usable < 0) first_usable = i;
+        if (pending[i].retention != VIRTUAL_WORKSPACE_RELEASE) ++usable_retained;
+    }
+    if (!usable_retained && first_usable >= 0) pending[first_usable].retention = VIRTUAL_WORKSPACE_RETAIN_LAST;
+    else if (!retained && buf_len(pending)) pending[0].retention = VIRTUAL_WORKSPACE_RETAIN_LAST;
     for (int i = 0; i < buf_len(pending); ++i) {
         if (pending[i].retention == VIRTUAL_WORKSPACE_RELEASE) continue;
         struct virtual_workspace workspace = pending[i].workspace;
         pending[i].new_index = workspace.index = buf_len(candidate) + 1;
-        buf_push(candidate, workspace);
+        if (!virtual_workspace_push(candidate, workspace)) goto out;
     }
     if (!buf_len(candidate)) goto out;
+    int committed = virtual_workspace_state_commit(vm->store, candidate, vm->next_id);
+    result = VIRTUAL_WORKSPACE_PERSISTENCE_FAILED;
+    if (!committed) goto out;
     virtual_workspace_manager_publish_refresh(vm, candidate);
     candidate = NULL;
     *entries = pending;
     pending = NULL;
-    result = VIRTUAL_WORKSPACE_SUCCESS;
+    result = committed == 2 ? VIRTUAL_WORKSPACE_DURABILITY_UNCERTAIN : VIRTUAL_WORKSPACE_SUCCESS;
 
 out:
     virtual_workspace_refresh_snapshot_dispose(&before);
@@ -645,21 +769,25 @@ static void virtual_workspace_manager_destroy_finish(struct virtual_workspace_ma
         struct virtual_workspace_window *window = &operation->windows[i];
         if (!window->sent) continue;
         window->moved = vm->source->window_state(window, operation->source.sid, operation->target.sid) == VIRTUAL_WORKSPACE_WINDOW_TARGET;
-        if (result != VIRTUAL_WORKSPACE_SUCCESS) vm->source->settle_window(window);
+        if (result != VIRTUAL_WORKSPACE_SUCCESS && result != VIRTUAL_WORKSPACE_DURABILITY_UNCERTAIN) vm->source->settle_window(window);
     }
     if (operation->complete) operation->complete(operation, result);
     virtual_workspace_destroy_dispose(operation);
 }
 
-/* M2-D can persist candidate metadata here before publishing mapping removal. */
-static void virtual_workspace_manager_release(struct virtual_workspace_manager *vm, struct virtual_workspace *workspace)
+/* Persist survivor metadata only after evacuation has been observed. */
+static enum virtual_workspace_error virtual_workspace_manager_release(struct virtual_workspace_manager *vm, struct virtual_workspace *workspace)
 {
+    struct virtual_workspace *candidate = NULL;
     for (int i = 0; i < buf_len(vm->workspaces); ++i) {
-        if (vm->workspaces[i].id != workspace->id) continue;
-        memmove(vm->workspaces + i, vm->workspaces + i + 1, (buf_len(vm->workspaces) - i - 1) * sizeof(*vm->workspaces));
-        --buf__hdr(vm->workspaces)->len;
-        return;
+        if (vm->workspaces[i].id == workspace->id) continue;
+        if (!virtual_workspace_push(candidate, vm->workspaces[i])) { buf_free(candidate); return VIRTUAL_WORKSPACE_LIMIT; }
     }
+    int committed = virtual_workspace_state_commit(vm->store, candidate, vm->next_id);
+    if (!committed) { buf_free(candidate); return VIRTUAL_WORKSPACE_PERSISTENCE_FAILED; }
+    buf_free(vm->workspaces);
+    vm->workspaces = candidate;
+    return committed == 2 ? VIRTUAL_WORKSPACE_DURABILITY_UNCERTAIN : VIRTUAL_WORKSPACE_SUCCESS;
 }
 
 enum virtual_workspace_error virtual_workspace_manager_destroy(struct virtual_workspace_manager *vm, int index, int target_index, void *context, void (*complete)(struct virtual_workspace_destroy *, enum virtual_workspace_error))
@@ -668,7 +796,12 @@ enum virtual_workspace_error virtual_workspace_manager_destroy(struct virtual_wo
     if (vm->destroy.token) return VIRTUAL_WORKSPACE_BUSY;
     struct virtual_workspace *workspace = virtual_workspace_manager_find_index(vm, index);
     if (!workspace) return VIRTUAL_WORKSPACE_INVALID_INDEX;
-    if (buf_len(vm->workspaces) <= 1) return VIRTUAL_WORKSPACE_LAST;
+    if (!virtual_workspace_manager_available(vm, workspace) || !vm->source->is_user_space(workspace->sid)) return VIRTUAL_WORKSPACE_SPACE_UNAVAILABLE;
+    int usable = 0;
+    for (int i = 0; i < buf_len(vm->workspaces); ++i) {
+        if (virtual_workspace_manager_available(vm, &vm->workspaces[i]) && vm->source->is_user_space(vm->workspaces[i].sid)) ++usable;
+    }
+    if (usable <= 1) return VIRTUAL_WORKSPACE_LAST;
     struct virtual_workspace_destroy operation = { .source = *workspace, .context = context, .complete = complete };
     enum virtual_workspace_error result = VIRTUAL_WORKSPACE_STATE_UNAVAILABLE;
     if (!virtual_workspace_manager_read_topology(vm, &operation.topology)) goto err;
@@ -819,8 +952,8 @@ void virtual_workspace_manager_destroy_continue(struct virtual_workspace_manager
         vm->source->active_space() != operation->final_focus ||
         vm->source->visible_space(vm->source->space_display(operation->final_focus)) != operation->final_focus ||
         (operation->original_focus != operation->source.sid && !vm->source->restore_focus(&operation->focus_window, false))) goto err;
-    virtual_workspace_manager_release(vm, &operation->source);
-    virtual_workspace_manager_destroy_finish(vm, VIRTUAL_WORKSPACE_SUCCESS);
+    result = virtual_workspace_manager_release(vm, &operation->source);
+    virtual_workspace_manager_destroy_finish(vm, result);
     return;
 defer:
     vm->source->schedule_destroy(operation->token);

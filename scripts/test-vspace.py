@@ -57,9 +57,37 @@ def desktop_state(snapshot):
     }
 
 
+def available_mappings(rows):
+    return [row for row in rows if row.get("availability", "available") == "available"]
+
+
+def check_listing(rows, snapshot):
+    require(isinstance(rows, list) and rows, "no virtual workspace mappings")
+    for field in ("id", "index"):
+        require(all(type(w[field]) is int and w[field] > 0 for w in rows)
+                and len({w[field] for w in rows}) == len(rows), "invalid/duplicate " + field)
+    require([w["index"] for w in rows] == sorted(w["index"] for w in rows), "mapping order changed")
+    active_rows = available_mappings(rows)
+    require(len({w["space-id"] for w in active_rows}) == len(active_rows), "duplicate active native mapping")
+    displays = {d["index"]: d["id"] for d in snapshot["displays"]}
+    spaces = {s["id"]: s for s in snapshot["spaces"]}
+    for row in rows:
+        require(row.get("availability", "available") in ("available", "unavailable", "unresolved"),
+                "invalid availability")
+        require(row.get("persistence", "session-only") in ("durable", "session-only", "durability-uncertain"),
+                "invalid persistence status")
+        require(all(type(row[k]) is int and row[k] > 0 for k in ("space-id", "display-id")), "invalid native identity hint")
+        if row.get("availability", "available") != "available":
+            require(row["has-focus"] is False, "unverified mapping claims focus")
+            continue
+        require(row["space-id"] in spaces and
+                displays.get(spaces[row["space-id"]]["display"]) == row["display-id"], "stale available native mapping")
+        require(row["has-focus"] == (row["space-id"] == active(snapshot)), "incorrect has-focus")
+
+
 def candidates(snapshot, rows, display_index):
     """Public-query candidates, NOT proof of native occupancy or eligibility."""
-    mapped = {w["space-id"] for w in rows}
+    mapped = {w["space-id"] for w in available_mappings(rows)}
     return sorted((s for s in snapshot["spaces"]
                    if s["display"] == display_index and s["id"] not in mapped
                    and not s["is-visible"] and not s["is-native-fullscreen"]
@@ -70,7 +98,7 @@ def check_append(before, after, snapshot, display):
     require(len(after) == len(before) + 1 and after[:-1] == before,
             "allocation rewrote existing mappings, IDs, indices, or order")
     new = after[-1]
-    require(new["id"] not in {w["id"] for w in before}, "allocation reused an ID")
+    require(new["id"] > max(w["id"] for w in before), "allocation reused or regressed an ID")
     require(new["index"] == max(w["index"] for w in before) + 1,
             "allocation did not use highest index plus one")
     require(new["display-id"] == display["id"] and not new["has-focus"],
@@ -196,22 +224,13 @@ class Runner:
         ping = self.message("vspace", "--ping").stdout
         require(ping == '{"status":"ok","component":"vspace"}\n', "ping response changed")
         rows = self.listing()
-        require(isinstance(rows, list) and rows, "no virtual workspace mappings")
-        for field in ("id", "index", "space-id"):
-            require(all(type(w[field]) is int and w[field] > 0 for w in rows)
-                    and len({w[field] for w in rows}) == len(rows), "invalid/duplicate " + field)
-        require([w["index"] for w in rows] == sorted(w["index"] for w in rows), "mapping order changed")
         snap = self.snapshot("query-baseline")
         self.report["display_count"] = len(snap["displays"])
-        displays = {d["index"]: d["id"] for d in snap["displays"]}
-        spaces = {s["id"]: s for s in snap["spaces"]}
-        for row in rows:
-            require(row["space-id"] in spaces and
-                    displays.get(spaces[row["space-id"]]["display"]) == row["display-id"],
-                    "stale native mapping; use a fresh daemon session for live tests")
-            require(row["has-focus"] == (row["space-id"] == active(snap)), "incorrect has-focus")
+        check_listing(rows, snap)
+        self.report["persistence_status"] = sorted({w.get("persistence", "session-only") for w in rows})
+        self.report["unavailable_workspace_ids"] = [w["id"] for w in rows if w.get("availability", "available") != "available"]
         current = self.message("vspace", "--current", check=False)
-        expected = next((w for w in rows if w["space-id"] == active(snap)), None)
+        expected = next((w for w in available_mappings(rows) if w["space-id"] == active(snap)), None)
         if expected:
             require(current.returncode == 0 and json.loads(current.stdout) == expected,
                     "current does not match native focus")
@@ -238,6 +257,9 @@ class Runner:
         missing = next(i for i in range(1, len(rows) + 2) if i not in {w["index"] for w in rows})
         self.rejected(("vspace", "--focus", str(missing)), "could not locate")
         self.rejected(("vspace", "--destroy", str(missing)), "could not locate")
+        for row in rows:
+            if row.get("availability", "available") != "available":
+                self.rejected(("vspace", "--focus", str(row["index"])), "unavailable")
         self.record("CLI rejection and no-mutation regressions")
         self.record("stale/disconnected mapping and uncertain occupancy injection", "skipped",
                     reason="covered by headless fixtures; live runner does not alter topology or AX state")
@@ -383,7 +405,7 @@ class Runner:
         observations = []
         starts = []
         for domain, index in (("space", target["index"]),
-                              ("vspace", next(w["index"] for w in rows if w["space-id"] == target["id"]))):
+                              ("vspace", next(w["index"] for w in available_mappings(rows) if w["space-id"] == target["id"]))):
             self.restore(baseline)  # Restore visibility on EVERY display between controls.
             start = self.snapshot(label + "-" + domain + "-start")
             starts.append(focus_state(start))
@@ -415,7 +437,7 @@ class Runner:
     def already_focused(self, baseline):
         self.restore(baseline)
         rows = self.listing()
-        source = next(w for w in rows if w["space-id"] == active(baseline))
+        source = next(w for w in available_mappings(rows) if w["space-id"] == active(baseline))
         native = next(s for s in baseline["spaces"] if s["id"] == active(baseline))
         n = self.message("space", "--focus", native["index"], check=False)
         v = self.message("vspace", "--focus", source["index"], check=False)
@@ -469,7 +491,7 @@ class Runner:
             require(not space["is-visible"] and not space["windows"] and
                     not any(w["space"] == space["index"] for w in snap["windows"]),
                     "destroy smoke requires a hidden allocation with no observed windows")
-            local = [w for w in before if w["display-id"] == source["display-id"] and w["id"] != source["id"]]
+            local = [w for w in available_mappings(before) if w["display-id"] == source["display-id"] and w["id"] != source["id"]]
             if not local:
                 self.record("destroy allocation " + str(source["id"]), "skipped", reason="no local mapped destination")
                 continue
@@ -497,6 +519,8 @@ class Runner:
             require(result["reindexed"] == [{"id": w["id"], "old-index": w["index"], "index": i + 1}
                                             for i, w in enumerate(survivors) if w["index"] != i + 1],
                     "incorrect refresh index changes")
+            require(not any(w["id"] in released for w in before if w.get("availability", "available") != "available"),
+                    "refresh released an unavailable logical record")
             reasons = {"focused", "visible", "occupied", "occupancy-unknown", "display-unavailable",
                        "mapping-unavailable", "last-workspace"}
             require([(w["id"], w["index"]) for w in result["retained"]] ==
@@ -531,7 +555,7 @@ class Runner:
                     self.allocate(display, created)
             self.restore(baseline)
             rows = self.listing()
-            mapped = {w["space-id"] for w in rows}
+            mapped = {w["space-id"] for w in available_mappings(rows)}
             source = next(s for s in baseline["spaces"] if s["id"] == active(baseline))
             possible = [s for s in baseline["spaces"] if s["id"] in mapped and s["id"] != source["id"]]
             groups = {

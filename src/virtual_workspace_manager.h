@@ -7,6 +7,9 @@ struct virtual_workspace
     uint64_t sid;
     uint32_t did;
     int index;
+    char space_uuid[37];
+    char display_uuid[37];
+    bool unresolved;
 };
 
 enum virtual_workspace_occupancy
@@ -40,7 +43,9 @@ enum virtual_workspace_error
     VIRTUAL_WORKSPACE_UNSAFE_WINDOWS,
     VIRTUAL_WORKSPACE_MOVE_FAILED,
     VIRTUAL_WORKSPACE_VISIBILITY_FAILED,
-    VIRTUAL_WORKSPACE_PENDING
+    VIRTUAL_WORKSPACE_PENDING,
+    VIRTUAL_WORKSPACE_PERSISTENCE_FAILED,
+    VIRTUAL_WORKSPACE_DURABILITY_UNCERTAIN
 };
 
 struct virtual_workspace_window
@@ -107,6 +112,7 @@ struct virtual_workspace_source
     void (*capture_focus)(struct virtual_workspace_window *window);
     bool (*restore_focus)(struct virtual_workspace_window *window, bool request);
     void (*schedule_destroy)(uint64_t token);
+    bool (*identity)(uint64_t sid, uint32_t did, char *space_uuid, char *display_uuid);
 };
 
 struct virtual_workspace_destroy
@@ -131,6 +137,8 @@ struct virtual_workspace_destroy
     void (*complete)(struct virtual_workspace_destroy *operation, enum virtual_workspace_error result);
 };
 
+struct virtual_workspace_store;
+
 struct virtual_workspace_manager
 {
     struct virtual_workspace *workspaces;
@@ -139,8 +147,11 @@ struct virtual_workspace_manager
     uint64_t next_operation;
     struct virtual_workspace_destroy destroy;
     bool did_begin;
+    struct virtual_workspace_store *store;
 };
 
+bool virtual_workspace_manager_available(struct virtual_workspace_manager *vm, struct virtual_workspace *workspace);
+const char *virtual_workspace_manager_persistence(struct virtual_workspace_manager *vm);
 bool virtual_workspace_manager_begin(struct virtual_workspace_manager *vm, const struct virtual_workspace_source *source);
 struct virtual_workspace *virtual_workspace_manager_find_index(struct virtual_workspace_manager *vm, int index);
 struct virtual_workspace *virtual_workspace_manager_find_space(struct virtual_workspace_manager *vm, uint64_t sid);

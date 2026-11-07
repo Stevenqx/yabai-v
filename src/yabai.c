@@ -198,6 +198,8 @@ static void parse_arguments(int argc, char **argv)
                         "    --version, -v          Print version to stdout and exit.\n"
                         "    --help, -h             Print options to stdout and exit.\n"
                         "Fork messages: yabai -m vspace --ping | --list | --current | --create | --focus N\n"
+                        "    --list includes availability and persistence status; unresolved records cannot be focused.\n"
+                        "    State: $XDG_STATE_HOME/yabai-v/state.json (default ~/.local/state/yabai-v/state.json).\n"
                         "    --create maps an empty hidden desktop on the focused display; no focus change.\n"
                         "    --focus uses native space focus results; visible switching is not confirmed.\n"
                         "    --destroy SOURCE [--to TARGET] evacuates windows, then releases the mapping.\n"

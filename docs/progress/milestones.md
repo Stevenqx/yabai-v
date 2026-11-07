@@ -378,11 +378,37 @@ baseline for every original service/desktop/window/layout/hash/SIP condition.
 No development daemon/fixture remains or further service action is pending.
 See [M2-C GUI evidence](../validation.md#milestone-2-c-approved-gui-validation--2026-11-05).
 
-## Milestone 2-D and native MRU
+## Milestone 2-D — Durable logical identity and validated restoration
+
+Status: implementation and available local validation complete, authorized by
+`tmp/yabai-v-m2d-codex-prompt.md` on
+2026-11-07. Branch `feat/vspace-mapping`, clean baseline `dbe2cde`.
+
+Scope: private versioned state, validated native Space/display UUID restoration,
+unresolved logical records, durable create/destroy/refresh candidate commits,
+conservative recovery and focused persistence/fault regressions. Preserve native
+focus/layout paths and the running service. Publication and a new GUI service
+session require separate authorization; macOS 26 remains deferred under D012.
+
+- [x] Verify clean descendant checkpoint and read implementation/progress records.
+- [x] Implement bounded schema, identity verification, restoration and availability.
+- [x] Integrate locked atomic snapshots at lifecycle publication boundaries.
+- [x] Cover restoration, conflicts, recovery and pre/post replacement failures.
+- [x] Run signed build, headless/static checks and update technical/progress records.
+- [x] Review and commit the coherent validated change locally.
+
+Available validation: signed universal build, 68 production and 24 runner tests,
+zero-finding arm64 analysis, Python 3.15/3.9.6 runner checks and native read-only
+UUID/installed-service query probes passed on SIP-enabled macOS 15.6. Real M2-D
+daemon/restart/GUI, physical two-display reconnect/renumbering, Dock/recreation/
+reboot, actual full-volume/power-loss, new hosted CI and macOS 26 remain unrun.
+Service changes and publication still need their applicable explicit approval.
+See [M2-D evidence](../validation.md#milestone-2-d-persistence-and-local-validation--2026-11-07).
+
+## Native MRU and later features
 
 Status: design proposals only; implementation is not authorized.
 
-Persistence and native Space/window MRU are recorded
-with their safety and policy boundaries in
+Native Space/window MRU is recorded with its safety and policy boundaries in
 [architecture proposals](../architecture.md#follow-on-proposals). Native Space lifecycle,
 reordering, GUI, and hotkeys remain deferred.
